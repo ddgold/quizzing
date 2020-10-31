@@ -1,0 +1,15 @@
+$body-bg: #333f48;
+$primary: #bf5700;
+$secondary: #005f86;
+
+@import "bootstrap";
+
+.bodyContainer {
+	background: #ffffff;
+	box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+	padding: 1rem;
+
+	@include media-breakpoint-up(md) {
+		border-radius: 0.25rem;
+	}
+}
