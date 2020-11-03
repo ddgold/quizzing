@@ -4,6 +4,8 @@ interface User {
 	nickname: string;
 	email: string;
 	password: string;
+	created?: Date;
+	lastLogin?: Date;
 }
 
 const UserSchema = new Schema({
@@ -20,6 +22,14 @@ const UserSchema = new Schema({
 	password: {
 		type: String,
 		required: true
+	},
+	created: {
+		type: Date,
+		default: new Date()
+	},
+	lastLogin: {
+		type: Date,
+		default: new Date()
 	}
 });
 
