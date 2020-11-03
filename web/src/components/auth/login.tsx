@@ -5,7 +5,17 @@ import { gql, useMutation } from "@apollo/client";
 
 const LOGIN = gql`
 	mutation Login($email: String!, $password: String!) {
-		login(email: $email, password: $password)
+		login(email: $email, password: $password) {
+			user {
+				id
+				nickname
+				email
+			}
+			errors {
+				field
+				message
+			}
+		}
 	}
 `;
 
@@ -14,14 +24,28 @@ interface FormState {
 	password: string;
 }
 
+interface FormError {
+	field: "email" | "password";
+	message: string;
+}
+
 export const Login = () => {
-	const { errors, handleSubmit, register } = useForm<FormState>();
+	const { errors, handleSubmit, register, setError, setValue } = useForm<FormState>();
 	const [loginMutation] = useMutation(LOGIN);
 
 	const onSubmit = handleSubmit(async (state: FormState) => {
-		await loginMutation({
+		const result = await loginMutation({
 			variables: state
 		});
+
+		if (result.data.login.errors) {
+			result.data.login.errors.forEach((error: FormError) => {
+				setError(error.field, { type: "manual", message: error.message });
+				setValue("password", "", { shouldValidate: false });
+			});
+		} else {
+			console.log(result.data.login.user);
+		}
 	});
 
 	return (

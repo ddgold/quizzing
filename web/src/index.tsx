@@ -6,8 +6,6 @@ import App from "./app";
 
 import "./index.scss";
 
-console.log(process.env.REACT_APP_APOLLO_SERVER);
-
 const client = new ApolloClient({
 	uri: process.env.REACT_APP_APOLLO_SERVER,
 	cache: new InMemoryCache()

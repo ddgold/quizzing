@@ -7,6 +7,7 @@
 	"license": "GPL-3.0-only",
 	"devDependencies": {
 		"@types/dotenv-flow": "^3.1.0",
+		"@types/mongoose": "^5.7.37",
 		"@types/node": "^14.14.2",
 		"nodemon": "^2.0.6",
 		"ts-node": "^9.0.0",
@@ -16,7 +17,8 @@
 		"apollo-server": "^2.19.0",
 		"dotenv-flow": "^3.2.0",
 		"graphql": "^14.0.0",
-		"graphql-import-node": "^0.0.4"
+		"graphql-import-node": "^0.0.4",
+		"mongoose": "^5.10.11"
 	},
 	"scripts": {
 		"dev": "nodemon --watch src/ --exec 'ts-node' src/server.ts"

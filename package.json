@@ -10,10 +10,11 @@
 		"server",
 		"web"
 	],
-	"scripts": {
-		"dev": "concurrently -n \"server, web  ,\" -c \"bgGreen,bgBlue\"  \"yarn --cwd server dev\" \"yarn --cwd web dev\""
-	},
 	"devDependencies": {
 		"concurrently": "^5.3.0"
+	},
+	"scripts": {
+		"dev": "concurrently -n \"server, web  ,\" -c \"bgGreen,bgBlue\"  \"yarn --cwd server dev\" \"yarn --cwd web dev\"",
+		"create-mongodb": "docker run -it -v /Volumes/mongodata:/data/db -p 27017:27017 --name mongodb -d mongo"
 	}
 }

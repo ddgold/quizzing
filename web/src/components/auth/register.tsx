@@ -5,7 +5,17 @@ import { gql, useMutation } from "@apollo/client";
 
 const REGISTER = gql`
 	mutation Register($nickname: String!, $email: String!, $password: String!) {
-		register(nickname: $nickname, email: $email, password: $password)
+		register(nickname: $nickname, email: $email, password: $password) {
+			user {
+				id
+				nickname
+				email
+			}
+			errors {
+				field
+				message
+			}
+		}
 	}
 `;
 
@@ -16,14 +26,29 @@ interface FormState {
 	confirmPassword: string;
 }
 
+interface FormError {
+	field: "nickname" | "email" | "password" | "confirmPassword";
+	message: string;
+}
+
 export const Register = () => {
-	const { errors, getValues, handleSubmit, register } = useForm<FormState>();
+	const { errors, getValues, handleSubmit, register, setError, setValue } = useForm<FormState>();
 	const [registerMutation] = useMutation(REGISTER);
 
 	const onSubmit = handleSubmit(async (state: FormState) => {
-		await registerMutation({
+		const result = await registerMutation({
 			variables: state
 		});
+
+		if (result.data.register.errors) {
+			result.data.register.errors.forEach((error: FormError) => {
+				setError(error.field, { type: "manual", message: error.message });
+				setValue("password", "", { shouldValidate: false });
+				setValue("confirmPassword", "", { shouldValidate: false });
+			});
+		} else {
+			console.log(result.data.register.user);
+		}
 	});
 
 	const passwordsMatch = () => {

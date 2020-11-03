@@ -1,8 +1,24 @@
+type FormError {
+	message: String!
+	field: String!
+}
+
+type User {
+	id: String!
+	nickname: String!
+	email: String!
+}
+
+type AuthResult {
+	user: User
+	errors: [FormError!]
+}
+
 type Query {
-	foo: String
+	userByEmail(email: String!): User
 }
 
 type Mutation {
-	login(email: String, password: String): String
-	register(nickname: String, email: String, password: String): String
+	login(email: String!, password: String!): AuthResult!
+	register(nickname: String!, email: String!, password: String!): AuthResult!
 }
