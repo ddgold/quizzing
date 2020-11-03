@@ -1,0 +1,9 @@
+{
+	"env": {
+		"NODE_ENV": "development"
+	},
+	"exec": "ts-node",
+	"ext": "ts,json,graphql",
+	"ignore": ["src/scripts"],
+	"watch": "src/"
+}

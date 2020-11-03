@@ -1,8 +1,8 @@
 import { IResolvers } from "graphql-tools";
 
-import { UserModel } from "../database";
+import { UserModel } from "../../database";
 
-export const resolvers: IResolvers = {
+export const authResolvers: IResolvers = {
 	Query: {
 		userByEmail: async (_, { email }) => {
 			return await UserModel.findOne({ email: email });

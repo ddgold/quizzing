@@ -26,9 +26,9 @@ database
 // Apollo Server
 // -------------
 const server = new ApolloServer({
-	typeDefs,
+	playground: process.env.NODE_ENV !== "production",
 	resolvers,
-	playground: process.env.NODE_ENV !== "production"
+	typeDefs
 });
 
 server

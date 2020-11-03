@@ -3,6 +3,9 @@ type FormError {
 	field: String!
 }
 
+# ----
+# Auth
+# ----
 type User {
 	id: String!
 	nickname: String!
@@ -14,11 +17,39 @@ type AuthResult {
 	errors: [FormError!]
 }
 
-type Query {
-	userByEmail(email: String!): User
+# -----
+# Build
+# -----
+type Board {
+	id: String!
+	name: String!
 }
 
+type BoardResult {
+	board: Board
+	errors: [FormError!]
+}
+
+# -------
+# Queries
+# -------
+type Query {
+	# Auth
+	userByEmail(email: String!): User
+
+	# Build
+	allBoards: [Board!]
+	boardByID(id: String!): Board
+}
+
+# ---------
+# Mutations
+# ---------
 type Mutation {
+	# Auth
 	login(email: String!, password: String!): AuthResult!
 	register(nickname: String!, email: String!, password: String!): AuthResult!
+
+	# Build
+	createNew(name: String!): BoardResult!
 }

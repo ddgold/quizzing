@@ -23,7 +23,8 @@
 		"mongoose": "^5.10.11"
 	},
 	"scripts": {
-		"dev": "nodemon --watch src/ --exec 'ts-node' src/server.ts",
-		"create-dummy-data": "ts-node ./src/scripts/createDummyData.ts"
+		"dev": "nodemon src/server.ts",
+		"create-dummy-data": "ts-node ./src/scripts/createDummyData.ts",
+		"drop-collections": "ts-node ./src/scripts/dropCollections.ts"
 	}
 }
