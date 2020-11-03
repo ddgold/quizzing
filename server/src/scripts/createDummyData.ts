@@ -1,4 +1,3 @@
-import { exit } from "process";
 import Database, { UserModel } from "../database";
 
 const createDummyUsers = (url: string) => {
@@ -23,7 +22,7 @@ const createDummyUsers = (url: string) => {
 				database.disconnect();
 			} catch (error) {
 				console.log("Error creating user:", error);
-				exit();
+				process.exit();
 			}
 		})
 		.catch((error) => {
