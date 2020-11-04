@@ -14,6 +14,9 @@ export const Header = () => (
 			<Nav.Link as={NavLink} to="/register">
 				Register
 			</Nav.Link>
+			<Nav.Link as={NavLink} to="/boards">
+				My Boards
+			</Nav.Link>
 		</Nav>
 	</Navbar>
 );

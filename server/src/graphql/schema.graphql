@@ -1,3 +1,5 @@
+scalar Date
+
 type FormError {
 	message: String!
 	field: String!
@@ -23,6 +25,7 @@ type AuthResult {
 type Board {
 	id: String!
 	name: String!
+	created: Date!
 }
 
 type BoardResult {
@@ -39,7 +42,7 @@ type Query {
 
 	# Build
 	allBoards: [Board!]
-	boardByID(id: String!): Board
+	singleBoard(id: String!): Board
 }
 
 # ---------

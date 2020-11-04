@@ -7,7 +7,7 @@ export const buildResolvers: IResolvers = {
 		allBoards: async () => {
 			return await BoardModel.find();
 		},
-		boardByID: async (_, { id }) => {
+		singleBoard: async (_, { id }) => {
 			return await BoardModel.findOne({ _id: id });
 		}
 	},

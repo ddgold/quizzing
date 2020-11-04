@@ -1,7 +1,7 @@
 import React from "react";
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 
-import { Error, Home, Header, Login, Register } from "./components";
+import { BoardList, Board, Error, Home, Header, Login, Register } from "./components";
 
 function App() {
 	return (
@@ -17,6 +17,12 @@ function App() {
 				</Route>
 				<Route exact path="/register">
 					<Register />
+				</Route>
+				<Route exact path="/boards">
+					<BoardList />
+				</Route>
+				<Route exact path="/boards/:id">
+					<Board />
 				</Route>
 				<Route>
 					<Error message="404: Page not found" />
