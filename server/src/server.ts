@@ -11,10 +11,10 @@ config({
 // ----------------
 // mongoDB Database
 // ----------------
-const database = new Database(process.env.MONGODB_URL);
+const database = new Database();
 
 database
-	.connect()
+	.connect(process.env.MONGODB_URL)
 	.then((url) => {
 		console.log(`Database connected at ${url}`);
 	})

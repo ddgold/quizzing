@@ -40,9 +40,9 @@ const createDummyBoards = async () => {
 };
 
 const createDummyData = (url: string) => {
-	let database = new Database(url);
+	let database = new Database();
 	database
-		.connect()
+		.connect(url)
 		.then(async () => {
 			await createDummyUsers();
 			await createDummyBoards();

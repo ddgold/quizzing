@@ -1,21 +1,18 @@
 import mongoose from "mongoose";
 
 export default class Database {
-	url: string;
 	connection: mongoose.Connection;
 
-	constructor(url: string) {
-		this.url = url;
-	}
+	constructor() {}
 
-	connect(): Promise<string> {
+	connect(url: string): Promise<string> {
 		return new Promise<string>((resolve, reject) => {
 			if (this.connection) {
 				return;
 			}
 
 			mongoose
-				.connect(this.url, {
+				.connect(url, {
 					useNewUrlParser: true,
 					useFindAndModify: true,
 					useUnifiedTopology: true,
@@ -23,7 +20,7 @@ export default class Database {
 				})
 				.then((mongoose) => {
 					this.connection = mongoose.connection;
-					resolve(this.url);
+					resolve(url);
 				})
 				.catch((error) => {
 					this.connection = undefined;
