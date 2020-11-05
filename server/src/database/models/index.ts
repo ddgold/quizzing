@@ -1,2 +1,2 @@
-export { BoardModel } from "./board";
-export { UserModel } from "./user";
+export { Board, BoardDocument, BoardModel } from "./board";
+export { User, UserDocument, UserModel } from "./user";

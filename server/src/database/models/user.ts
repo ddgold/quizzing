@@ -1,7 +1,7 @@
 import { Document, Model, model, Schema } from "mongoose";
 import bcrypt from "bcryptjs";
 
-interface User {
+export interface User {
 	nickname: string;
 	email: string;
 	password: string;
@@ -45,7 +45,7 @@ UserSchema.pre("save", async function (this: UserDocument, next) {
 	return next();
 });
 
-interface UserDocument extends User, Document {
+export interface UserDocument extends User, Document {
 	comparePassword: (this: UserDocument, candidatePassword: string) => Promise<boolean>;
 }
 

@@ -1,7 +1,6 @@
 import { Document, Model, model, Schema } from "mongoose";
-import bcrypt from "bcryptjs";
 
-interface Board {
+export interface Board {
 	name: string;
 	created?: Date;
 }
@@ -18,7 +17,7 @@ const BoardSchema = new Schema({
 	}
 });
 
-interface BoardDocument extends Board, Document {}
+export interface BoardDocument extends Board, Document {}
 
 interface BoardModel extends Model<BoardDocument> {}
 

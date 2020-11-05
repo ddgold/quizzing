@@ -1,25 +1,33 @@
 import { IResolvers } from "graphql-tools";
 
-import { UserModel } from "../../database";
+import { UserDocument, UserModel } from "../../database";
+import { Context, assertAuthorized, sendRefreshToken, signAccessToken, signRefreshToken } from "../../auth";
 
-export const authResolvers: IResolvers = {
+interface AuthResult {
+	accessToken?: string;
+	user?: UserDocument;
+	errors?: { message: string; field: string }[];
+}
+
+export const authResolvers: IResolvers<any, Context> = {
 	Query: {
-		userByEmail: async (_, { email }) => {
+		userByEmail: async (_, { email }, context) => {
+			assertAuthorized(context);
 			return await UserModel.findOne({ email: email });
 		}
 	},
 	Mutation: {
-		login: async (_, { email, password }) => {
+		login: async (_, { email, password }, context): Promise<AuthResult> => {
 			// Check user with email exists
 			const user = await UserModel.findOne({ email: email });
 			if (!user) {
-				return { user: undefined, errors: [{ message: "Incorrect email and/or password", field: "email" }] };
+				return { errors: [{ message: "Incorrect email and/or password", field: "email" }] };
 			}
 
 			// Check user's password was correct
 			const valid = await user.comparePassword(password);
 			if (!valid) {
-				return { user: undefined, errors: [{ message: "Incorrect email and/or password", field: "email" }] };
+				return { errors: [{ message: "Incorrect email and/or password", field: "email" }] };
 			}
 
 			// Update user's last login date
@@ -27,9 +35,10 @@ export const authResolvers: IResolvers = {
 			await user.save();
 
 			// Return user
-			return { user: user };
+			sendRefreshToken(context.res, signRefreshToken(user.id));
+			return { accessToken: signAccessToken(user.id), user: user };
 		},
-		register: async (_, { nickname, email, password }) => {
+		register: async (_, { nickname, email, password }, context): Promise<AuthResult> => {
 			let errors = [];
 			// Check there's no existing user using this nickname
 			if (await UserModel.findOne({ nickname: nickname })) {
@@ -49,7 +58,10 @@ export const authResolvers: IResolvers = {
 			// Create new user
 			try {
 				const newUser = await UserModel.create({ nickname: nickname, email: email, password: password });
-				return { user: newUser };
+
+				// Return new user
+				sendRefreshToken(context.res, signRefreshToken(newUser.id));
+				return { accessToken: signAccessToken(newUser.id), user: newUser };
 			} catch (error) {
 				console.log("Register mutation error:", error);
 				return { user: undefined, errors: [{ message: "Unknown error creating new account", field: "email" }] };

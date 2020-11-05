@@ -1,8 +1,11 @@
-import { ApolloServer } from "apollo-server";
+import express from "express";
+import cookieParser from "cookie-parser";
+import { ApolloServer } from "apollo-server-express";
 import { config } from "dotenv-flow";
 
 import { resolvers, typeDefs } from "./graphql";
 import Database from "./database/database";
+import { Context, postRefreshToken } from "./auth";
 
 config({
 	default_node_env: "development"
@@ -25,17 +28,21 @@ database
 // -------------
 // Apollo Server
 // -------------
+const app = express();
+
+app.use(cookieParser());
+
+app.post("/refreshToken", postRefreshToken);
+
 const server = new ApolloServer({
 	playground: process.env.NODE_ENV !== "production",
 	resolvers,
-	typeDefs
+	typeDefs,
+	context: (Context) => Context
 });
 
-server
-	.listen({ port: process.env.PORT })
-	.then(({ url }) => {
-		console.log(`Server running at ${url}`);
-	})
-	.catch((error) => {
-		console.log("Error establishing server:", error);
-	});
+server.applyMiddleware({ app });
+
+app.listen({ port: process.env.PORT }, () => {
+	console.log(`Server running at http://localhost:${process.env.PORT}${server.graphqlPath}`);
+});

@@ -15,6 +15,7 @@ type User {
 }
 
 type AuthResult {
+	accessToken: String
 	user: User
 	errors: [FormError!]
 }

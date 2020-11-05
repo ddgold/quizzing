@@ -1,9 +1,9 @@
 import Database, { UserModel } from "../database";
 
 const createDummyUsers = (url: string) => {
-	let database = new Database(url);
+	let database = new Database();
 	database
-		.connect()
+		.connect(url)
 		.then(async () => {
 			const collections = ["boards", "users"];
 
