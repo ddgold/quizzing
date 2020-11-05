@@ -1,5 +1,6 @@
 import express from "express";
 import cookieParser from "cookie-parser";
+import cors from "cors";
 import { ApolloServer } from "apollo-server-express";
 import { config } from "dotenv-flow";
 
@@ -32,6 +33,13 @@ const app = express();
 
 app.use(cookieParser());
 
+app.use(
+	cors({
+		origin: process.env.FRONTEND_URL,
+		credentials: true
+	})
+);
+
 app.post("/refreshToken", postRefreshToken);
 
 const server = new ApolloServer({
@@ -41,8 +49,8 @@ const server = new ApolloServer({
 	context: (Context) => Context
 });
 
-server.applyMiddleware({ app });
+server.applyMiddleware({ app, cors: false });
 
-app.listen({ port: process.env.PORT }, () => {
-	console.log(`Server running at http://localhost:${process.env.PORT}${server.graphqlPath}`);
+app.listen({ port: process.env.GRAPHQL_PORT }, () => {
+	console.log(`Server running at http://localhost:${process.env.GRAPHQL_PORT}${server.graphqlPath}`);
 });
