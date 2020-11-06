@@ -38,6 +38,11 @@ export const authResolvers: IResolvers<any, Context> = {
 			sendRefreshToken(context.res, signRefreshToken(user.id));
 			return { accessToken: signAccessToken(user.id), user: user };
 		},
+		logout: async (_, {}, context): Promise<boolean> => {
+			// Clear refresh token
+			sendRefreshToken(context.res, "");
+			return true;
+		},
 		register: async (_, { nickname, email, password }, context): Promise<AuthResult> => {
 			let errors = [];
 			// Check there's no existing user using this nickname
