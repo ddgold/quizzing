@@ -26,7 +26,7 @@ interface Data {
 }
 
 export const BoardList = () => {
-	const { data, error, loading } = useQuery<Data>(ALL_BOARDS, { fetchPolicy: "network-only" });
+	const { data, error, loading } = useQuery<Data, {}>(ALL_BOARDS, { fetchPolicy: "network-only" });
 
 	if (error) {
 		return <Error message={error.message} />;

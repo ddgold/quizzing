@@ -1,6 +1,9 @@
 import React from "react";
-import { Container } from "react-bootstrap";
-import { gql, useQuery } from "@apollo/client";
+import { Button, Container } from "react-bootstrap";
+import { gql, useQuery, useMutation } from "@apollo/client";
+import { useHistory } from "react-router-dom";
+
+import { setAccessToken } from "../../auth";
 import { Error, Loading } from "..";
 
 const CURRENT_USER = gql`
@@ -11,6 +14,12 @@ const CURRENT_USER = gql`
 	}
 `;
 
+const LOGOUT = gql`
+	mutation Logout {
+		logout
+	}
+`;
+
 interface Data {
 	currentUser: {
 		nickname: string;
@@ -18,7 +27,17 @@ interface Data {
 }
 
 export const User = () => {
-	const { data, error, loading } = useQuery<Data>(CURRENT_USER, { fetchPolicy: "network-only" });
+	const { data, error, loading } = useQuery<Data, {}>(CURRENT_USER, { fetchPolicy: "network-only" });
+	const [logoutMutation] = useMutation<{}, {}>(LOGOUT);
+	const history = useHistory();
+
+	const logout = async () => {
+		console.log("logout");
+		await logoutMutation();
+		setAccessToken("");
+
+		history.push("/");
+	};
 
 	if (error) {
 		return <Error message={error.message} />;
@@ -28,12 +47,15 @@ export const User = () => {
 		return <Loading />;
 	}
 
+	if (!data?.currentUser) {
+		return <Error message="Not logged in" />;
+	}
+
 	return (
 		<Container className="bodyContainer">
 			<h1>User</h1>
-			<p className="lead" style={{ marginBottom: "0px" }}>
-				{`Current user: ${data?.currentUser ? data.currentUser.nickname : "not logged in"}`}
-			</p>
+			<p className="lead">{`Current user: ${data.currentUser.nickname}`}</p>
+			<Button onClick={() => logout()}>Log Out</Button>
 		</Container>
 	);
 };
