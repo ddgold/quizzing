@@ -8,6 +8,7 @@ export { Loading } from "./loading";
 export { Login } from "./user/login";
 export { Register } from "./user/register";
 export { User } from "./user/user";
+export { UserControl } from "./user/userControl";
 
 // Build
 export { Board } from "./build/board";

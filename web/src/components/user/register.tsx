@@ -40,7 +40,7 @@ interface State {
 
 export const Register = () => {
 	const { errors, getValues, handleSubmit, register, setError, setValue } = useForm<State>();
-	const [registerMutation] = useMutation<Data, State>(REGISTER);
+	const [registerMutation, { client }] = useMutation<Data, State>(REGISTER);
 	const history = useHistory();
 
 	const onSubmit = handleSubmit(async (state: State) => {
@@ -59,6 +59,7 @@ export const Register = () => {
 			setAccessToken(accessToken);
 
 			history.push("/");
+			await client!.resetStore();
 		}
 	});
 

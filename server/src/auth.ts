@@ -1,5 +1,6 @@
 import { sign, verify } from "jsonwebtoken";
 import { Request, Response } from "express";
+import { AuthenticationError } from "apollo-server-express";
 
 import { UserModel } from "./database";
 
@@ -36,7 +37,7 @@ export const assertAuthorized = async (context: Context): Promise<void> => {
 	const authorization = context.req.headers["authorization"];
 
 	if (!authorization) {
-		throw new Error("Not Authorized");
+		throw new AuthenticationError("Not Authorized");
 	}
 
 	try {
@@ -44,7 +45,7 @@ export const assertAuthorized = async (context: Context): Promise<void> => {
 		context.payload = verify(token, process.env.ACCESS_TOKEN_SECRET!) as TokenPayload;
 	} catch (error) {
 		console.log(`Authentication error: ${error}`);
-		throw new Error("Not Authorized");
+		throw new AuthenticationError("Not Authorized");
 	}
 };
 

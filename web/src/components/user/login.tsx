@@ -38,7 +38,7 @@ interface State {
 
 export const Login = () => {
 	const { errors, handleSubmit, register, setError, setValue } = useForm<State>();
-	const [loginMutation] = useMutation<Data, State>(LOGIN);
+	const [loginMutation, { client }] = useMutation<Data, State>(LOGIN);
 	const history = useHistory();
 
 	const onSubmit = handleSubmit(async (state: State) => {
@@ -56,6 +56,7 @@ export const Login = () => {
 			setAccessToken(accessToken);
 
 			history.push("/");
+			await client!.resetStore();
 		}
 	});
 

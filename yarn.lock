@@ -2,7 +2,7 @@
 # yarn lockfile v1
 
 
-"@apollo/client@^3.2.5":
+"@apollo/client@^3.0.0", "@apollo/client@^3.2.5":
   version "3.2.5"
   resolved "https://registry.yarnpkg.com/@apollo/client/-/client-3.2.5.tgz#24e0a6faa1d231ab44807af237c6227410c75c4d"
   integrity sha512-zpruxnFMz6K94gs2pqc3sidzFDbQpKT5D6P/J/I9s8ekHZ5eczgnRp6pqXC86Bh7+44j/btpmOT0kwiboyqTnA==
@@ -2590,6 +2590,13 @@ apollo-graphql@^0.6.0:
   dependencies:
     apollo-env "^0.6.5"
     lodash.sortby "^4.7.0"
+
+apollo-link-token-refresh@^0.3.2:
+  version "0.3.2"
+  resolved "https://registry.yarnpkg.com/apollo-link-token-refresh/-/apollo-link-token-refresh-0.3.2.tgz#60773790b0f111d674dd358e1e53a660a6f56b35"
+  integrity sha512-4us703pt1RyW8NOLCUtCVLbnse2gux43W9mePzfAHKeNsj8d6rzRE4IDIS+6GEb/jay36uw8E7BvX5X9k6Ivkw==
+  dependencies:
+    "@apollo/client" "^3.0.0"
 
 apollo-link@^1.2.14:
   version "1.2.14"
@@ -7858,6 +7865,11 @@ jws@^3.2.2:
   dependencies:
     jwa "^1.4.1"
     safe-buffer "^5.0.1"
+
+jwt-decode@^3.1.1:
+  version "3.1.1"
+  resolved "https://registry.yarnpkg.com/jwt-decode/-/jwt-decode-3.1.1.tgz#526710779567c380910139f790da2910c529e49f"
+  integrity sha512-EaH9dTD9ogCmxZRdiTsIUIJslqjoFfk8nEAi+Bq8u/aUjrVuhZ6eZjhWRH6SC9NBA0Lwr3K35H2zDnWvK/n4vQ==
 
 kareem@2.3.1:
   version "2.3.1"

@@ -28,15 +28,18 @@ interface Data {
 
 export const User = () => {
 	const { data, error, loading } = useQuery<Data, {}>(CURRENT_USER, { fetchPolicy: "network-only" });
-	const [logoutMutation] = useMutation<{}, {}>(LOGOUT);
+	const [logoutMutation, { client }] = useMutation<{}, {}>(LOGOUT);
 	const history = useHistory();
 
 	const logout = async () => {
-		console.log("logout");
 		await logoutMutation();
 		setAccessToken("");
 
+		console.log("aaa");
 		history.push("/");
+		console.log("bbb");
+		await client!.resetStore();
+		console.log("ccc");
 	};
 
 	if (error) {
