@@ -32,7 +32,7 @@ export const sendRefreshToken = (res: Response, token: string): void => {
 	});
 };
 
-export const assertAuthorized = async (context: Context): Promise<void> => {
+export const assertAuthorized = (context: Context): void => {
 	const authorization = context.req.headers["authorization"];
 
 	if (!authorization) {
