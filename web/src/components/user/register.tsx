@@ -2,10 +2,16 @@ import React from "react";
 import { Container, Form, Button } from "react-bootstrap";
 import { useForm } from "react-hook-form";
 import { gql, useMutation } from "@apollo/client";
+import { useHistory } from "react-router-dom";
+
+import { AuthResult, FieldError } from "../../models/auth";
+import { isLoggedIn, setAccessToken } from "../../auth";
+import { Error } from "..";
 
 const REGISTER = gql`
 	mutation Register($nickname: String!, $email: String!, $password: String!) {
 		register(nickname: $nickname, email: $email, password: $password) {
+			accessToken
 			user {
 				id
 				nickname
@@ -19,35 +25,40 @@ const REGISTER = gql`
 	}
 `;
 
-interface FormState {
+type Fields = "nickname" | "email" | "password" | "confirmPassword";
+
+interface Data {
+	register: AuthResult<Fields>;
+}
+
+interface State {
 	nickname: string;
 	email: string;
 	password: string;
 	confirmPassword: string;
 }
 
-interface FormError {
-	field: "nickname" | "email" | "password" | "confirmPassword";
-	message: string;
-}
-
 export const Register = () => {
-	const { errors, getValues, handleSubmit, register, setError, setValue } = useForm<FormState>();
-	const [registerMutation] = useMutation(REGISTER);
+	const { errors, getValues, handleSubmit, register, setError, setValue } = useForm<State>();
+	const [registerMutation] = useMutation<Data, State>(REGISTER);
+	const history = useHistory();
 
-	const onSubmit = handleSubmit(async (state: FormState) => {
+	const onSubmit = handleSubmit(async (state: State) => {
 		const result = await registerMutation({
 			variables: state
 		});
 
-		if (result.data.register.errors) {
-			result.data.register.errors.forEach((error: FormError) => {
+		if (result.data!.register.errors) {
+			result.data!.register.errors.forEach((error: FieldError<Fields>) => {
 				setError(error.field, { type: "manual", message: error.message });
 				setValue("password", "", { shouldValidate: false });
 				setValue("confirmPassword", "", { shouldValidate: false });
 			});
 		} else {
-			console.log(result.data.register.user);
+			const accessToken = result.data!.register.accessToken;
+			setAccessToken(accessToken);
+
+			history.push("/");
 		}
 	});
 
@@ -55,6 +66,10 @@ export const Register = () => {
 		const values = getValues(["password", "confirmPassword"]);
 		return values.password === values.confirmPassword;
 	};
+
+	if (isLoggedIn()) {
+		return <Error message={"You are already logged in"} />;
+	}
 
 	return (
 		<Container className="bodyContainer">

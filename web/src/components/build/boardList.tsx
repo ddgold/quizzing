@@ -21,11 +21,15 @@ interface Board {
 	created: Date;
 }
 
+interface Data {
+	allBoards: Board[];
+}
+
 export const BoardList = () => {
-	const { data, error, loading } = useQuery(ALL_BOARDS);
+	const { data, error, loading } = useQuery<Data>(ALL_BOARDS, { fetchPolicy: "network-only" });
 
 	if (error) {
-		return <Error message={`Error! ${error.message}`} />;
+		return <Error message={error.message} />;
 	}
 
 	if (loading) {
@@ -43,7 +47,7 @@ export const BoardList = () => {
 					</tr>
 				</thead>
 				<tbody>
-					{data.allBoards.map((board: Board, index: number) => {
+					{data!.allBoards.map((board: Board, index: number) => {
 						const created = new Date(board.created);
 						return (
 							<tr key={index}>

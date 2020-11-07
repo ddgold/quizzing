@@ -29,7 +29,7 @@ const BoardWithoutRouter = (props: Props) => {
 	});
 
 	if (error) {
-		return <Error message={`Error! ${error.message}`} />;
+		return <Error message={error.message} />;
 	}
 
 	if (loading) {

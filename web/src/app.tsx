@@ -1,9 +1,33 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import Navbar from "react-bootstrap/esm/Navbar";
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 
-import { BoardList, Board, Error, Home, Header, Login, Register } from "./components";
+import { setAccessToken } from "./auth";
+import { BoardList, Board, Error, Home, Header, Login, Register, Loading } from "./components";
 
-function App() {
+export const App = () => {
+	const [loading, setLoading] = useState(true);
+
+	useEffect(() => {
+		console.log("useEffect");
+		fetch("http://localhost:8000/refreshToken", { method: "POST", credentials: "include" }).then(async (result) => {
+			const { accessToken } = await result.json();
+			console.log("refreshing...", accessToken);
+			setAccessToken(accessToken);
+			setLoading(false);
+		});
+	}, []);
+
+	if (loading) {
+		return (
+			<Router>
+				<Navbar bg="primary" variant="dark" style={{ marginBottom: "20px" }}>
+					<Navbar.Brand>Quizzing</Navbar.Brand>
+				</Navbar>
+				<Loading />
+			</Router>
+		);
+	}
 	return (
 		<Router>
 			<Header />
@@ -30,6 +54,4 @@ function App() {
 			</Switch>
 		</Router>
 	);
-}
-
-export default App;
+};

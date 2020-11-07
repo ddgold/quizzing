@@ -2,10 +2,16 @@ import React from "react";
 import { Container, Form, Button } from "react-bootstrap";
 import { useForm } from "react-hook-form";
 import { gql, useMutation } from "@apollo/client";
+import { useHistory } from "react-router-dom";
+
+import { AuthResult, FieldError } from "../../models/auth";
+import { isLoggedIn, setAccessToken } from "../../auth";
+import { Error } from "..";
 
 const LOGIN = gql`
 	mutation Login($email: String!, $password: String!) {
 		login(email: $email, password: $password) {
+			accessToken
 			user {
 				id
 				nickname
@@ -19,34 +25,43 @@ const LOGIN = gql`
 	}
 `;
 
-interface FormState {
+type Fields = "email" | "password";
+
+interface Data {
+	login: AuthResult<Fields>;
+}
+
+interface State {
 	email: string;
 	password: string;
 }
 
-interface FormError {
-	field: "email" | "password";
-	message: string;
-}
-
 export const Login = () => {
-	const { errors, handleSubmit, register, setError, setValue } = useForm<FormState>();
-	const [loginMutation] = useMutation(LOGIN);
+	const { errors, handleSubmit, register, setError, setValue } = useForm<State>();
+	const [loginMutation] = useMutation<Data, State>(LOGIN);
+	const history = useHistory();
 
-	const onSubmit = handleSubmit(async (state: FormState) => {
+	const onSubmit = handleSubmit(async (state: State) => {
 		const result = await loginMutation({
 			variables: state
 		});
 
-		if (result.data.login.errors) {
-			result.data.login.errors.forEach((error: FormError) => {
+		if (result.data!.login.errors) {
+			result.data!.login.errors.forEach((error: FieldError<Fields>) => {
 				setError(error.field, { type: "manual", message: error.message });
 				setValue("password", "", { shouldValidate: false });
 			});
 		} else {
-			console.log(result.data.login.user);
+			const accessToken = result.data!.login.accessToken;
+			setAccessToken(accessToken);
+
+			history.push("/");
 		}
 	});
+
+	if (isLoggedIn()) {
+		return <Error message={"You are already logged in"} />;
+	}
 
 	return (
 		<Container className="bodyContainer">
