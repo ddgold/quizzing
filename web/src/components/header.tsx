@@ -2,9 +2,11 @@ import React from "react";
 import { Navbar, Nav } from "react-bootstrap";
 import { Link, NavLink } from "react-router-dom";
 
-import { UserControl } from ".";
+import { useUserStatus, UserStatus } from ".";
 
 export const Header = () => {
+	const [userStatus, nickname] = useUserStatus();
+
 	return (
 		<>
 			<Navbar bg="primary" variant="dark" style={{ marginBottom: "20px" }}>
@@ -12,12 +14,28 @@ export const Header = () => {
 					Quizzing
 				</Navbar.Brand>
 				<Nav className="mr-auto">
-					<Nav.Link as={NavLink} to="/boards">
-						My Boards
-					</Nav.Link>
+					{userStatus === UserStatus.LoggedIn ? (
+						<Nav.Link as={NavLink} to="/boards">
+							My Boards
+						</Nav.Link>
+					) : null}
 				</Nav>
 				<Nav className="justify-content-end">
-					<UserControl />
+					{userStatus === UserStatus.LoggedIn ? (
+						<Nav.Link as={NavLink} to="/user">
+							{nickname}
+						</Nav.Link>
+					) : null}
+					{userStatus === UserStatus.LoggedOut ? (
+						<>
+							<Nav.Link as={NavLink} to="/login">
+								Login
+							</Nav.Link>
+							<Nav.Link as={NavLink} to="/register">
+								Register
+							</Nav.Link>
+						</>
+					) : null}
 				</Nav>
 			</Navbar>
 		</>

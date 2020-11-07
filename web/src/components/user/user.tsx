@@ -35,11 +35,8 @@ export const User = () => {
 		await logoutMutation();
 		setAccessToken("");
 
-		console.log("aaa");
 		history.push("/");
-		console.log("bbb");
 		await client!.resetStore();
-		console.log("ccc");
 	};
 
 	if (error) {
