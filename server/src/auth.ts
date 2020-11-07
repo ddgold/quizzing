@@ -32,7 +32,7 @@ export const sendRefreshToken = (res: Response, token: string): void => {
 	});
 };
 
-export const assertAuthorized = (context: Context): void => {
+export const assertAuthorized = async (context: Context): Promise<void> => {
 	const authorization = context.req.headers["authorization"];
 
 	if (!authorization) {
@@ -43,12 +43,20 @@ export const assertAuthorized = (context: Context): void => {
 		const token = authorization.split(" ")[1];
 		context.payload = verify(token, process.env.ACCESS_TOKEN_SECRET!) as TokenPayload;
 	} catch (error) {
-		console.log("Authentication error:", error);
+		console.log(`Authentication error: ${error}`);
 		throw new Error("Not Authorized");
 	}
 };
 
-export const postRefreshToken = async (req: Request, res: Response): Promise<Response<any>> => {
+interface RefreshResult {
+	success: boolean;
+	accessToken: string;
+}
+
+export const postRefreshToken = async (
+	req: Request,
+	res: Response<RefreshResult>
+): Promise<Response<RefreshResult>> => {
 	const token = req.cookies.qid;
 	if (!token) {
 		return res.send({ success: false, accessToken: "" });
@@ -57,13 +65,13 @@ export const postRefreshToken = async (req: Request, res: Response): Promise<Res
 	try {
 		const payload = verify(token, process.env.REFRESH_TOKEN_SECRET!) as TokenPayload;
 
-		const user = await UserModel.findOne({ id: payload.userId });
+		const user = await UserModel.findOne({ _id: payload.userId });
 		if (!user) {
-			return res.send({ success: false });
+			return res.send({ success: false, accessToken: "" });
 		}
 
-		sendRefreshToken(res, signRefreshToken(user.id));
-		return res.send({ ok: true, accessToken: signAccessToken(user.id) });
+		sendRefreshToken(res, signRefreshToken({ userId: user.id }));
+		return res.send({ success: true, accessToken: signAccessToken({ userId: user.id }) });
 	} catch (error) {
 		console.log("Refresh token error:", error);
 		return res.send({ success: false, accessToken: "" });

@@ -6,17 +6,17 @@ import { Context, assertAuthorized } from "../../auth";
 export const buildResolvers: IResolvers<any, Context> = {
 	Query: {
 		allBoards: async (_, {}, context): Promise<Board[]> => {
-			assertAuthorized(context);
+			await assertAuthorized(context);
 			return await BoardModel.find();
 		},
 		singleBoard: async (_, { id }, context): Promise<Board> => {
-			assertAuthorized(context);
+			await assertAuthorized(context);
 			return await BoardModel.findOne({ _id: id });
 		}
 	},
 	Mutation: {
 		createNew: async (_, { name }, context) => {
-			assertAuthorized(context);
+			await assertAuthorized(context);
 
 			// Create new board
 			try {

@@ -3,16 +3,14 @@ import Navbar from "react-bootstrap/esm/Navbar";
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 
 import { setAccessToken } from "./auth";
-import { BoardList, Board, Error, Home, Header, Login, Register, Loading } from "./components";
+import { BoardList, Board, Error, Home, Header, Login, Register, Loading, User } from "./components";
 
 export const App = () => {
 	const [loading, setLoading] = useState(true);
 
 	useEffect(() => {
-		console.log("useEffect");
 		fetch("http://localhost:8000/refreshToken", { method: "POST", credentials: "include" }).then(async (result) => {
 			const { accessToken } = await result.json();
-			console.log("refreshing...", accessToken);
 			setAccessToken(accessToken);
 			setLoading(false);
 		});
@@ -35,6 +33,9 @@ export const App = () => {
 			<Switch>
 				<Route exact path="/">
 					<Home />
+				</Route>
+				<Route exact path="/user">
+					<User />
 				</Route>
 				<Route exact path="/login">
 					<Login />

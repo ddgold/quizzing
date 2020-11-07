@@ -7,6 +7,7 @@ export { Loading } from "./loading";
 // User
 export { Login } from "./user/login";
 export { Register } from "./user/register";
+export { User } from "./user/user";
 
 // Build
 export { Board } from "./build/board";

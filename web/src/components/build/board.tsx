@@ -23,6 +23,7 @@ interface Props extends RouteComponentProps {}
 
 const BoardWithoutRouter = (props: Props) => {
 	const { data, error, loading } = useQuery(SINGLE_BOARD, {
+		fetchPolicy: "network-only",
 		variables: {
 			id: (props.match.params as PathVariables).id
 		}

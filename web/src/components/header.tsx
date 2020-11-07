@@ -18,5 +18,10 @@ export const Header = () => (
 				My Boards
 			</Nav.Link>
 		</Nav>
+		<Nav className="justify-content-end" activeKey="/home">
+			<Nav.Link as={NavLink} to="/user">
+				User
+			</Nav.Link>
+		</Nav>
 	</Navbar>
 );

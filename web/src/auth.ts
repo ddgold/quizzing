@@ -9,5 +9,5 @@ export const getAccessToken = () => {
 };
 
 export const isLoggedIn = () => {
-	return accessToken !== "";
+	return !!accessToken;
 };

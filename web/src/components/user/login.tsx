@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { gql, useMutation } from "@apollo/client";
 import { useHistory } from "react-router-dom";
 
-import { AuthResult, FieldError } from "../../models/auth";
+import { AuthResult, FieldError } from "../../models/user";
 import { isLoggedIn, setAccessToken } from "../../auth";
 import { Error } from "..";
 

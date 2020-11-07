@@ -43,7 +43,7 @@ export const userResolvers: IResolvers<any, Context> = {
 			await user.save();
 
 			// Return user
-			sendRefreshToken(context.res, signRefreshToken(user.id));
+			sendRefreshToken(context.res, signRefreshToken({ userId: user.id }));
 			return { accessToken: signAccessToken({ userId: user.id }), user: user };
 		},
 		logout: async (_, {}, context): Promise<boolean> => {
@@ -73,7 +73,7 @@ export const userResolvers: IResolvers<any, Context> = {
 				const newUser = await UserModel.create({ nickname: nickname, email: email, password: password });
 
 				// Return new user
-				sendRefreshToken(context.res, signRefreshToken(newUser.id));
+				sendRefreshToken(context.res, signRefreshToken({ userId: newUser.id }));
 				return { accessToken: signAccessToken({ userId: newUser.id }), user: newUser };
 			} catch (error) {
 				console.log("Register mutation error:", error);
