@@ -6,7 +6,7 @@ type FormError {
 }
 
 # ----
-# Auth
+# User
 # ----
 type User {
 	id: String!
@@ -38,7 +38,8 @@ type BoardResult {
 # Queries
 # -------
 type Query {
-	# Auth
+	# User
+	currentUser: User
 	userByEmail(email: String!): User
 
 	# Build
@@ -50,7 +51,7 @@ type Query {
 # Mutations
 # ---------
 type Mutation {
-	# Auth
+	# User
 	login(email: String!, password: String!): AuthResult!
 	logout: Boolean
 	register(nickname: String!, email: String!, password: String!): AuthResult!

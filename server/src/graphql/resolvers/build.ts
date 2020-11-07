@@ -1,15 +1,15 @@
 import { IResolvers } from "graphql-tools";
 
-import { BoardModel } from "../../database";
+import { Board, BoardModel } from "../../database";
 import { Context, assertAuthorized } from "../../auth";
 
 export const buildResolvers: IResolvers<any, Context> = {
 	Query: {
-		allBoards: async (_, {}, context) => {
+		allBoards: async (_, {}, context): Promise<Board[]> => {
 			assertAuthorized(context);
 			return await BoardModel.find();
 		},
-		singleBoard: async (_, { id }, context) => {
+		singleBoard: async (_, { id }, context): Promise<Board> => {
 			assertAuthorized(context);
 			return await BoardModel.findOne({ _id: id });
 		}

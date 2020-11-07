@@ -1,6 +1,6 @@
 import { IResolvers } from "graphql-tools";
 
-import { UserDocument, UserModel } from "../../database";
+import { User, UserDocument, UserModel } from "../../database";
 import { Context, assertAuthorized, sendRefreshToken, signAccessToken, signRefreshToken } from "../../auth";
 
 interface AuthResult {
@@ -9,10 +9,18 @@ interface AuthResult {
 	errors?: { message: string; field: string }[];
 }
 
-export const authResolvers: IResolvers<any, Context> = {
+export const userResolvers: IResolvers<any, Context> = {
 	Query: {
-		userByEmail: async (_, { email }, context) => {
-			assertAuthorized(context);
+		currentUser: async (_, {}, context): Promise<User> => {
+			try {
+				await assertAuthorized(context);
+				return await UserModel.findOne({ _id: context.payload!.userId });
+			} catch (error) {
+				return null;
+			}
+		},
+		userByEmail: async (_, { email }, context): Promise<User> => {
+			await assertAuthorized(context);
 			return await UserModel.findOne({ email: email });
 		}
 	},
@@ -36,7 +44,7 @@ export const authResolvers: IResolvers<any, Context> = {
 
 			// Return user
 			sendRefreshToken(context.res, signRefreshToken(user.id));
-			return { accessToken: signAccessToken(user.id), user: user };
+			return { accessToken: signAccessToken({ userId: user.id }), user: user };
 		},
 		logout: async (_, {}, context): Promise<boolean> => {
 			// Clear refresh token
@@ -66,7 +74,7 @@ export const authResolvers: IResolvers<any, Context> = {
 
 				// Return new user
 				sendRefreshToken(context.res, signRefreshToken(newUser.id));
-				return { accessToken: signAccessToken(newUser.id), user: newUser };
+				return { accessToken: signAccessToken({ userId: newUser.id }), user: newUser };
 			} catch (error) {
 				console.log("Register mutation error:", error);
 				return { user: undefined, errors: [{ message: "Unknown error creating new account", field: "email" }] };

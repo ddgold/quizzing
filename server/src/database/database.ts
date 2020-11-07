@@ -29,7 +29,7 @@ export default class Database {
 		});
 	}
 
-	disconnect() {
+	disconnect(): void {
 		if (!this.connection) {
 			return;
 		}

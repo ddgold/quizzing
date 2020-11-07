@@ -13,26 +13,26 @@ interface TokenPayload {
 	userId: string;
 }
 
-export const signAccessToken = (payload: TokenPayload) => {
+export const signAccessToken = (payload: TokenPayload): string => {
 	return sign({ userId: payload.userId }, process.env.ACCESS_TOKEN_SECRET!, {
 		expiresIn: "15m"
 	});
 };
 
-export const signRefreshToken = (payload: TokenPayload) => {
+export const signRefreshToken = (payload: TokenPayload): string => {
 	return sign({ userId: payload.userId }, process.env.REFRESH_TOKEN_SECRET!, {
 		expiresIn: "7d"
 	});
 };
 
-export const sendRefreshToken = (res: Response, token: string) => {
+export const sendRefreshToken = (res: Response, token: string): void => {
 	res.cookie("qid", token, {
 		httpOnly: true,
 		path: "/refreshToken"
 	});
 };
 
-export const assertAuthorized = (context: Context) => {
+export const assertAuthorized = async (context: Context): Promise<void> => {
 	const authorization = context.req.headers["authorization"];
 
 	if (!authorization) {
@@ -48,7 +48,7 @@ export const assertAuthorized = (context: Context) => {
 	}
 };
 
-export const postRefreshToken = async (req: Request, res: Response) => {
+export const postRefreshToken = async (req: Request, res: Response): Promise<Response<any>> => {
 	const token = req.cookies.qid;
 	if (!token) {
 		return res.send({ success: false, accessToken: "" });

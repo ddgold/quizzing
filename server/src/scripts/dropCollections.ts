@@ -1,6 +1,6 @@
 import Database, { UserModel } from "../database";
 
-const createDummyUsers = (url: string) => {
+const createDummyUsers = (url: string): void => {
 	let database = new Database();
 	database
 		.connect(url)

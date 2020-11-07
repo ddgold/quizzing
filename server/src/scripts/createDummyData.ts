@@ -1,6 +1,6 @@
 import Database, { BoardModel, UserModel } from "../database";
 
-const createDummyUsers = async () => {
+const createDummyUsers = async (): Promise<void> => {
 	const users = [
 		{ nickname: "Emma", email: "emma@test.com", password: "Pa$sw0rd" },
 		{ nickname: "Jack", email: "jack@test.com", password: "Pa$sw0rd" },
@@ -20,7 +20,7 @@ const createDummyUsers = async () => {
 	}
 };
 
-const createDummyBoards = async () => {
+const createDummyBoards = async (): Promise<void> => {
 	const boards = [
 		{ name: "Civil War History" },
 		{ name: "American Geography" },
@@ -39,7 +39,7 @@ const createDummyBoards = async () => {
 	}
 };
 
-const createDummyData = (url: string) => {
+const createDummyData = async (url: string): Promise<void> => {
 	let database = new Database();
 	database
 		.connect(url)
