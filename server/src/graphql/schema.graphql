@@ -57,5 +57,5 @@ type Mutation {
 	register(nickname: String!, email: String!, password: String!): AuthResult!
 
 	# Build
-	createNew(name: String!): BoardResult!
+	createNewBoard(name: String!): BoardResult!
 }

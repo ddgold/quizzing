@@ -15,7 +15,7 @@ export const buildResolvers: IResolvers<any, Context> = {
 		}
 	},
 	Mutation: {
-		createNew: async (_, { name }, context) => {
+		createNewBoard: async (_, { name }, context) => {
 			await assertAuthorized(context);
 
 			// Create new board

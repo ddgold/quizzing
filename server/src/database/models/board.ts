@@ -8,7 +8,6 @@ export interface Board {
 const BoardSchema = new Schema({
 	name: {
 		type: String,
-		unique: true,
 		required: true
 	},
 	created: {
