@@ -2,18 +2,23 @@ import { Document, Model, model, Schema } from "mongoose";
 
 export interface Board {
 	name: string;
+	creator: string;
 	created?: Date;
 }
 
 const BoardSchema = new Schema({
 	name: {
-		type: String,
+		type: Schema.Types.String,
 		required: true,
 		maxlength: 32,
 		match: /^[A-Za-z0-9 ]*$/
 	},
+	creator: {
+		type: Schema.Types.ObjectId,
+		required: true
+	},
 	created: {
-		type: Date,
+		type: Schema.Types.Date,
 		default: new Date()
 	}
 });

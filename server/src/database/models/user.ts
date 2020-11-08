@@ -11,7 +11,7 @@ export interface User {
 
 const UserSchema = new Schema({
 	nickname: {
-		type: String,
+		type: Schema.Types.String,
 		unique: true,
 		required: true,
 		minlength: 3,
@@ -19,25 +19,25 @@ const UserSchema = new Schema({
 		match: /^[A-Za-z0-9_]*$/
 	},
 	email: {
-		type: String,
+		type: Schema.Types.String,
 		unique: true,
 		required: true,
 		maxlength: 64,
 		match: /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$/
 	},
 	password: {
-		type: String,
+		type: Schema.Types.String,
 		required: true,
 		minlength: 8,
 		maxlength: 64,
 		match: /(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[~!@#$%^*-_=+])/
 	},
 	created: {
-		type: Date,
+		type: Schema.Types.Date,
 		default: new Date()
 	},
 	lastLogin: {
-		type: Date,
+		type: Schema.Types.Date,
 		default: new Date()
 	}
 });

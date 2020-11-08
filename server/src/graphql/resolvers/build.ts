@@ -1,6 +1,6 @@
 import { IResolvers } from "graphql-tools";
 
-import { Board, BoardModel } from "../../database";
+import { Board, BoardModel, UserModel } from "../../database";
 import { Context, assertAuthorized } from "../../auth";
 
 export const buildResolvers: IResolvers<any, Context> = {
@@ -8,6 +8,11 @@ export const buildResolvers: IResolvers<any, Context> = {
 		allBoards: async (_, {}, context): Promise<Board[]> => {
 			await assertAuthorized(context);
 			return await BoardModel.find();
+		},
+		myBoards: async (_, {}, context): Promise<Board[]> => {
+			await assertAuthorized(context);
+			const currentUser = await UserModel.findOne({ _id: context.payload!.userId });
+			return await BoardModel.find({ creator: currentUser._id });
 		},
 		singleBoard: async (_, { id }, context): Promise<Board> => {
 			await assertAuthorized(context);
@@ -20,7 +25,8 @@ export const buildResolvers: IResolvers<any, Context> = {
 
 			// Create new board
 			try {
-				const newBoard = await BoardModel.create({ name: name });
+				const currentUser = await UserModel.findOne({ _id: context.payload!.userId });
+				const newBoard = await BoardModel.create({ name: name, creator: currentUser._id });
 				return { board: newBoard };
 			} catch (error) {
 				switch (error.name) {
