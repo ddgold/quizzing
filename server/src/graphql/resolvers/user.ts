@@ -76,8 +76,15 @@ export const userResolvers: IResolvers<any, Context> = {
 				sendRefreshToken(context.res, signRefreshToken({ userId: newUser.id }));
 				return { accessToken: signAccessToken({ userId: newUser.id }), user: newUser };
 			} catch (error) {
-				console.log("Register mutation error:", error);
-				return { user: undefined, errors: [{ message: "Unknown error creating new account", field: "email" }] };
+				switch (error.name) {
+					case "ValidationError":
+						console.log(`Register mutation error: ${error.message}`);
+						break;
+					default:
+						console.log("Register mutation unknown error:", error);
+				}
+
+				return { user: undefined, errors: [{ message: "Error creating new account", field: "email" }] };
 			}
 		}
 	}

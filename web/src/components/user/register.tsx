@@ -86,8 +86,16 @@ export const Register = () => {
 								value: true,
 								message: "Nickname is required"
 							},
+							minLength: {
+								value: 3,
+								message: "Nickname must be at least 3 characters"
+							},
+							maxLength: {
+								value: 18,
+								message: "Nickname must be at most 18 characters"
+							},
 							pattern: {
-								value: /^[A-Za-z0-9_]*$/i,
+								value: /^[A-Za-z0-9_]*$/,
 								message: "Nickname can only include letters, numbers, and underscores (_)"
 							}
 						})}
@@ -106,6 +114,10 @@ export const Register = () => {
 							required: {
 								value: true,
 								message: "Email address is required"
+							},
+							maxLength: {
+								value: 64,
+								message: "Email must be at most 64 characters"
 							},
 							pattern: {
 								value: /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$/,
@@ -131,6 +143,10 @@ export const Register = () => {
 							minLength: {
 								value: 8,
 								message: "Password must be at least 8 characters"
+							},
+							maxLength: {
+								value: 64,
+								message: "Password must be at most 64 characters"
 							},
 							pattern: {
 								value: /(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[~!@#$%^*-_=+])/,
