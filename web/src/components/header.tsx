@@ -15,9 +15,14 @@ export const Header = () => {
 				</Navbar.Brand>
 				<Nav className="mr-auto">
 					{userStatus === UserStatus.LoggedIn ? (
-						<Nav.Link as={NavLink} to="/boards">
-							My Boards
-						</Nav.Link>
+						<>
+							<Nav.Link as={NavLink} to="/boards/all">
+								All Boards
+							</Nav.Link>
+							<Nav.Link as={NavLink} to="/boards/my">
+								My Boards
+							</Nav.Link>
+						</>
 					) : null}
 				</Nav>
 				<Nav className="justify-content-end">

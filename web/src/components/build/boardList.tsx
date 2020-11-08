@@ -6,9 +6,9 @@ import { gql, useQuery } from "@apollo/client";
 import { CreateNewBoard, Error, Loading } from "..";
 import { BoardModel } from "../../models/board";
 
-const ALL_BOARDS = gql`
-	query AllBoards {
-		allBoards {
+const BOARDS = gql`
+	query Boards($showAll: Boolean!) {
+		boards(showAll: $showAll) {
 			id
 			name
 			created
@@ -17,11 +17,18 @@ const ALL_BOARDS = gql`
 `;
 
 interface Data {
-	allBoards: BoardModel[];
+	boards: BoardModel[];
 }
 
-export const BoardList = () => {
-	const { data, error, loading } = useQuery<Data>(ALL_BOARDS, { fetchPolicy: "network-only" });
+interface Props {
+	showAll: boolean;
+}
+
+export const BoardList = ({ showAll }: Props) => {
+	const { data, error, loading } = useQuery<Data, Props>(BOARDS, {
+		fetchPolicy: "network-only",
+		variables: { showAll }
+	});
 
 	if (error) {
 		return <Error message={error.message} />;
@@ -35,7 +42,7 @@ export const BoardList = () => {
 		<Container className="bodyContainer">
 			<Row>
 				<Col>
-					<h1>Board List</h1>
+					<h1>{showAll ? "All Boards" : "My Boards"}</h1>
 				</Col>
 				<Col style={{ paddingTop: "8px" }} xs="auto">
 					<CreateNewBoard />
@@ -50,12 +57,12 @@ export const BoardList = () => {
 					</tr>
 				</thead>
 				<tbody>
-					{data!.allBoards.map((board: BoardModel, index: number) => {
+					{data!.boards.map((board: BoardModel, index: number) => {
 						const created = new Date(board.created);
 						return (
 							<tr key={index}>
 								<td>
-									<Link to={"./boards/" + board.id}>{board.name}</Link>
+									<Link to={"/boards/id/" + board.id}>{board.name}</Link>
 								</td>
 								<td>{created.toLocaleString()}</td>
 							</tr>

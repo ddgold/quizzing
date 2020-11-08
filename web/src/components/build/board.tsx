@@ -6,9 +6,9 @@ import { gql, useQuery } from "@apollo/client";
 import { Error, Loading } from "..";
 import { BoardModel } from "../../models/board";
 
-const SINGLE_BOARD = gql`
-	query SingeBoard($id: String!) {
-		singleBoard(id: $id) {
+const BOARD_BY_ID = gql`
+	query BoardById($id: String!) {
+		boardById(id: $id) {
 			id
 			name
 			created
@@ -17,7 +17,7 @@ const SINGLE_BOARD = gql`
 `;
 
 interface Data {
-	singleBoard: BoardModel;
+	boardById: BoardModel;
 }
 
 interface PathVariables {
@@ -27,7 +27,7 @@ interface PathVariables {
 interface Props extends RouteComponentProps {}
 
 const BoardWithoutRouter = (props: Props) => {
-	const { data, error, loading } = useQuery<Data>(SINGLE_BOARD, {
+	const { data, error, loading } = useQuery<Data, PathVariables>(BOARD_BY_ID, {
 		fetchPolicy: "network-only",
 		variables: {
 			id: (props.match.params as PathVariables).id
@@ -44,7 +44,7 @@ const BoardWithoutRouter = (props: Props) => {
 
 	return (
 		<Container className="bodyContainer">
-			<h1>{data!.singleBoard.name}</h1>
+			<h1>{data!.boardById.name}</h1>
 		</Container>
 	);
 };

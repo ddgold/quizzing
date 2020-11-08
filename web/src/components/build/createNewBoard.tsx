@@ -59,7 +59,7 @@ export const CreateNewBoard = () => {
 			setShowModal(false);
 
 			const newBoardId = result.data!.createNewBoard.board.id;
-			history.push(`/boards/${newBoardId}`);
+			history.push(`/boards/id/${newBoardId}`);
 		}
 	});
 

@@ -43,10 +43,13 @@ export const App = () => {
 				<Route exact path="/register">
 					<Register />
 				</Route>
-				<Route exact path="/boards">
-					<BoardList />
+				<Route exact path="/boards/all">
+					<BoardList showAll={true} />
 				</Route>
-				<Route exact path="/boards/:id">
+				<Route exact path="/boards/my">
+					<BoardList showAll={false} />
+				</Route>
+				<Route exact path="/boards/id/:id">
 					<Board />
 				</Route>
 				<Route>

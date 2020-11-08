@@ -26,6 +26,7 @@ type AuthResult {
 type Board {
 	id: String!
 	name: String!
+	creator: String!
 	created: Date!
 }
 
@@ -43,9 +44,8 @@ type Query {
 	userByEmail(email: String!): User
 
 	# Build
-	allBoards: [Board!]
-	myBoards: [Board!]
-	singleBoard(id: String!): Board
+	boards(showAll: Boolean!): [Board!]
+	boardById(id: String!): Board
 }
 
 # ---------

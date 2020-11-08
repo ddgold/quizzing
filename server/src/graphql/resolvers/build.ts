@@ -5,16 +5,16 @@ import { Context, assertAuthorized } from "../../auth";
 
 export const buildResolvers: IResolvers<any, Context> = {
 	Query: {
-		allBoards: async (_, {}, context): Promise<Board[]> => {
+		boards: async (_, { showAll }, context): Promise<Board[]> => {
 			await assertAuthorized(context);
-			return await BoardModel.find();
+			if (showAll) {
+				return await BoardModel.find();
+			} else {
+				const currentUser = await UserModel.findOne({ _id: context.payload!.userId });
+				return await BoardModel.find({ creator: currentUser._id });
+			}
 		},
-		myBoards: async (_, {}, context): Promise<Board[]> => {
-			await assertAuthorized(context);
-			const currentUser = await UserModel.findOne({ _id: context.payload!.userId });
-			return await BoardModel.find({ creator: currentUser._id });
-		},
-		singleBoard: async (_, { id }, context): Promise<Board> => {
+		boardById: async (_, { id }, context): Promise<Board> => {
 			await assertAuthorized(context);
 			return await BoardModel.findOne({ _id: id });
 		}

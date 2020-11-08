@@ -19,7 +19,8 @@ const BoardSchema = new Schema({
 	},
 	created: {
 		type: Schema.Types.Date,
-		default: new Date()
+		default: new Date(),
+		required: true
 	}
 });
 
