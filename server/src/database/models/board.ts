@@ -8,12 +8,23 @@ export interface Board {
 const BoardSchema = new Schema({
 	name: {
 		type: String,
-		required: true
+		required: true,
+		maxlength: 32,
+		match: /^[A-Za-z0-9 ]*$/
 	},
 	created: {
 		type: Date,
 		default: new Date()
 	}
+});
+
+// Sanitize name
+BoardSchema.pre("save", async function (this: BoardDocument, next) {
+	if (!this.isModified("name")) {
+		return next();
+	}
+	this.name = this.name.trim();
+	return next();
 });
 
 export interface BoardDocument extends Board, Document {}

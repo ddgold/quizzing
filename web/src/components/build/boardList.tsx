@@ -1,9 +1,10 @@
 import React from "react";
-import { Container, Table } from "react-bootstrap";
+import { Col, Container, Row, Table } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { gql, useQuery } from "@apollo/client";
 
-import { Error, Loading } from "..";
+import { CreateNewBoard, Error, Loading } from "..";
+import { BoardModel } from "../../models/board";
 
 const ALL_BOARDS = gql`
 	query AllBoards {
@@ -15,18 +16,12 @@ const ALL_BOARDS = gql`
 	}
 `;
 
-interface Board {
-	id: string;
-	name: string;
-	created: Date;
-}
-
 interface Data {
-	allBoards: Board[];
+	allBoards: BoardModel[];
 }
 
 export const BoardList = () => {
-	const { data, error, loading } = useQuery<Data, {}>(ALL_BOARDS, { fetchPolicy: "network-only" });
+	const { data, error, loading } = useQuery<Data>(ALL_BOARDS, { fetchPolicy: "network-only" });
 
 	if (error) {
 		return <Error message={error.message} />;
@@ -38,7 +33,15 @@ export const BoardList = () => {
 
 	return (
 		<Container className="bodyContainer">
-			<h1>Board List</h1>
+			<Row>
+				<Col>
+					<h1>Board List</h1>
+				</Col>
+				<Col style={{ paddingTop: "8px" }} xs="auto">
+					<CreateNewBoard />
+				</Col>
+			</Row>
+
 			<Table striped bordered hover>
 				<thead>
 					<tr>
@@ -47,7 +50,7 @@ export const BoardList = () => {
 					</tr>
 				</thead>
 				<tbody>
-					{data!.allBoards.map((board: Board, index: number) => {
+					{data!.allBoards.map((board: BoardModel, index: number) => {
 						const created = new Date(board.created);
 						return (
 							<tr key={index}>

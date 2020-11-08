@@ -13,3 +13,4 @@ export { useUserStatus, UserStatus } from "./user/useUserStatus";
 // Build
 export { Board } from "./build/board";
 export { BoardList } from "./build/boardList";
+export { CreateNewBoard } from "./build/createNewBoard";

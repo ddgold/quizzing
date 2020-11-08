@@ -23,8 +23,14 @@ export const buildResolvers: IResolvers<any, Context> = {
 				const newBoard = await BoardModel.create({ name: name });
 				return { board: newBoard };
 			} catch (error) {
-				console.log("Create new board mutation error:", error);
-				return { board: undefined, errors: [{ message: "Unknown error creating new board", field: "name" }] };
+				switch (error.name) {
+					case "ValidationError":
+						console.log(`Create new board mutation error: ${error.message}`);
+						break;
+					default:
+						console.log("Create new board mutation unknown error:", error);
+				}
+				return { board: undefined, errors: [{ message: "Error creating new board", field: "name" }] };
 			}
 		}
 	}

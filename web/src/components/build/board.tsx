@@ -4,6 +4,7 @@ import { RouteComponentProps, withRouter } from "react-router-dom";
 import { gql, useQuery } from "@apollo/client";
 
 import { Error, Loading } from "..";
+import { BoardModel } from "../../models/board";
 
 const SINGLE_BOARD = gql`
 	query SingeBoard($id: String!) {
@@ -15,6 +16,10 @@ const SINGLE_BOARD = gql`
 	}
 `;
 
+interface Data {
+	singleBoard: BoardModel;
+}
+
 interface PathVariables {
 	id: string;
 }
@@ -22,7 +27,7 @@ interface PathVariables {
 interface Props extends RouteComponentProps {}
 
 const BoardWithoutRouter = (props: Props) => {
-	const { data, error, loading } = useQuery(SINGLE_BOARD, {
+	const { data, error, loading } = useQuery<Data>(SINGLE_BOARD, {
 		fetchPolicy: "network-only",
 		variables: {
 			id: (props.match.params as PathVariables).id
@@ -39,7 +44,7 @@ const BoardWithoutRouter = (props: Props) => {
 
 	return (
 		<Container className="bodyContainer">
-			<h1>{data.singleBoard.name}</h1>
+			<h1>{data!.singleBoard.name}</h1>
 		</Container>
 	);
 };
