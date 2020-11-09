@@ -23,6 +23,25 @@ type AuthResult {
 # -----
 # Build
 # -----
+type Clue {
+	answer: String!
+	question: String!
+}
+
+type Category {
+	id: String!
+	name: String!
+	description: String
+	clues: [Clue]!
+	creator: User!
+	created: Date!
+}
+
+type CategoryResult {
+	category: Category
+	errors: [FormError!]
+}
+
 type Board {
 	id: String!
 	name: String!
@@ -46,6 +65,8 @@ type Query {
 	# Build
 	boards(showAll: Boolean!): [Board!]
 	boardById(id: String!): Board
+	categories(showAll: Boolean!): [Category!]
+	categoryById(id: String!): Category
 }
 
 # ---------
@@ -59,4 +80,5 @@ type Mutation {
 
 	# Build
 	createNewBoard(name: String!): BoardResult!
+	createNewCategory(name: String!): CategoryResult!
 }

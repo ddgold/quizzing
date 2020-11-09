@@ -65,7 +65,7 @@ export const userResolvers: IResolvers<any, Context> = {
 
 			// Return any errors
 			if (errors.length) {
-				return { user: undefined, errors: errors };
+				return { errors: errors };
 			}
 
 			// Create new user
@@ -83,7 +83,7 @@ export const userResolvers: IResolvers<any, Context> = {
 					default:
 						console.log("Register mutation unknown error:", error);
 				}
-				return { user: undefined, errors: [{ message: "Error creating new account", field: "email" }] };
+				return { errors: [{ message: "Error creating new account", field: "email" }] };
 			}
 		}
 	}

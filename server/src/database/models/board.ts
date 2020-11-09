@@ -27,10 +27,9 @@ const BoardSchema = new Schema({
 
 // Sanitize name
 BoardSchema.pre("save", async function (this: BoardDocument, next) {
-	if (!this.isModified("name")) {
-		return next();
+	if (this.isModified("name")) {
+		this.name = this.name.trim();
 	}
-	this.name = this.name.trim();
 	return next();
 });
 
