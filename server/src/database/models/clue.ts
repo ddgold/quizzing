@@ -1,6 +1,6 @@
 import { Document, Model, model, Schema } from "mongoose";
 
-export interface Clue {
+interface Clue {
 	answer: String;
 	question: String;
 }
@@ -10,7 +10,7 @@ const ClueSchema = new Schema({
 		type: Schema.Types.String,
 		required: true,
 		minlength: 1,
-		maxlength: 64
+		maxlength: 128
 	},
 	question: {
 		type: Schema.Types.String,

@@ -1,6 +1,6 @@
 import { Document, Model, model, Schema } from "mongoose";
 
-export interface Board {
+interface Board {
 	name: string;
 	creator: string;
 	created?: Date;

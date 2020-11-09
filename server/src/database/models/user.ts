@@ -1,7 +1,7 @@
 import { Document, Model, model, Schema } from "mongoose";
 import bcrypt from "bcryptjs";
 
-export interface User {
+interface User {
 	nickname: string;
 	email: string;
 	password: string;

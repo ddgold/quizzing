@@ -1,11 +1,11 @@
 import { IResolvers } from "graphql-tools";
 
-import { Board, BoardModel, Category, CategoryModel } from "../../database";
+import { BoardDocument, BoardModel, CategoryDocument, CategoryModel } from "../../database";
 import { Context, assertAuthorized } from "../../auth";
 
 export const buildResolvers: IResolvers<any, Context> = {
 	Query: {
-		boards: async (_, { showAll }, context): Promise<Board[]> => {
+		boards: async (_, { showAll }, context): Promise<BoardDocument[]> => {
 			await assertAuthorized(context);
 			if (showAll) {
 				return await BoardModel.find().populate("creator").exec();
@@ -13,21 +13,24 @@ export const buildResolvers: IResolvers<any, Context> = {
 				return await BoardModel.find({ creator: context.payload!.userId }).populate("creator").exec();
 			}
 		},
-		boardById: async (_, { id }, context): Promise<Board> => {
+		boardById: async (_, { id }, context): Promise<BoardDocument> => {
 			await assertAuthorized(context);
 			return await BoardModel.findById(id).populate("creator").exec();
 		},
-		categories: async (_, { showAll }, context): Promise<Category[]> => {
+		categories: async (_, { showAll }, context): Promise<CategoryDocument[]> => {
 			await assertAuthorized(context);
 			if (showAll) {
-				return await CategoryModel.find().populate("creator").exec();
+				return await CategoryModel.find().populate("creator").populate("clues").exec();
 			} else {
-				return await CategoryModel.find({ creator: context.payload!.userId }).populate("creator").exec();
+				return await CategoryModel.find({ creator: context.payload!.userId })
+					.populate("creator")
+					.populate("clues")
+					.exec();
 			}
 		},
-		categoryById: async (_, { id }, context): Promise<Category> => {
+		categoryById: async (_, { id }, context): Promise<CategoryDocument> => {
 			await assertAuthorized(context);
-			return await CategoryModel.findById(id).populate("creator").exec();
+			return await CategoryModel.findById(id).populate("creator").populate("clues").exec();
 		}
 	},
 	Mutation: {

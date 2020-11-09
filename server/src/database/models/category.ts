@@ -1,6 +1,6 @@
 import { Document, Model, model, Schema } from "mongoose";
 
-export interface Category {
+interface Category {
 	name: String;
 	description?: String;
 	clues?: String[];
@@ -21,7 +21,7 @@ const CategorySchema = new Schema({
 		maxlength: 64
 	},
 	clues: {
-		type: [Schema.Types.ObjectId],
+		type: [{ type: Schema.Types.ObjectId, ref: "clue" }],
 		default: []
 	},
 	creator: {

@@ -1,6 +1,6 @@
 import { IResolvers } from "graphql-tools";
 
-import { User, UserDocument, UserModel } from "../../database";
+import { UserDocument, UserModel } from "../../database";
 import { Context, assertAuthorized, sendRefreshToken, signAccessToken, signRefreshToken } from "../../auth";
 
 interface AuthResult {
@@ -11,7 +11,7 @@ interface AuthResult {
 
 export const userResolvers: IResolvers<any, Context> = {
 	Query: {
-		currentUser: async (_, {}, context): Promise<User> => {
+		currentUser: async (_, {}, context): Promise<UserDocument> => {
 			try {
 				await assertAuthorized(context);
 				return await UserModel.findById(context.payload!.userId).exec();
@@ -19,7 +19,7 @@ export const userResolvers: IResolvers<any, Context> = {
 				return null;
 			}
 		},
-		userByEmail: async (_, { email }, context): Promise<User> => {
+		userByEmail: async (_, { email }, context): Promise<UserDocument> => {
 			await assertAuthorized(context);
 			return await UserModel.findOne({ email: email }).exec();
 		}
