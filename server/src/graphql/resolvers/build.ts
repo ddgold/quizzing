@@ -8,15 +8,14 @@ export const buildResolvers: IResolvers<any, Context> = {
 		boards: async (_, { showAll }, context): Promise<Board[]> => {
 			await assertAuthorized(context);
 			if (showAll) {
-				return await BoardModel.find();
+				return await BoardModel.find().populate("creator").exec();
 			} else {
-				const currentUser = await UserModel.findOne({ _id: context.payload!.userId });
-				return await BoardModel.find({ creator: currentUser._id });
+				return await BoardModel.find({ creator: context.payload!.userId }).populate("creator").exec();
 			}
 		},
 		boardById: async (_, { id }, context): Promise<Board> => {
 			await assertAuthorized(context);
-			return await BoardModel.findOne({ _id: id });
+			return await BoardModel.findById(id).populate("creator").exec();
 		}
 	},
 	Mutation: {
@@ -25,8 +24,7 @@ export const buildResolvers: IResolvers<any, Context> = {
 
 			// Create new board
 			try {
-				const currentUser = await UserModel.findOne({ _id: context.payload!.userId });
-				const newBoard = await BoardModel.create({ name: name, creator: currentUser._id });
+				const newBoard = await BoardModel.create({ name: name, creator: context.payload!.userId });
 				return { board: newBoard };
 			} catch (error) {
 				switch (error.name) {

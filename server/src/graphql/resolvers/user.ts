@@ -14,20 +14,20 @@ export const userResolvers: IResolvers<any, Context> = {
 		currentUser: async (_, {}, context): Promise<User> => {
 			try {
 				await assertAuthorized(context);
-				return await UserModel.findOne({ _id: context.payload!.userId });
+				return await UserModel.findById(context.payload!.userId).exec();
 			} catch (error) {
 				return null;
 			}
 		},
 		userByEmail: async (_, { email }, context): Promise<User> => {
 			await assertAuthorized(context);
-			return await UserModel.findOne({ email: email });
+			return await UserModel.findOne({ email: email }).exec();
 		}
 	},
 	Mutation: {
 		login: async (_, { email, password }, context): Promise<AuthResult> => {
 			// Check user with email exists
-			const user = await UserModel.findOne({ email: email });
+			const user = await UserModel.findOne({ email: email }).exec();
 			if (!user) {
 				return { errors: [{ message: "Incorrect email and/or password", field: "email" }] };
 			}
@@ -54,12 +54,12 @@ export const userResolvers: IResolvers<any, Context> = {
 		register: async (_, { nickname, email, password }, context): Promise<AuthResult> => {
 			let errors = [];
 			// Check there's no existing user using this nickname
-			if (await UserModel.findOne({ nickname: nickname })) {
+			if (await UserModel.findOne({ nickname: nickname }).exec()) {
 				errors.push({ message: "Existing account using that nickname found", field: "nickname" });
 			}
 
 			// Check there's no existing user using this email
-			if (await UserModel.findOne({ email: email })) {
+			if (await UserModel.findOne({ email: email }).exec()) {
 				errors.push({ message: "Existing account using that email found", field: "email" });
 			}
 
@@ -83,7 +83,6 @@ export const userResolvers: IResolvers<any, Context> = {
 					default:
 						console.log("Register mutation unknown error:", error);
 				}
-
 				return { user: undefined, errors: [{ message: "Error creating new account", field: "email" }] };
 			}
 		}

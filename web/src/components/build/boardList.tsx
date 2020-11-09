@@ -12,6 +12,9 @@ const BOARDS = gql`
 			id
 			name
 			created
+			creator {
+				nickname
+			}
 		}
 	}
 `;
@@ -64,7 +67,7 @@ export const BoardList = ({ showAll }: Props) => {
 								<td>
 									<Link to={"/boards/id/" + board.id}>{board.name}</Link>
 								</td>
-								<td>{created.toLocaleString()}</td>
+								<td>{`${created.toLocaleString()} by ${board.creator.nickname}`}</td>
 							</tr>
 						);
 					})}

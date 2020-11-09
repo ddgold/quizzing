@@ -1,6 +1,9 @@
+import { User } from "./user";
+
 export interface BoardModel {
 	id: string;
 	name: string;
+	creator: User;
 	created: Date;
 }
 

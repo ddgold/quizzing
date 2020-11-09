@@ -33,6 +33,7 @@
 	"scripts": {
 		"dev": "nodemon src/server.ts",
 		"create-dummy-data": "ts-node ./src/scripts/createDummyData.ts",
-		"drop-collections": "ts-node ./src/scripts/dropCollections.ts"
+		"drop-collections": "ts-node ./src/scripts/dropCollections.ts",
+		"scrap": "ts-node ./src/scripts/scrap.ts"
 	}
 }
