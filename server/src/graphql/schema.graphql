@@ -38,7 +38,7 @@ type Category {
 }
 
 type CategoryResult {
-	category: Category
+	result: Category
 	errors: [FormError!]
 }
 
@@ -50,7 +50,7 @@ type Board {
 }
 
 type BoardResult {
-	board: Board
+	result: Board
 	errors: [FormError!]
 }
 

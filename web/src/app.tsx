@@ -3,7 +3,19 @@ import Navbar from "react-bootstrap/esm/Navbar";
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 
 import { setAccessToken } from "./auth";
-import { BoardList, Board, Error, Home, Header, Login, Register, Loading, User } from "./components";
+import {
+	BoardList,
+	Board,
+	CategoryList,
+	Category,
+	Error,
+	Home,
+	Header,
+	Login,
+	Register,
+	Loading,
+	User
+} from "./components";
 
 export const App = () => {
 	const [loading, setLoading] = useState(true);
@@ -51,6 +63,15 @@ export const App = () => {
 				</Route>
 				<Route exact path="/boards/id/:id">
 					<Board />
+				</Route>
+				<Route exact path="/categories/all">
+					<CategoryList showAll={true} />
+				</Route>
+				<Route exact path="/categories/my">
+					<CategoryList showAll={false} />
+				</Route>
+				<Route exact path="/categories/id/:id">
+					<Category />
 				</Route>
 				<Route>
 					<Error message="404: Page not found" />

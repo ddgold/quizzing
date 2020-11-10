@@ -14,3 +14,6 @@ export { useUserStatus, UserStatus } from "./user/useUserStatus";
 export { Board } from "./build/board";
 export { BoardList } from "./build/boardList";
 export { CreateNewBoard } from "./build/createNewBoard";
+export { Category } from "./build/category";
+export { CategoryList } from "./build/categoryList";
+export { CreateNewCategory } from "./build/createNewCategory";

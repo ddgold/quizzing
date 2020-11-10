@@ -4,7 +4,7 @@ import { RouteComponentProps, withRouter } from "react-router-dom";
 import { gql, useQuery } from "@apollo/client";
 
 import { Error, Loading } from "..";
-import { BoardModel } from "../../models/board";
+import { BoardModel } from "../../models/build";
 
 const BOARD_BY_ID = gql`
 	query BoardById($id: String!) {

@@ -40,7 +40,7 @@ export const buildResolvers: IResolvers<any, Context> = {
 			// Create new board
 			try {
 				const newBoard = await BoardModel.create({ name: name, creator: context.payload!.userId });
-				return { board: newBoard };
+				return { result: newBoard };
 			} catch (error) {
 				switch (error.name) {
 					case "ValidationError":
@@ -58,7 +58,7 @@ export const buildResolvers: IResolvers<any, Context> = {
 			// Create new category
 			try {
 				const newCategory = await CategoryModel.create({ name: name, creator: context.payload!.userId });
-				return { category: newCategory };
+				return { result: newCategory };
 			} catch (error) {
 				switch (error.name) {
 					case "ValidationError":

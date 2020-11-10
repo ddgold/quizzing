@@ -22,6 +22,12 @@ export const Header = () => {
 							<Nav.Link as={NavLink} to="/boards/my">
 								My Boards
 							</Nav.Link>
+							<Nav.Link as={NavLink} to="/categories/all">
+								All Categories
+							</Nav.Link>
+							<Nav.Link as={NavLink} to="/categories/my">
+								My Categories
+							</Nav.Link>
 						</>
 					) : null}
 				</Nav>

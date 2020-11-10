@@ -5,11 +5,11 @@ import { gql, useMutation } from "@apollo/client";
 import { useHistory } from "react-router-dom";
 
 import { FieldError, FormResult } from "../../models/shared";
-import { BoardModel } from "../../models/build";
+import { CategoryModel } from "../../models/build";
 
-const CREATE_NEW_BOARD = gql`
-	mutation CreateNewBoard($name: String!) {
-		createNewBoard(name: $name) {
+const CREATE_NEW_CATEGORY = gql`
+	mutation CreateNewCategory($name: String!) {
+		createNewCategory(name: $name) {
 			result {
 				id
 			}
@@ -24,17 +24,17 @@ const CREATE_NEW_BOARD = gql`
 type Fields = "name";
 
 interface Data {
-	createNewBoard: FormResult<BoardModel, Fields>;
+	createNewCategory: FormResult<CategoryModel, Fields>;
 }
 
 interface State {
 	name: string;
 }
 
-export const CreateNewBoard = () => {
+export const CreateNewCategory = () => {
 	const [showModal, setShowModal] = useState<boolean>(false);
 	const { errors, handleSubmit, register, setError } = useForm<State>();
-	const [createNewBoardMutation] = useMutation<Data, State>(CREATE_NEW_BOARD);
+	const [createNewCategoryMutation] = useMutation<Data, State>(CREATE_NEW_CATEGORY);
 	const history = useHistory();
 
 	const sanitizeName = (name: string): string => {
@@ -48,19 +48,19 @@ export const CreateNewBoard = () => {
 	const onSubmit = handleSubmit(async (state: State) => {
 		state.name = sanitizeName(state.name);
 
-		const result = await createNewBoardMutation({
+		const result = await createNewCategoryMutation({
 			variables: state
 		});
 
-		if (result.data!.createNewBoard.errors) {
-			result.data!.createNewBoard.errors.forEach((error: FieldError<Fields>) => {
+		if (result.data!.createNewCategory.errors) {
+			result.data!.createNewCategory.errors.forEach((error: FieldError<Fields>) => {
 				setError(error.field, { type: "manual", message: error.message });
 			});
 		} else {
 			setShowModal(false);
 
-			const newBoardId = result.data!.createNewBoard.result.id;
-			history.push(`/boards/id/${newBoardId}`);
+			const newCategoryId = result.data!.createNewCategory.result.id;
+			history.push(`/categories/id/${newCategoryId}`);
 		}
 	});
 
@@ -71,30 +71,30 @@ export const CreateNewBoard = () => {
 			<Modal show={showModal} centered backdrop="static">
 				<Form noValidate onSubmit={onSubmit}>
 					<Modal.Header closeButton onHide={onCancel}>
-						<Modal.Title>Create New Board</Modal.Title>
+						<Modal.Title>Create New Category</Modal.Title>
 					</Modal.Header>
 
 					<Modal.Body>
 						<Form.Group controlId="name">
-							<Form.Label>Board name</Form.Label>
+							<Form.Label>Category name</Form.Label>
 							<Form.Control
 								name="name"
 								type="name"
 								ref={register({
 									required: {
 										value: true,
-										message: "Board name is required"
+										message: "Category name is required"
 									},
 									maxLength: {
 										value: 32,
-										message: "Board name must be at most 32 characters"
+										message: "Category name must be at most 32 characters"
 									},
 									pattern: {
 										value: /^[A-Za-z0-9 ]*$/,
 										message: "Nickname can only include letters, numbers, and spaces"
 									}
 								})}
-								placeholder="Enter board name"
+								placeholder="Enter category name"
 								isInvalid={!!errors.name}
 							/>
 							<Form.Control.Feedback type="invalid">{errors.name?.message}</Form.Control.Feedback>
