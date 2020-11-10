@@ -3,12 +3,12 @@ import { Col, Container, Row, Table } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { gql, useQuery } from "@apollo/client";
 
-import { CreateNewCategory, Error, Loading } from "..";
-import { CategoryModel } from "../../models/build";
+import { CreateNewBoard, Error, Loading } from "../..";
+import { BoardModel } from "../../../models/build";
 
-const CATEGORIES = gql`
-	query Categories($showAll: Boolean!) {
-		categories(showAll: $showAll) {
+const BOARDS = gql`
+	query Boards($showAll: Boolean!) {
+		boards(showAll: $showAll) {
 			id
 			name
 			created
@@ -20,15 +20,15 @@ const CATEGORIES = gql`
 `;
 
 interface Data {
-	categories: CategoryModel[];
+	boards: BoardModel[];
 }
 
 interface Props {
 	showAll: boolean;
 }
 
-export const CategoryList = ({ showAll }: Props) => {
-	const { data, error, loading } = useQuery<Data, Props>(CATEGORIES, {
+export const BoardList = ({ showAll }: Props) => {
+	const { data, error, loading } = useQuery<Data, Props>(BOARDS, {
 		fetchPolicy: "network-only",
 		variables: { showAll }
 	});
@@ -45,10 +45,10 @@ export const CategoryList = ({ showAll }: Props) => {
 		<Container className="bodyContainer">
 			<Row>
 				<Col>
-					<h1>{showAll ? "All Categories" : "My Categories"}</h1>
+					<h1>{showAll ? "All Boards" : "My Boards"}</h1>
 				</Col>
 				<Col style={{ paddingTop: "8px" }} xs="auto">
-					<CreateNewCategory />
+					<CreateNewBoard />
 				</Col>
 			</Row>
 
@@ -60,14 +60,14 @@ export const CategoryList = ({ showAll }: Props) => {
 					</tr>
 				</thead>
 				<tbody>
-					{data!.categories.map((category: CategoryModel, index: number) => {
-						const created = new Date(category.created);
+					{data!.boards.map((board: BoardModel, index: number) => {
+						const created = new Date(board.created);
 						return (
 							<tr key={index}>
 								<td>
-									<Link to={"/categories/id/" + category.id}>{category.name}</Link>
+									<Link to={"/boards/id/" + board.id}>{board.name}</Link>
 								</td>
-								<td>{`${created.toLocaleString()} by ${category.creator.nickname}`}</td>
+								<td>{`${created.toLocaleString()} by ${board.creator.nickname}`}</td>
 							</tr>
 						);
 					})}

@@ -3,8 +3,8 @@ import { Container, Table } from "react-bootstrap";
 import { RouteComponentProps, withRouter } from "react-router-dom";
 import { gql, useQuery } from "@apollo/client";
 
-import { Error, Loading } from "..";
-import { CategoryModel, ClueModel } from "../../models/build";
+import { Error, Loading } from "../..";
+import { CategoryModel, ClueModel } from "../../../models/build";
 
 const CATEGORY_BY_ID = gql`
 	query CategoryById($id: String!) {

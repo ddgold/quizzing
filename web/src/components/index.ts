@@ -11,9 +11,9 @@ export { User } from "./user/user";
 export { useUserStatus, UserStatus } from "./user/useUserStatus";
 
 // Build
-export { Board } from "./build/board";
-export { BoardList } from "./build/boardList";
-export { CreateNewBoard } from "./build/createNewBoard";
-export { Category } from "./build/category";
-export { CategoryList } from "./build/categoryList";
-export { CreateNewCategory } from "./build/createNewCategory";
+export { Board } from "./build/board/board";
+export { BoardList } from "./build/board/boardList";
+export { CreateNewBoard } from "./build/board/createNewBoard";
+export { Category } from "./build/category/category";
+export { CategoryList } from "./build/category/categoryList";
+export { CreateNewCategory } from "./build/category/createNewCategory";
