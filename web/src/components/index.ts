@@ -3,6 +3,7 @@ export { Error } from "./shared/error";
 export { Header } from "./shared/header";
 export { Home } from "./shared/home";
 export { Loading } from "./shared/loading";
+export { Page } from "./shared/page";
 
 // User
 export { Login } from "./user/login";

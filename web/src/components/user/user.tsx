@@ -1,10 +1,10 @@
 import React from "react";
-import { Button, Container } from "react-bootstrap";
+import { Button } from "react-bootstrap";
 import { gql, useQuery, useMutation } from "@apollo/client";
 import { useHistory } from "react-router-dom";
 
 import { setAccessToken } from "../../auth";
-import { Error, Loading } from "..";
+import { Error, Loading, Page } from "..";
 
 const CURRENT_USER = gql`
 	query CurrentUser {
@@ -52,10 +52,8 @@ export const User = () => {
 	}
 
 	return (
-		<Container className="bodyContainer">
-			<h1>User</h1>
+		<Page title="User" titleRight={<Button onClick={() => logout()}>Log Out</Button>}>
 			<p className="lead">{`Current user: ${data.currentUser.nickname}`}</p>
-			<Button onClick={() => logout()}>Log Out</Button>
-		</Container>
+		</Page>
 	);
 };

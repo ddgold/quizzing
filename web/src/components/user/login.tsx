@@ -1,12 +1,12 @@
 import React from "react";
-import { Container, Form, Button } from "react-bootstrap";
+import { Form, Button } from "react-bootstrap";
 import { useForm } from "react-hook-form";
 import { gql, useMutation } from "@apollo/client";
 import { useHistory } from "react-router-dom";
 
 import { AuthResult, FieldError } from "../../models/user";
 import { isLoggedIn, setAccessToken } from "../../auth";
-import { Error } from "..";
+import { Error, Page } from "..";
 
 const LOGIN = gql`
 	mutation Login($email: String!, $password: String!) {
@@ -55,8 +55,8 @@ export const Login = () => {
 			const accessToken = result.data!.login.accessToken;
 			setAccessToken(accessToken);
 
-			history.push("/");
 			await client!.resetStore();
+			history.push("/");
 		}
 	});
 
@@ -65,8 +65,7 @@ export const Login = () => {
 	}
 
 	return (
-		<Container className="bodyContainer">
-			<h1>Login</h1>
+		<Page title="Login">
 			<Form noValidate onSubmit={onSubmit}>
 				<Form.Group controlId="email">
 					<Form.Label>Email address</Form.Label>
@@ -110,6 +109,6 @@ export const Login = () => {
 					Login
 				</Button>
 			</Form>
-		</Container>
+		</Page>
 	);
 };

@@ -1,9 +1,9 @@
 import React from "react";
-import { Container, Table } from "react-bootstrap";
+import { Table } from "react-bootstrap";
 import { RouteComponentProps, withRouter } from "react-router-dom";
 import { gql, useQuery } from "@apollo/client";
 
-import { Error, Loading } from "../..";
+import { Error, Loading, Page } from "../..";
 import { CategoryModel, ClueModel } from "../../../models/build";
 
 const CATEGORY_BY_ID = gql`
@@ -45,8 +45,7 @@ const CategoryWithoutRouter = (props: Props) => {
 	}
 
 	return (
-		<Container className="bodyContainer">
-			<h1>{data!.categoryById.name}</h1>
+		<Page title={data!.categoryById.name}>
 			<Table striped bordered>
 				<thead>
 					<tr>
@@ -65,7 +64,7 @@ const CategoryWithoutRouter = (props: Props) => {
 					})}
 				</tbody>
 			</Table>
-		</Container>
+		</Page>
 	);
 };
 

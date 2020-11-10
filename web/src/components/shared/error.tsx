@@ -1,15 +1,15 @@
 import React from "react";
-import { Container } from "react-bootstrap";
+
+import { Page } from "..";
 
 interface Props {
 	message: string;
 }
 
 export const Error = ({ message }: Props) => (
-	<Container className="bodyContainer">
-		<h3>Oop! Something went wrong...</h3>
+	<Page title="Error">
 		<p className="lead" style={{ marginBottom: "0px" }}>
 			{message}
 		</p>
-	</Container>
+	</Page>
 );

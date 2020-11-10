@@ -1,9 +1,8 @@
 import React from "react";
-import { Container } from "react-bootstrap";
 import { RouteComponentProps, withRouter } from "react-router-dom";
 import { gql, useQuery } from "@apollo/client";
 
-import { Error, Loading } from "../..";
+import { Error, Loading, Page } from "../..";
 import { BoardModel } from "../../../models/build";
 
 const BOARD_BY_ID = gql`
@@ -42,11 +41,7 @@ const BoardWithoutRouter = (props: Props) => {
 		return <Loading />;
 	}
 
-	return (
-		<Container className="bodyContainer">
-			<h1>{data!.boardById.name}</h1>
-		</Container>
-	);
+	return <Page title={data!.boardById.name}></Page>;
 };
 
 export const Board = withRouter(BoardWithoutRouter);

@@ -1,8 +1,11 @@
 import React from "react";
-import { Container } from "react-bootstrap";
+
+import { Page } from "..";
 
 export const Home = () => (
-	<Container className="bodyContainer">
-		<h1>Home</h1>
-	</Container>
+	<Page title="Home">
+		<p className="lead" style={{ marginBottom: "0px" }}>
+			Welcome to quizzing!
+		</p>
+	</Page>
 );

@@ -1,9 +1,9 @@
 import React from "react";
-import { Col, Container, Row, Table } from "react-bootstrap";
+import { Table } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { gql, useQuery } from "@apollo/client";
 
-import { CreateNewBoard, Error, Loading } from "../..";
+import { CreateNewBoard, Error, Loading, Page } from "../..";
 import { BoardModel } from "../../../models/build";
 
 const BOARDS = gql`
@@ -42,16 +42,7 @@ export const BoardList = ({ showAll }: Props) => {
 	}
 
 	return (
-		<Container className="bodyContainer">
-			<Row>
-				<Col>
-					<h1>{showAll ? "All Boards" : "My Boards"}</h1>
-				</Col>
-				<Col style={{ paddingTop: "8px" }} xs="auto">
-					<CreateNewBoard />
-				</Col>
-			</Row>
-
+		<Page title={showAll ? "All Boards" : "My Boards"} titleRight={<CreateNewBoard />}>
 			<Table striped bordered hover>
 				<thead>
 					<tr>
@@ -73,6 +64,6 @@ export const BoardList = ({ showAll }: Props) => {
 					})}
 				</tbody>
 			</Table>
-		</Container>
+		</Page>
 	);
 };

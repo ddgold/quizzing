@@ -1,12 +1,12 @@
 import React from "react";
-import { Container, Form, Button } from "react-bootstrap";
+import { Form, Button } from "react-bootstrap";
 import { useForm } from "react-hook-form";
 import { gql, useMutation } from "@apollo/client";
 import { useHistory } from "react-router-dom";
 
 import { AuthResult, FieldError } from "../../models/user";
 import { isLoggedIn, setAccessToken } from "../../auth";
-import { Error } from "..";
+import { Error, Page } from "..";
 
 const REGISTER = gql`
 	mutation Register($nickname: String!, $email: String!, $password: String!) {
@@ -73,8 +73,7 @@ export const Register = () => {
 	}
 
 	return (
-		<Container className="bodyContainer">
-			<h1>Register</h1>
+		<Page title="Register">
 			<Form noValidate onSubmit={onSubmit}>
 				<Form.Group controlId="nickname">
 					<Form.Label>Nickname</Form.Label>
@@ -180,6 +179,6 @@ export const Register = () => {
 					Submit
 				</Button>
 			</Form>
-		</Container>
+		</Page>
 	);
 };

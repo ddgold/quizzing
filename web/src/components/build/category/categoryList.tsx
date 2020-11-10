@@ -1,9 +1,9 @@
 import React from "react";
-import { Col, Container, Row, Table } from "react-bootstrap";
+import { Table } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { gql, useQuery } from "@apollo/client";
 
-import { CreateNewCategory, Error, Loading } from "../..";
+import { CreateNewCategory, Error, Loading, Page } from "../..";
 import { CategoryModel } from "../../../models/build";
 
 const CATEGORIES = gql`
@@ -42,16 +42,7 @@ export const CategoryList = ({ showAll }: Props) => {
 	}
 
 	return (
-		<Container className="bodyContainer">
-			<Row>
-				<Col>
-					<h1>{showAll ? "All Categories" : "My Categories"}</h1>
-				</Col>
-				<Col style={{ paddingTop: "8px" }} xs="auto">
-					<CreateNewCategory />
-				</Col>
-			</Row>
-
+		<Page title={showAll ? "All Categories" : "My Categories"} titleRight={<CreateNewCategory />}>
 			<Table striped bordered hover>
 				<thead>
 					<tr>
@@ -73,6 +64,6 @@ export const CategoryList = ({ showAll }: Props) => {
 					})}
 				</tbody>
 			</Table>
-		</Container>
+		</Page>
 	);
 };
