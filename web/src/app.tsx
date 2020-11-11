@@ -21,11 +21,13 @@ export const App = () => {
 	const [loading, setLoading] = useState(true);
 
 	useEffect(() => {
-		fetch("http://localhost:8000/refreshToken", { method: "POST", credentials: "include" }).then(async (result) => {
-			const { accessToken } = await result.json();
-			setAccessToken(accessToken);
-			setLoading(false);
-		});
+		fetch(process.env.REACT_APP_SERVER_URL + "/refreshToken", { method: "POST", credentials: "include" }).then(
+			async (result) => {
+				const { accessToken } = await result.json();
+				setAccessToken(accessToken);
+				setLoading(false);
+			}
+		);
 	}, []);
 
 	if (loading) {

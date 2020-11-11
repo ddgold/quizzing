@@ -9,7 +9,7 @@ export const Header = () => {
 
 	return (
 		<>
-			<Navbar bg="primary" variant="dark" expand="lg" style={{ marginBottom: "20px" }}>
+			<Navbar bg="primary" variant="dark" expand="md" style={{ marginBottom: "20px" }}>
 				<Navbar.Brand as={Link} to="/">
 					Quizzing
 				</Navbar.Brand>

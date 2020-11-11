@@ -24,6 +24,7 @@ type AuthResult {
 # Build
 # -----
 type Clue {
+	id: String!
 	answer: String!
 	question: String!
 }

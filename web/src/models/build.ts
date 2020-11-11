@@ -10,8 +10,9 @@ export interface BoardModel {
 export interface CategoryModel {
 	id: string;
 	name: string;
-	creator: User;
+	description: string;
 	clues: ClueModel[];
+	creator: User;
 	created: Date;
 }
 

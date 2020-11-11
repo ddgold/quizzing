@@ -18,7 +18,7 @@ const CategorySchema = new Schema({
 	description: {
 		type: Schema.Types.String,
 		required: false,
-		maxlength: 64
+		maxlength: 265
 	},
 	clues: {
 		type: [{ type: Schema.Types.ObjectId, ref: "clue" }],

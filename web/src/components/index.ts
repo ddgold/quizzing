@@ -20,3 +20,5 @@ export { CreateNewBoard } from "./build/board/createNewBoard";
 export { Category } from "./build/category/category";
 export { CategoryList } from "./build/category/categoryList";
 export { CreateNewCategory } from "./build/category/createNewCategory";
+export { EditCategory } from "./build/category/editCategory";
+export { ViewCategory } from "./build/category/viewCategory";
