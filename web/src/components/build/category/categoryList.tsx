@@ -3,7 +3,7 @@ import { Table } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { gql, useQuery } from "@apollo/client";
 
-import { CreateNewCategory, Error, Loading, Page } from "../..";
+import { CreateCategory, Error, Loading, Page } from "../..";
 import { CategoryModel } from "../../../models/build";
 
 const CATEGORIES = gql`
@@ -42,12 +42,12 @@ export const CategoryList = ({ showAll }: Props) => {
 	}
 
 	return (
-		<Page title={showAll ? "All Categories" : "My Categories"} titleRight={<CreateNewCategory />}>
+		<Page title={showAll ? "All Categories" : "My Categories"} titleRight={<CreateCategory />}>
 			<Table striped bordered hover>
 				<thead>
 					<tr>
-						<th>Name</th>
-						<th>Created</th>
+						<th style={{ width: "50%" }}>Name</th>
+						<th style={{ width: "50%" }}>Created</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -58,7 +58,9 @@ export const CategoryList = ({ showAll }: Props) => {
 								<td>
 									<Link to={"/categories/id/" + category.id}>{category.name}</Link>
 								</td>
-								<td>{`${created.toLocaleString()} by ${category.creator.nickname}`}</td>
+								<td>
+									{showAll ? `${created.toLocaleString()} by ${category.creator.nickname}` : created.toLocaleString()}
+								</td>
 							</tr>
 						);
 					})}

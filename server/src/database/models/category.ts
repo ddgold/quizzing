@@ -1,9 +1,10 @@
 import { Document, Model, model, Schema } from "mongoose";
+import { ClueDocument } from "./clue";
 
 interface Category {
-	name: String;
-	description?: String;
-	clues?: String[];
+	name: string;
+	description?: string;
+	clues?: string[];
 	creator: string;
 	created?: Date;
 }

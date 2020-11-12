@@ -7,9 +7,9 @@ import { useHistory } from "react-router-dom";
 import { FieldError, FormResult } from "../../../models/shared";
 import { CategoryModel } from "../../../models/build";
 
-const CREATE_NEW_CATEGORY = gql`
-	mutation CreateNewCategory($name: String!) {
-		createNewCategory(name: $name) {
+const CREATE_CATEGORY = gql`
+	mutation CreateCategory($name: String!) {
+		createCategory(name: $name) {
 			result {
 				id
 			}
@@ -24,17 +24,17 @@ const CREATE_NEW_CATEGORY = gql`
 type Fields = "name";
 
 interface Data {
-	createNewCategory: FormResult<CategoryModel, Fields>;
+	createCategory: FormResult<CategoryModel, Fields>;
 }
 
 interface State {
 	name: string;
 }
 
-export const CreateNewCategory = () => {
+export const CreateCategory = () => {
 	const [showModal, setShowModal] = useState<boolean>(false);
 	const { errors, handleSubmit, register, setError } = useForm<State>();
-	const [createNewCategoryMutation] = useMutation<Data, State>(CREATE_NEW_CATEGORY);
+	const [createCategoryMutation] = useMutation<Data, State>(CREATE_CATEGORY);
 	const history = useHistory();
 
 	const sanitizeName = (name: string): string => {
@@ -46,21 +46,26 @@ export const CreateNewCategory = () => {
 	};
 
 	const onSubmit = handleSubmit(async (state: State) => {
-		state.name = sanitizeName(state.name);
+		try {
+			state.name = sanitizeName(state.name);
 
-		const result = await createNewCategoryMutation({
-			variables: state
-		});
-
-		if (result.data!.createNewCategory.errors) {
-			result.data!.createNewCategory.errors.forEach((error: FieldError<Fields>) => {
-				setError(error.field, { type: "manual", message: error.message });
+			const result = await createCategoryMutation({
+				variables: state
 			});
-		} else {
-			setShowModal(false);
 
-			const newCategoryId = result.data!.createNewCategory.result.id;
-			history.push(`/categories/id/${newCategoryId}`);
+			if (result.data!.createCategory.errors) {
+				result.data!.createCategory.errors.forEach((error: FieldError<Fields>) => {
+					setError(error.field, { type: "manual", message: error.message });
+				});
+			} else {
+				setShowModal(false);
+
+				const newCategoryId = result.data!.createCategory.result.id;
+				history.push(`/categories/id/${newCategoryId}`);
+			}
+		} catch (error) {
+			setError("name", { type: "manual", message: "Error creating new category" });
+			console.error(error);
 		}
 	});
 

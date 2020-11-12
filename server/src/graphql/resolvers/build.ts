@@ -1,6 +1,6 @@
 import { IResolvers } from "graphql-tools";
 
-import { BoardDocument, BoardModel, CategoryDocument, CategoryModel } from "../../database";
+import { BoardDocument, BoardModel, CategoryDocument, CategoryModel, ClueDocument, ClueModel } from "../../database";
 import { Context, assertAuthorized } from "../../auth";
 
 export const buildResolvers: IResolvers<any, Context> = {
@@ -36,8 +36,6 @@ export const buildResolvers: IResolvers<any, Context> = {
 	Mutation: {
 		createNewBoard: async (_, { name }, context) => {
 			await assertAuthorized(context);
-
-			// Create new board
 			try {
 				const newBoard = await BoardModel.create({ name: name, creator: context.payload!.userId });
 				return { result: newBoard };
@@ -52,10 +50,8 @@ export const buildResolvers: IResolvers<any, Context> = {
 				return { errors: [{ message: "Error creating new board", field: "name" }] };
 			}
 		},
-		createNewCategory: async (_, { name }, context) => {
+		createCategory: async (_, { name }, context) => {
 			await assertAuthorized(context);
-
-			// Create new category
 			try {
 				const newCategory = await CategoryModel.create({ name: name, creator: context.payload!.userId });
 				return { result: newCategory };
@@ -68,6 +64,40 @@ export const buildResolvers: IResolvers<any, Context> = {
 						console.log("Create new category mutation unknown error:", error);
 				}
 				return { errors: [{ message: "Error creating new category", field: "name" }] };
+			}
+		},
+		updateCategory: async (_, { id, name, description, clues }, context) => {
+			await assertAuthorized(context);
+			try {
+				let clueIds: string[] = await Promise.all(
+					clues.map(async (clue: ClueDocument) => {
+						const doc = await ClueModel.findOneAndUpdate(
+							{ answer: clue.answer, question: clue.question },
+							{},
+							{ upsert: true }
+						).exec();
+						return doc.id;
+					})
+				);
+
+				const category = await CategoryModel.findByIdAndUpdate(id, {
+					name: name,
+					description: description,
+					clues: clueIds
+				})
+					.populate("creator")
+					.populate("clues")
+					.exec();
+				return { result: category };
+			} catch (error) {
+				switch (error.name) {
+					case "ValidationError":
+						console.log(`Update category mutation error: ${error.message}`);
+						break;
+					default:
+						console.log("Update category mutation unknown error:", error);
+				}
+				return { errors: [{ message: "Error updating category", field: "name" }] };
 			}
 		}
 	}

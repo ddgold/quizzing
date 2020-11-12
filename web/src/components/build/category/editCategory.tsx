@@ -1,31 +1,85 @@
 import React from "react";
 import { Button, Col, Form, InputGroup, Row } from "react-bootstrap";
 import { useForm, useFieldArray } from "react-hook-form";
+import { gql, useMutation } from "@apollo/client";
 
+import { FieldError, FormResult } from "../../../models/shared";
 import { CategoryModel, ClueModel } from "../../../models/build";
+
+const UPDATE_CATEGORY = gql`
+	mutation UpdateCategory($id: String!, $name: String!, $description: String!, $clues: [ClueInput!]!) {
+		updateCategory(id: $id, name: $name, description: $description, clues: $clues) {
+			result {
+				id
+				name
+				description
+				clues {
+					answer
+					question
+				}
+				creator {
+					id
+					nickname
+				}
+				created
+			}
+			errors {
+				message
+				field
+			}
+		}
+	}
+`;
 
 interface Props {
 	category: CategoryModel;
-	onSubmit: () => void;
+	onSubmit: (update: CategoryModel) => void;
+}
+
+type Fields = "name" | "description" | "clues";
+
+interface Data {
+	updateCategory: FormResult<CategoryModel, Fields>;
+}
+
+interface State {
+	id: string;
+	name: string;
+	description: string;
+	clues: ClueModel[];
 }
 
 export const EditCategory = (props: Props) => {
-	const { control, errors, handleSubmit, register } = useForm<CategoryModel>({
+	const { control, errors, handleSubmit, register, setError } = useForm<CategoryModel>({
 		defaultValues: props.category
 	});
-	const { fields, append, remove } = useFieldArray<ClueModel>({
-		control,
-		name: "clues"
-	});
+	const { fields, append, remove } = useFieldArray<ClueModel>({ control, name: "clues" });
+	const [updateCategoryMutation] = useMutation<Data, State>(UPDATE_CATEGORY);
 
 	const onSubmit = handleSubmit(async (state: CategoryModel) => {
-		let result = {
-			...props.category,
-			...state
-		};
+		try {
+			if (!state.clues) {
+				state.clues = [];
+			}
 
-		console.log(result);
-		props.onSubmit();
+			const result = await updateCategoryMutation({
+				variables: {
+					...state,
+					id: props.category.id
+				}
+			});
+
+			if (result.data!.updateCategory.errors) {
+				result.data!.updateCategory.errors.forEach((error: FieldError<Fields>) => {
+					setError(error.field, { type: "manual", message: error.message });
+				});
+			} else {
+				props.onSubmit(result.data!.updateCategory.result!);
+			}
+		} catch (error) {
+			setError("name", { type: "manual", message: "Error updating category" });
+			console.error(error);
+		}
 	});
 
 	return (
@@ -72,86 +126,90 @@ export const EditCategory = (props: Props) => {
 			<Form.Group>
 				<h3>Clues</h3>
 			</Form.Group>
-			{fields.map((item, index) => {
-				let answerError = "";
-				let questionError = "";
-				let errorString = "";
-				if (errors.clues && errors.clues[index]) {
-					if (errors.clues![index]!.answer) {
-						answerError = errors.clues![index]!.answer!.message ?? "";
+			{fields.length > 0 ? (
+				fields.map((item, index) => {
+					let answerError = "";
+					let questionError = "";
+					let errorString = "";
+					if (errors.clues && errors.clues[index]) {
+						if (errors.clues![index]!.answer) {
+							answerError = errors.clues![index]!.answer!.message ?? "";
+						}
+						if (errors.clues![index]!.question) {
+							questionError = errors.clues![index]!.question!.message ?? "";
+						}
+
+						if (answerError && questionError) {
+							errorString = `${answerError},  ${questionError}`;
+						} else if (answerError) {
+							errorString = answerError;
+						} else {
+							errorString = questionError;
+						}
 					}
-					if (errors.clues![index]!.question) {
-						questionError = errors.clues![index]!.question!.message ?? "";
-					}
 
-					if (answerError && questionError) {
-						errorString = `${answerError},  ${questionError}`;
-					} else if (answerError) {
-						errorString = answerError;
-					} else {
-						errorString = questionError;
-					}
-				}
+					return (
+						<InputGroup key={item.id} style={{ marginBottom: "0.5rem" }}>
+							<Form.Control
+								name={`clues[${index}].answer`}
+								id={`clues[${index}].answer`}
+								as="textarea"
+								style={{ resize: "none" }}
+								rows={3}
+								ref={register({
+									required: {
+										value: true,
+										message: "Answer is required"
+									},
+									maxLength: {
+										value: 128,
+										message: "Answer must be at most 128 characters"
+									}
+								})}
+								defaultValue={item.answer}
+								placeholder="Enter answer"
+								isInvalid={!!answerError}
+							/>
 
-				return (
-					<InputGroup key={item.id} style={{ marginBottom: "0.5rem" }}>
-						<Form.Control
-							name={`clues[${index}].answer`}
-							id={`clues[${index}].answer`}
-							as="textarea"
-							style={{ resize: "none" }}
-							rows={3}
-							ref={register({
-								required: {
-									value: true,
-									message: "Answer is required"
-								},
-								maxLength: {
-									value: 128,
-									message: "Answer must be at most 128 characters"
-								}
-							})}
-							defaultValue={item.answer}
-							placeholder="Enter answer"
-							isInvalid={!!answerError}
-						/>
+							<Form.Control
+								name={`clues[${index}].question`}
+								id={`clues[${index}].question`}
+								as="textarea"
+								style={{ resize: "none" }}
+								rows={3}
+								ref={register({
+									required: {
+										value: true,
+										message: "Question is required"
+									},
+									maxLength: {
+										value: 64,
+										message: "Question must be at most 64 characters"
+									}
+								})}
+								defaultValue={item.question}
+								placeholder="Enter question"
+								isInvalid={!!questionError}
+							/>
 
-						<Form.Control
-							name={`clues[${index}].question`}
-							id={`clues[${index}].question`}
-							as="textarea"
-							style={{ resize: "none" }}
-							rows={3}
-							ref={register({
-								required: {
-									value: true,
-									message: "Question is required"
-								},
-								maxLength: {
-									value: 64,
-									message: "Question must be at most 64 characters"
-								}
-							})}
-							defaultValue={item.question}
-							placeholder="Enter question"
-							isInvalid={!!questionError}
-						/>
+							<InputGroup.Append>
+								<Button
+									variant="outline-secondary"
+									size="sm"
+									style={{ borderTopRightRadius: "0.2rem", borderBottomRightRadius: "0.2rem" }}
+									onClick={() => remove(index)}
+								>
+									-
+								</Button>
+							</InputGroup.Append>
 
-						<InputGroup.Append>
-							<Button
-								variant="outline-secondary"
-								size="sm"
-								style={{ borderTopRightRadius: "0.2rem", borderBottomRightRadius: "0.2rem" }}
-								onClick={() => remove(index)}
-							>
-								-
-							</Button>
-						</InputGroup.Append>
-
-						<Form.Control.Feedback type="invalid">{errorString}</Form.Control.Feedback>
-					</InputGroup>
-				);
-			})}
+							<Form.Control.Feedback type="invalid">{errorString}</Form.Control.Feedback>
+						</InputGroup>
+					);
+				})
+			) : (
+				<Form.Control plaintext disabled type="text" placeholder="No clues" />
+			)}
 			<Row style={{ paddingTop: "1rem" }}>
 				<Col>
 					<Button variant="outline-secondary" onClick={() => append({})}>

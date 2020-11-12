@@ -31,9 +31,11 @@
 		"mongoose": "^5.10.11"
 	},
 	"scripts": {
-		"dev": "nodemon src/server.ts",
+		"dev": "nodemon ./src/server.ts",
+		"dev-once": "ts-node ./src/server.ts",
 		"create-dummy-data": "ts-node ./src/scripts/createDummyData.ts",
 		"drop-collections": "ts-node ./src/scripts/dropCollections.ts",
-		"scrap": "ts-node ./src/scripts/scrap.ts"
+		"scrap": "ts-node ./src/scripts/scrap.ts",
+		"kill-port": "lsof -ti:8000 | xargs kill"
 	}
 }

@@ -17,7 +17,6 @@ export interface CategoryModel {
 }
 
 export interface ClueModel {
-	id: string;
 	question: string;
 	answer: string;
 }

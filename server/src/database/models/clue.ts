@@ -1,8 +1,8 @@
 import { Document, Model, model, Schema } from "mongoose";
 
 interface Clue {
-	answer: String;
-	question: String;
+	answer: string;
+	question: string;
 }
 
 const ClueSchema = new Schema({

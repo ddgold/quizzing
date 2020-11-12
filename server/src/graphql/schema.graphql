@@ -24,7 +24,11 @@ type AuthResult {
 # Build
 # -----
 type Clue {
-	id: String!
+	answer: String!
+	question: String!
+}
+
+input ClueInput {
 	answer: String!
 	question: String!
 }
@@ -81,5 +85,6 @@ type Mutation {
 
 	# Build
 	createNewBoard(name: String!): BoardResult!
-	createNewCategory(name: String!): CategoryResult!
+	createCategory(name: String!): CategoryResult!
+	updateCategory(id: String!, name: String!, description: String!, clues: [ClueInput!]!): CategoryResult!
 }

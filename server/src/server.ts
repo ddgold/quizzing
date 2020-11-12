@@ -12,6 +12,22 @@ config({
 	default_node_env: "development"
 });
 
+const requiredEnvironmentVariables = [
+	"ACCESS_TOKEN_SECRET",
+	"REFRESH_TOKEN_SECRET",
+	"GRAPHQL_PORT",
+	"FRONTEND_URL",
+	"MONGODB_URL"
+];
+
+for (const environmentVariable of requiredEnvironmentVariables) {
+	// console.log(environmentVariable, process.env[environmentVariable]);
+	if (!process.env[environmentVariable]) {
+		console.error(`Required environment variable '${environmentVariable}' not set.`);
+		process.exit();
+	}
+}
+
 // ----------------
 // mongoDB Database
 // ----------------

@@ -13,7 +13,6 @@ const CATEGORY_BY_ID = gql`
 			name
 			description
 			clues {
-				id
 				answer
 				question
 			}

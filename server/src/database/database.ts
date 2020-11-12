@@ -11,10 +11,12 @@ export default class Database {
 				return;
 			}
 
+			mongoose.set("returnOriginal", false);
+
 			mongoose
 				.connect(url, {
 					useNewUrlParser: true,
-					useFindAndModify: true,
+					useFindAndModify: false,
 					useUnifiedTopology: true,
 					useCreateIndex: true
 				})

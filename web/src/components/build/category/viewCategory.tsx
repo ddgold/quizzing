@@ -11,24 +11,28 @@ export const ViewCategory = ({ category }: Props) => {
 	return (
 		<>
 			<p>{category.description}</p>
-			<Table striped bordered>
-				<thead>
-					<tr>
-						<th>Answer</th>
-						<th>Question</th>
-					</tr>
-				</thead>
-				<tbody>
-					{category.clues.map((clue: ClueModel) => {
-						return (
-							<tr key={clue.id}>
-								<td>{clue.answer}</td>
-								<td>{clue.question}</td>
-							</tr>
-						);
-					})}
-				</tbody>
-			</Table>
+			{category.clues.length > 0 ? (
+				<Table striped bordered>
+					<thead>
+						<tr>
+							<th style={{ width: "65%" }}>Answer</th>
+							<th style={{ width: "35%" }}>Question</th>
+						</tr>
+					</thead>
+					<tbody>
+						{category.clues.map((clue: ClueModel, index: number) => {
+							return (
+								<tr key={index}>
+									<td>{clue.answer}</td>
+									<td>{clue.question}</td>
+								</tr>
+							);
+						})}
+					</tbody>
+				</Table>
+			) : (
+				<p>No clues</p>
+			)}
 			<p>{`Create ${new Date(category.created).toLocaleString()} by ${category.creator.nickname}`}</p>
 		</>
 	);
