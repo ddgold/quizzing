@@ -36,10 +36,11 @@ input ClueInput {
 type Category {
 	id: String!
 	name: String!
-	description: String
+	description: String!
 	clues: [Clue]!
 	creator: User!
 	created: Date!
+	updated: Date!
 }
 
 type CategoryResult {

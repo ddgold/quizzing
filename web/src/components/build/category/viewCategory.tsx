@@ -34,6 +34,7 @@ export const ViewCategory = ({ category }: Props) => {
 				<p>No clues</p>
 			)}
 			<p>{`Create ${new Date(category.created).toLocaleString()} by ${category.creator.nickname}`}</p>
+			<p>{`Last Updated ${new Date(category.updated).toLocaleString()}`}</p>
 		</>
 	);
 };

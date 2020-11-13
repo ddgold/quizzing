@@ -1,12 +1,12 @@
 import { Document, Model, model, Schema } from "mongoose";
-import { ClueDocument } from "./clue";
 
 interface Category {
 	name: string;
-	description?: string;
-	clues?: string[];
+	description: string;
+	clues: string[];
 	creator: string;
-	created?: Date;
+	created: Date;
+	updated: Date;
 }
 
 const CategorySchema = new Schema({
@@ -32,7 +32,10 @@ const CategorySchema = new Schema({
 	},
 	created: {
 		type: Schema.Types.Date,
-		default: new Date(),
+		required: true
+	},
+	updated: {
+		type: Schema.Types.Date,
 		required: true
 	}
 });

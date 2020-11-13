@@ -14,6 +14,7 @@ export interface CategoryModel {
 	clues: ClueModel[];
 	creator: User;
 	created: Date;
+	updated: Date;
 }
 
 export interface ClueModel {

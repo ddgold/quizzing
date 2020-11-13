@@ -53,7 +53,14 @@ export const buildResolvers: IResolvers<any, Context> = {
 		createCategory: async (_, { name }, context) => {
 			await assertAuthorized(context);
 			try {
-				const newCategory = await CategoryModel.create({ name: name, creator: context.payload!.userId });
+				const newCategory = await CategoryModel.create({
+					name: name,
+					description: "",
+					clues: [],
+					creator: context.payload!.userId,
+					created: new Date(),
+					updated: new Date()
+				});
 				return { result: newCategory };
 			} catch (error) {
 				switch (error.name) {
@@ -83,7 +90,8 @@ export const buildResolvers: IResolvers<any, Context> = {
 				const category = await CategoryModel.findByIdAndUpdate(id, {
 					name: name,
 					description: description,
-					clues: clueIds
+					clues: clueIds,
+					updated: new Date()
 				})
 					.populate("creator")
 					.populate("clues")

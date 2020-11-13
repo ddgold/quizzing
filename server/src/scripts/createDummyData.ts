@@ -62,6 +62,8 @@ const createDummyCategories = async (): Promise<void> => {
 			name: "The Kraft Dynasty",
 			description: "Fun fact about the great Kraft Dynasty",
 			creator: kingKongUser.id,
+			created: new Date(),
+			updated: new Date(),
 			clues: await processCategoryClues([
 				{
 					answer: "The Kraft Dynasty include this many Super Bowl appearances.",
@@ -90,6 +92,8 @@ const createDummyCategories = async (): Promise<void> => {
 			name: "The Sol System",
 			description: "How well do you know our solar system?",
 			creator: kingKongUser.id,
+			created: new Date(),
+			updated: new Date(),
 			clues: await processCategoryClues([
 				{
 					answer: "This planet has more than double the mass of all the other planets combined",
@@ -117,6 +121,8 @@ const createDummyCategories = async (): Promise<void> => {
 			name: "College Mascots",
 			description: "Name the college mascot",
 			creator: kingKongUser.id,
+			created: new Date(),
+			updated: new Date(),
 			clues: await processCategoryClues([
 				{
 					answer: "Brown bears Joe & Josephine Bruin are the mascots for this Golden State university.",

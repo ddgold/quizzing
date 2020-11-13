@@ -21,6 +21,7 @@ const CATEGORY_BY_ID = gql`
 				nickname
 			}
 			created
+			updated
 		}
 	}
 `;
