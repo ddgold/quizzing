@@ -36,6 +36,7 @@
 		"create-dummy-data": "ts-node ./src/scripts/createDummyData.ts",
 		"drop-collections": "ts-node ./src/scripts/dropCollections.ts",
 		"scrap": "ts-node ./src/scripts/scrap.ts",
-		"kill-port": "lsof -ti:8000 | xargs kill"
+		"kill-port": "lsof -ti:8000 | xargs kill",
+		"remove-modules": "rm -rf ./node_modules"
 	}
 }

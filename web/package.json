@@ -28,7 +28,8 @@
 	},
 	"scripts": {
 		"dev": "react-scripts start",
-		"build": "react-scripts build"
+		"build": "react-scripts build",
+		"remove-modules": "rm -rf ./node_modules"
 	},
 	"eslintConfig": {
 		"extends": "react-app"

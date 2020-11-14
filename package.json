@@ -15,6 +15,7 @@
 	},
 	"scripts": {
 		"dev": "concurrently -n \"server, web  ,\" -c \"bgGreen,bgBlue\"  \"yarn --cwd server dev\" \"yarn --cwd web dev\"",
-		"create-mongodb": "docker run -it -v /Volumes/mongodata:/data/db -p 27017:27017 --name mongodb -d mongo"
+		"create-mongodb": "docker run -it -v /Volumes/mongodata:/data/db -p 27017:27017 --name mongodb -d mongo",
+		"remove-modules": "rm -rf ./node_modules && yarn --cwd server remove-modules && yarn --cwd web remove-modules"
 	}
 }
