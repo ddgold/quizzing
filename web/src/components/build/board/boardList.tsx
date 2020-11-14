@@ -3,7 +3,7 @@ import { Table } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { gql, useQuery } from "@apollo/client";
 
-import { CreateNewBoard, Error, Loading, Page } from "../..";
+import { CreateBoard, Error, Loading, Page } from "../..";
 import { BoardModel } from "../../../models/build";
 
 const BOARDS = gql`
@@ -42,7 +42,7 @@ export const BoardList = ({ showAll }: Props) => {
 	}
 
 	return (
-		<Page title={showAll ? "All Boards" : "My Boards"} titleRight={<CreateNewBoard />}>
+		<Page title={showAll ? "All Boards" : "My Boards"} titleRight={<CreateBoard />}>
 			<Table striped bordered hover>
 				<thead>
 					<tr>

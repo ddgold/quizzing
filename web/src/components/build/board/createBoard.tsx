@@ -7,9 +7,9 @@ import { useHistory } from "react-router-dom";
 import { FieldError, FormResult } from "../../../models/shared";
 import { BoardModel } from "../../../models/build";
 
-const CREATE_NEW_BOARD = gql`
-	mutation CreateNewBoard($name: String!) {
-		createNewBoard(name: $name) {
+const CREATE_BOARD = gql`
+	mutation CreateBoard($name: String!) {
+		createBoard(name: $name) {
 			result {
 				id
 			}
@@ -24,17 +24,17 @@ const CREATE_NEW_BOARD = gql`
 type Fields = "name";
 
 interface Data {
-	createNewBoard: FormResult<BoardModel, Fields>;
+	createBoard: FormResult<BoardModel, Fields>;
 }
 
 interface State {
 	name: string;
 }
 
-export const CreateNewBoard = () => {
+export const CreateBoard = () => {
 	const [showModal, setShowModal] = useState<boolean>(false);
 	const { errors, handleSubmit, register, setError } = useForm<State>();
-	const [createNewBoardMutation] = useMutation<Data, State>(CREATE_NEW_BOARD);
+	const [createBoardMutation] = useMutation<Data, State>(CREATE_BOARD);
 	const history = useHistory();
 
 	const sanitizeName = (name: string): string => {
@@ -48,18 +48,18 @@ export const CreateNewBoard = () => {
 	const onSubmit = handleSubmit(async (state: State) => {
 		state.name = sanitizeName(state.name);
 
-		const result = await createNewBoardMutation({
+		const result = await createBoardMutation({
 			variables: state
 		});
 
-		if (result.data!.createNewBoard.errors) {
-			result.data!.createNewBoard.errors.forEach((error: FieldError<Fields>) => {
+		if (result.data!.createBoard.errors) {
+			result.data!.createBoard.errors.forEach((error: FieldError<Fields>) => {
 				setError(error.field, { type: "manual", message: error.message });
 			});
 		} else {
 			setShowModal(false);
 
-			const newBoardId = result.data!.createNewBoard.result.id;
+			const newBoardId = result.data!.createBoard.result.id;
 			history.push(`/boards/id/${newBoardId}`);
 		}
 	});

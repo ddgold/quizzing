@@ -2,16 +2,29 @@ import { Document, Model, model, Schema } from "mongoose";
 
 interface Board {
 	name: string;
+	description: string;
+	categories: string[];
 	creator: string;
-	created?: Date;
+	created: Date;
+	updated: Date;
 }
 
 const BoardSchema = new Schema({
 	name: {
 		type: Schema.Types.String,
 		required: true,
-		maxlength: 32,
-		match: /^[A-Za-z0-9 ]*$/
+		minlength: 1,
+		maxlength: 32
+	},
+	description: {
+		type: Schema.Types.String,
+		required: false,
+		minlength: 0,
+		maxlength: 265
+	},
+	categories: {
+		type: [{ type: Schema.Types.ObjectId, ref: "category" }],
+		required: true
 	},
 	creator: {
 		type: Schema.Types.ObjectId,
@@ -20,16 +33,25 @@ const BoardSchema = new Schema({
 	},
 	created: {
 		type: Schema.Types.Date,
-		default: new Date(),
+		required: true
+	},
+	updated: {
+		type: Schema.Types.Date,
 		required: true
 	}
 });
 
-// Sanitize name
 BoardSchema.pre("save", async function (this: BoardDocument, next) {
+	// Sanitize name
 	if (this.isModified("name")) {
 		this.name = this.name.trim();
 	}
+
+	// Sanitize name
+	if (this.isModified("description")) {
+		this.description = this.description.trim();
+	}
+
 	return next();
 });
 

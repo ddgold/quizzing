@@ -51,8 +51,11 @@ type CategoryResult {
 type Board {
 	id: String!
 	name: String!
+	description: String!
+	categories: [Category]!
 	creator: User!
 	created: Date!
+	updated: Date!
 }
 
 type BoardResult {
@@ -85,7 +88,8 @@ type Mutation {
 	register(nickname: String!, email: String!, password: String!): AuthResult!
 
 	# Build
-	createNewBoard(name: String!): BoardResult!
+	createBoard(name: String!): BoardResult!
+	updateBoard(id: String!, name: String!, description: String!, categoryIds: [String!]!): BoardResult!
 	createCategory(name: String!): CategoryResult!
 	updateCategory(id: String!, name: String!, description: String!, clues: [ClueInput!]!): CategoryResult!
 }

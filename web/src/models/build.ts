@@ -3,8 +3,11 @@ import { User } from "./user";
 export interface BoardModel {
 	id: string;
 	name: string;
+	description: string;
+	categories: CategoryModel[];
 	creator: User;
 	created: Date;
+	updated: Date;
 }
 
 export interface CategoryModel {
