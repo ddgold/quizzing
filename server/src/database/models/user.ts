@@ -5,8 +5,8 @@ interface User {
 	nickname: string;
 	email: string;
 	password: string;
-	created?: Date;
-	lastLogin?: Date;
+	created: Date;
+	lastLogin: Date;
 }
 
 const UserSchema = new Schema({

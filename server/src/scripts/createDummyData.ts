@@ -1,9 +1,17 @@
-import Database, { BoardModel, CategoryModel, ClueModel, UserDocument, UserModel } from "../database";
+import Database, {
+	BoardDocument,
+	BoardModel,
+	CategoryDocument,
+	CategoryModel,
+	ClueModel,
+	UserDocument,
+	UserModel
+} from "../database";
 
 const createDummyUsers = async (): Promise<void> => {
 	const users = [
-		{ nickname: "king_kong", email: "king@test.com", password: "_PL<0okm" },
-		{ nickname: "foobar", email: "foobar@test.com", password: "_PL<0okm" }
+		{ nickname: "king_kong", email: "king@test.com", password: "_PL<0okm", created: new Date(), lastLogin: new Date() },
+		{ nickname: "foobar", email: "foobar@test.com", password: "_PL<0okm", created: new Date(), lastLogin: new Date() }
 	];
 
 	for (const user of users) {
@@ -28,20 +36,73 @@ const getUser = async (nickName: string): Promise<UserDocument> => {
 	return user;
 };
 
+const getBoard = async (name: string): Promise<BoardDocument> => {
+	const board = await BoardModel.findOne({ name: name }).exec();
+	if (!board) {
+		throw new Error(`Required board '${board}' not found.`);
+	}
+	return board;
+};
+
+const getCategory = async (name: string): Promise<CategoryDocument> => {
+	const category = await CategoryModel.findOne({ name: name }).exec();
+	if (!category) {
+		throw new Error(`Required category '${category}' not found.`);
+	}
+	return category;
+};
+
 const createDummyBoards = async (): Promise<void> => {
-	const foobarUser = await getUser("foobar");
-	const kingKongUser = await getUser("king_kong");
+	const foobar = await getUser("foobar");
+	const kingKong = await getUser("king_kong");
+
+	const kraftDynasty = await getCategory("The Kraft Dynasty");
+	const solSystem = await getCategory("The Sol System");
+	const collegeMascots = await getCategory("College Mascots");
 
 	const boards = [
-		{ name: "Civil War History", creator: foobarUser.id },
-		{ name: "American Geography", creator: foobarUser.id },
-		{ name: "Sports Universal", creator: foobarUser.id },
-		{ name: "Science Fun", creator: kingKongUser.id }
+		{
+			name: "Civil War History",
+			description: "",
+			categories: [],
+			creator: foobar.id,
+			created: new Date(),
+			updated: new Date()
+		},
+		{
+			name: "American Geography",
+			description: "",
+			categories: [],
+			creator: foobar.id,
+			created: new Date(),
+			updated: new Date()
+		},
+		{
+			name: "Sports Universal",
+			description: "",
+			categories: [kraftDynasty.id, collegeMascots.id],
+			creator: foobar.id,
+			created: new Date(),
+			updated: new Date()
+		},
+		{
+			name: "Science Fun",
+			description: "",
+			categories: [solSystem.id],
+			creator: kingKong.id,
+			created: new Date(),
+			updated: new Date()
+		}
 	];
 
 	for (const board of boards) {
-		await BoardModel.create(board);
-		console.log(`Created board '${board.name}'`);
+		try {
+			await getBoard(board.name);
+			console.log(`Board '${board.name}' already exists.`);
+		} catch (error) {
+			await BoardModel.create(board);
+			console.log(`Created board '${board.name}'`);
+		}
 	}
 };
 
@@ -150,8 +211,13 @@ const createDummyCategories = async (): Promise<void> => {
 	];
 
 	for (const category of categories) {
-		await CategoryModel.create(category);
-		console.log(`Created category '${category.name}'`);
+		try {
+			await getCategory(category.name);
+			console.log(`Category '${category.name}' already exists.`);
+		} catch (error) {
+			await CategoryModel.create(category);
+			console.log(`Created category '${category.name}'`);
+		}
 	}
 };
 
@@ -196,6 +262,7 @@ const addScript = (scripts: string[], newScript: string): void => {
 		// Required prerequisite scripts
 		if (newScript === "boards") {
 			addScript(scripts, "users");
+			addScript(scripts, "categories");
 		} else if (newScript === "categories") {
 			addScript(scripts, "users");
 		}
