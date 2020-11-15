@@ -70,7 +70,13 @@ export const userResolvers: IResolvers<any, Context> = {
 
 			// Create new user
 			try {
-				const newUser = await UserModel.create({ nickname: nickname, email: email, password: password });
+				const newUser = await UserModel.create({
+					nickname: nickname,
+					email: email,
+					password: password,
+					created: new Date(),
+					lastLogin: new Date()
+				});
 
 				// Return new user
 				sendRefreshToken(context.res, signRefreshToken({ userId: newUser.id }));
