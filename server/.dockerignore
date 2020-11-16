@@ -1,0 +1,16 @@
+# Dependency directories
+node_modules/
+
+# Build directories
+build/
+
+# All environment files
+*.env*
+
+# Logs
+*logs/
+*.log
+
+# Dockerfiles
+Dockerfile
+.dockerignore

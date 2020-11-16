@@ -28,6 +28,7 @@
 	},
 	"scripts": {
 		"dev": "react-scripts start",
+		"prebuild": "rm -rf ./build",
 		"build": "react-scripts build",
 		"remove-modules": "rm -rf ./node_modules"
 	},

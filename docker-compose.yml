@@ -1,0 +1,50 @@
+version: "3.8"
+services:
+  web:
+    container_name: web
+    build:
+      context: ./web
+      args:
+        server_url: http://192.168.1.191:8000
+        graphqL_port:
+    depends_on:
+      - server
+    ports:
+      - 3000:80
+    networks:
+      - graphql
+  server:
+    container_name: server
+    build: ./server
+    environment:
+      - GRAPHQL_PORT=8000
+      - MONGODB_URL=mongodb://192.168.1.191:27017
+      - FRONTEND_URL=http://192.168.1.191:3000
+      - SECRETS_DIR=/run/secrets
+    secrets:
+      - access_token
+      - refresh_token
+    depends_on:
+      - mongo
+    ports:
+      - 8000:8000
+    networks:
+      - database
+      - graphql
+  mongo:
+    container_name: mongo
+    image: mongo:4.4.1
+    volumes:
+      - /Volumes/mongodata:/data/db
+    ports:
+      - 27017:27017
+    networks:
+      - database
+secrets:
+  access_token:
+    file: ./secrets/access_token
+  refresh_token:
+    file: ./secrets/refresh_token
+networks:
+  database:
+  graphql:

@@ -5,13 +5,10 @@
 		"target": "es6",
 		"noImplicitAny": true,
 		"moduleResolution": "node",
-		"sourceMap": true,
-		"outDir": "./dist",
+		"skipLibCheck": true,
 		"baseUrl": ".",
-		"paths": {
-			"*": ["./node_modules/*"]
-		},
-		"resolveJsonModule": true
+		"outDir": "./build"
 	},
-	"include": ["./src/**/*"]
+	"include": ["./src/**/*"],
+	"exclude": ["./node_modules", "./**/*.spec.ts", "./src/scripts"]
 }

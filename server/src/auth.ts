@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 import { AuthenticationError } from "apollo-server-express";
 
 import { UserModel } from "./database";
+import { getDockerSecret } from "./environment";
 
 export interface Context {
 	req: Request;
@@ -15,13 +16,13 @@ interface TokenPayload {
 }
 
 export const signAccessToken = (payload: TokenPayload): string => {
-	return sign({ userId: payload.userId }, process.env.ACCESS_TOKEN_SECRET!, {
+	return sign({ userId: payload.userId }, getDockerSecret("access_token"), {
 		expiresIn: "15m"
 	});
 };
 
 export const signRefreshToken = (payload: TokenPayload): string => {
-	return sign({ userId: payload.userId }, process.env.REFRESH_TOKEN_SECRET!, {
+	return sign({ userId: payload.userId }, getDockerSecret("refresh_token"), {
 		expiresIn: "7d"
 	});
 };
@@ -42,7 +43,7 @@ export const assertAuthorized = async (context: Context): Promise<void> => {
 
 	try {
 		const token = authorization.split(" ")[1];
-		context.payload = verify(token, process.env.ACCESS_TOKEN_SECRET!) as TokenPayload;
+		context.payload = verify(token, getDockerSecret("access_token")) as TokenPayload;
 	} catch (error) {
 		console.log(`Authentication error: ${error}`);
 		throw new AuthenticationError("Not Authorized");
@@ -64,7 +65,7 @@ export const postRefreshToken = async (
 	}
 
 	try {
-		const payload = verify(token, process.env.REFRESH_TOKEN_SECRET!) as TokenPayload;
+		const payload = verify(token, getDockerSecret("refresh_token")) as TokenPayload;
 
 		const user = await UserModel.findOne({ _id: payload.userId });
 		if (!user) {
