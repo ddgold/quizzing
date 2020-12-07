@@ -63,8 +63,10 @@ type BoardResult {
 	errors: [FieldError!]
 }
 
+union QueryObject = Board | Category
+
 type QueryResult {
-	result: Board
+	result: QueryObject
 	canEdit: Boolean
 }
 
@@ -80,7 +82,7 @@ type Query {
 	boards(showAll: Boolean!): [Board!]
 	boardById(id: String!): QueryResult
 	categories(showAll: Boolean!): [Category!]
-	categoryById(id: String!): Category
+	categoryById(id: String!): QueryResult
 }
 
 # ---------

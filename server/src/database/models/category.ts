@@ -50,6 +50,17 @@ CategorySchema.pre("save", async function (this: CategoryDocument, next) {
 
 export interface CategoryDocument extends Category, Document {}
 
-interface CategoryModel extends Model<CategoryDocument> {}
+interface CategoryModel extends Model<CategoryDocument> {
+	canEdit: (categoryId: string, userId: string) => Promise<boolean>;
+}
+
+CategorySchema.statics.canEdit = async function (categoryId: string, userId: string): Promise<boolean> {
+	let category = await CategoryModel.findById(categoryId).exec();
+	if (!category) {
+		return false;
+	}
+
+	return userId == category.creator;
+};
 
 export const CategoryModel = model<CategoryDocument>("category", CategorySchema) as CategoryModel;

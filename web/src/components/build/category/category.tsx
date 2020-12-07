@@ -4,30 +4,34 @@ import { RouteComponentProps, withRouter } from "react-router-dom";
 import { gql, useQuery } from "@apollo/client";
 
 import { EditCategory, Error, Loading, Page, ViewCategory } from "../..";
+import { QueryError } from "../../../models/shared";
 import { CategoryModel } from "../../../models/build";
 
 const CATEGORY_BY_ID = gql`
 	query CategoryById($id: String!) {
 		categoryById(id: $id) {
-			id
-			name
-			description
-			clues {
-				answer
-				question
-			}
-			creator {
+			result {
 				id
-				nickname
+				name
+				description
+				clues {
+					answer
+					question
+				}
+				creator {
+					id
+					nickname
+				}
+				created
+				updated
 			}
-			created
-			updated
+			canEdit
 		}
 	}
 `;
 
 interface Data {
-	categoryById: CategoryModel;
+	categoryById: QueryError<CategoryModel>;
 }
 
 interface PathVariables {
@@ -52,8 +56,10 @@ const CategoryWithoutRouter = (props: Props) => {
 					Cancel
 				</Button>
 			);
-		} else {
+		} else if (data!.categoryById.canEdit) {
 			return <Button onClick={() => setEditing(true)}>Edit</Button>;
+		} else {
+			return undefined;
 		}
 	};
 
@@ -65,12 +71,16 @@ const CategoryWithoutRouter = (props: Props) => {
 		return <Loading />;
 	}
 
+	if (!data?.categoryById.result) {
+		return <Error message={"Board not found"} />;
+	}
+
 	return (
-		<Page title={data!.categoryById.name} titleRight={editButton()}>
+		<Page title={data!.categoryById.result.name} titleRight={editButton()}>
 			{editing ? (
-				<EditCategory category={data!.categoryById} onSubmit={() => setEditing(false)} />
+				<EditCategory category={data!.categoryById.result} onSubmit={() => setEditing(false)} />
 			) : (
-				<ViewCategory category={data!.categoryById} />
+				<ViewCategory category={data!.categoryById.result} />
 			)}
 		</Page>
 	);

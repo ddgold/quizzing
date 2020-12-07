@@ -6,6 +6,19 @@ import { BoardDocument, BoardModel, CategoryDocument, CategoryModel, ClueDocumen
 import { Context, assertAuthorized } from "../../auth";
 
 export const buildResolvers: IResolvers<any, Context> = {
+	QueryObject: {
+		__resolveType(object: BoardDocument | CategoryDocument) {
+			if ((object as BoardDocument).categories) {
+				return "Board";
+			}
+
+			if ((object as CategoryDocument).clues) {
+				return "Category";
+			}
+
+			return null;
+		}
+	},
 	Query: {
 		boards: async (_, { showAll }, context): Promise<BoardDocument[]> => {
 			await assertAuthorized(context);
@@ -51,9 +64,12 @@ export const buildResolvers: IResolvers<any, Context> = {
 					.exec();
 			}
 		},
-		categoryById: async (_, { id }, context): Promise<CategoryDocument> => {
+		categoryById: async (_, { id }, context): Promise<QueryError<CategoryDocument>> => {
 			await assertAuthorized(context);
-			return await CategoryModel.findById(id).populate("clues").populate("creator").exec();
+			let category = await CategoryModel.findById(id).populate("clues").populate("creator").exec();
+
+			let canEdit = await CategoryModel.canEdit(id, context.payload!.userId);
+			return { result: category, canEdit: canEdit };
 		}
 	},
 	Mutation: {
@@ -179,6 +195,12 @@ export const buildResolvers: IResolvers<any, Context> = {
 		},
 		updateCategory: async (_, { id, name, description, clues }, context) => {
 			await assertAuthorized(context);
+
+			let canEdit = await CategoryModel.canEdit(id, context.payload!.userId);
+			if (!canEdit) {
+				throw new ForbiddenError("No edit permission");
+			}
+
 			try {
 				let clueIds: string[] = await Promise.all(
 					clues.map(async (clue: ClueDocument, index: number) => {
