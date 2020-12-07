@@ -11,19 +11,21 @@ const CATEGORY_BY_ID = gql`
 	query CategoryById($id: String!) {
 		categoryById(id: $id) {
 			result {
-				id
-				name
-				description
-				clues {
-					answer
-					question
-				}
-				creator {
+				... on Category {
 					id
-					nickname
+					name
+					description
+					clues {
+						answer
+						question
+					}
+					creator {
+						id
+						nickname
+					}
+					created
+					updated
 				}
-				created
-				updated
 			}
 			canEdit
 		}

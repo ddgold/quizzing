@@ -11,20 +11,22 @@ const BOARD_BY_ID = gql`
 	query BoardById($id: String!) {
 		boardById(id: $id) {
 			result {
-				id
-				name
-				description
-				categories {
+				... on Board {
 					id
 					name
 					description
+					categories {
+						id
+						name
+						description
+					}
+					creator {
+						id
+						nickname
+					}
+					created
+					updated
 				}
-				creator {
-					id
-					nickname
-				}
-				created
-				updated
 			}
 			canEdit
 		}

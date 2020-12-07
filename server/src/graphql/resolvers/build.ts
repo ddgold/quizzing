@@ -1,12 +1,12 @@
 import { IResolvers } from "graphql-tools";
 import { ForbiddenError } from "apollo-server-express";
 
-import { QueryError } from "../types";
+import { FormResult, QueryResult } from "../types";
 import { BoardDocument, BoardModel, CategoryDocument, CategoryModel, ClueDocument, ClueModel } from "../../database";
 import { Context, assertAuthorized } from "../../auth";
 
 export const buildResolvers: IResolvers<any, Context> = {
-	QueryObject: {
+	ResultObject: {
 		__resolveType(object: BoardDocument | CategoryDocument) {
 			if ((object as BoardDocument).categories) {
 				return "Board";
@@ -40,7 +40,7 @@ export const buildResolvers: IResolvers<any, Context> = {
 					.exec();
 			}
 		},
-		boardById: async (_, { id }, context): Promise<QueryError<BoardDocument>> => {
+		boardById: async (_, { id }, context): Promise<QueryResult<BoardDocument>> => {
 			await assertAuthorized(context);
 			let board = await BoardModel.findById(id)
 				.populate({
@@ -64,7 +64,7 @@ export const buildResolvers: IResolvers<any, Context> = {
 					.exec();
 			}
 		},
-		categoryById: async (_, { id }, context): Promise<QueryError<CategoryDocument>> => {
+		categoryById: async (_, { id }, context): Promise<QueryResult<CategoryDocument>> => {
 			await assertAuthorized(context);
 			let category = await CategoryModel.findById(id).populate("clues").populate("creator").exec();
 
@@ -73,7 +73,7 @@ export const buildResolvers: IResolvers<any, Context> = {
 		}
 	},
 	Mutation: {
-		createBoard: async (_, { name }, context) => {
+		createBoard: async (_, { name }, context): Promise<FormResult<BoardDocument>> => {
 			await assertAuthorized(context);
 			try {
 				const newBoard = await BoardModel.create({
@@ -99,7 +99,7 @@ export const buildResolvers: IResolvers<any, Context> = {
 				return { errors: [{ message: "Error creating board", field: "name" }] };
 			}
 		},
-		updateBoard: async (_, { id, name, description, categoryIds }, context) => {
+		updateBoard: async (_, { id, name, description, categoryIds }, context): Promise<FormResult<BoardDocument>> => {
 			await assertAuthorized(context);
 
 			let canEdit = await BoardModel.canEdit(id, context.payload!.userId);
@@ -167,7 +167,7 @@ export const buildResolvers: IResolvers<any, Context> = {
 				return { errors: [{ message: "Error updating board", field: "name" }] };
 			}
 		},
-		createCategory: async (_, { name }, context) => {
+		createCategory: async (_, { name }, context): Promise<FormResult<CategoryDocument>> => {
 			await assertAuthorized(context);
 			try {
 				const newCategory = await CategoryModel.create({
@@ -179,7 +179,7 @@ export const buildResolvers: IResolvers<any, Context> = {
 					updated: new Date()
 				});
 
-				newCategory.populate("creator").execPopulate();
+				await newCategory.populate("creator").execPopulate();
 
 				return { result: newCategory };
 			} catch (error) {
@@ -193,7 +193,7 @@ export const buildResolvers: IResolvers<any, Context> = {
 				return { errors: [{ message: "Error creating category", field: "name" }] };
 			}
 		},
-		updateCategory: async (_, { id, name, description, clues }, context) => {
+		updateCategory: async (_, { id, name, description, clues }, context): Promise<FormResult<CategoryDocument>> => {
 			await assertAuthorized(context);
 
 			let canEdit = await CategoryModel.canEdit(id, context.payload!.userId);

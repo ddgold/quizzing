@@ -11,7 +11,9 @@ const CREATE_BOARD = gql`
 	mutation CreateBoard($name: String!) {
 		createBoard(name: $name) {
 			result {
-				id
+				... on Board {
+					id
+				}
 			}
 			errors {
 				message

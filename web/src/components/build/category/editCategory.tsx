@@ -10,18 +10,20 @@ const UPDATE_CATEGORY = gql`
 	mutation UpdateCategory($id: String!, $name: String!, $description: String!, $clues: [ClueInput!]!) {
 		updateCategory(id: $id, name: $name, description: $description, clues: $clues) {
 			result {
-				id
-				name
-				description
-				clues {
-					answer
-					question
-				}
-				creator {
+				... on Category {
 					id
-					nickname
+					name
+					description
+					clues {
+						answer
+						question
+					}
+					creator {
+						id
+						nickname
+					}
+					created
 				}
-				created
 			}
 			errors {
 				message

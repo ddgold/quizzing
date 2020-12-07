@@ -10,20 +10,22 @@ const UPDATE_BOARD = gql`
 	mutation UpdateBoard($id: String!, $name: String!, $description: String!, $categoryIds: [String!]!) {
 		updateBoard(id: $id, name: $name, description: $description, categoryIds: $categoryIds) {
 			result {
-				id
-				name
-				description
-				categories {
+				... on Board {
 					id
 					name
 					description
+					categories {
+						id
+						name
+						description
+					}
+					creator {
+						id
+						nickname
+					}
+					created
+					updated
 				}
-				creator {
-					id
-					nickname
-				}
-				created
-				updated
 			}
 			errors {
 				message

@@ -43,11 +43,6 @@ type Category {
 	updated: Date!
 }
 
-type CategoryResult {
-	result: Category
-	errors: [FieldError!]
-}
-
 type Board {
 	id: String!
 	name: String!
@@ -58,15 +53,15 @@ type Board {
 	updated: Date!
 }
 
-type BoardResult {
-	result: Board
+union ResultObject = Board | Category
+
+type FormResult {
+	result: ResultObject
 	errors: [FieldError!]
 }
 
-union QueryObject = Board | Category
-
 type QueryResult {
-	result: QueryObject
+	result: ResultObject
 	canEdit: Boolean
 }
 
@@ -95,8 +90,8 @@ type Mutation {
 	register(nickname: String!, email: String!, password: String!): AuthResult!
 
 	# Build
-	createBoard(name: String!): BoardResult!
-	updateBoard(id: String!, name: String!, description: String!, categoryIds: [String!]!): BoardResult!
-	createCategory(name: String!): CategoryResult!
-	updateCategory(id: String!, name: String!, description: String!, clues: [ClueInput!]!): CategoryResult!
+	createBoard(name: String!): FormResult!
+	updateBoard(id: String!, name: String!, description: String!, categoryIds: [String!]!): FormResult!
+	createCategory(name: String!): FormResult!
+	updateCategory(id: String!, name: String!, description: String!, clues: [ClueInput!]!): FormResult!
 }

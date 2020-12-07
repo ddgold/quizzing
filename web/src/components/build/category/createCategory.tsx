@@ -11,7 +11,9 @@ const CREATE_CATEGORY = gql`
 	mutation CreateCategory($name: String!) {
 		createCategory(name: $name) {
 			result {
-				id
+				... on Category {
+					id
+				}
 			}
 			errors {
 				message
