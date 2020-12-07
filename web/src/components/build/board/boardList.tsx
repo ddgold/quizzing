@@ -46,8 +46,8 @@ export const BoardList = ({ showAll }: Props) => {
 			<Table striped bordered hover>
 				<thead>
 					<tr>
-						<th>Name</th>
-						<th>Created</th>
+						<th style={{ width: "50%" }}>Name</th>
+						<th style={{ width: "50%" }}>Created</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -58,7 +58,9 @@ export const BoardList = ({ showAll }: Props) => {
 								<td>
 									<Link to={"/boards/id/" + board.id}>{board.name}</Link>
 								</td>
-								<td>{`${created.toLocaleString()} by ${board.creator.nickname}`}</td>
+								<td>
+									{showAll ? `${created.toLocaleString()} by ${board.creator.nickname}` : created.toLocaleString()}
+								</td>
 							</tr>
 						);
 					})}

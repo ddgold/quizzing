@@ -87,7 +87,6 @@ export const EditBoard = (props: Props) => {
 			}
 		} catch (error) {
 			setError("name", { type: "manual", message: "Error updating board" });
-			console.error(error);
 		}
 	});
 

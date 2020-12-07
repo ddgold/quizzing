@@ -1,5 +1,7 @@
 import { IResolvers } from "graphql-tools";
+import { ForbiddenError } from "apollo-server-express";
 
+import { QueryError } from "../types";
 import { BoardDocument, BoardModel, CategoryDocument, CategoryModel, ClueDocument, ClueModel } from "../../database";
 import { Context, assertAuthorized } from "../../auth";
 
@@ -25,7 +27,7 @@ export const buildResolvers: IResolvers<any, Context> = {
 					.exec();
 			}
 		},
-		boardById: async (_, { id }, context): Promise<BoardDocument> => {
+		boardById: async (_, { id }, context): Promise<QueryError<BoardDocument>> => {
 			await assertAuthorized(context);
 			let board = await BoardModel.findById(id)
 				.populate({
@@ -35,7 +37,8 @@ export const buildResolvers: IResolvers<any, Context> = {
 				.populate("creator")
 				.exec();
 
-			return board;
+			let canEdit = await BoardModel.canEdit(id, context.payload!.userId);
+			return { result: board, canEdit: canEdit };
 		},
 		categories: async (_, { showAll }, context): Promise<CategoryDocument[]> => {
 			await assertAuthorized(context);
@@ -82,6 +85,11 @@ export const buildResolvers: IResolvers<any, Context> = {
 		},
 		updateBoard: async (_, { id, name, description, categoryIds }, context) => {
 			await assertAuthorized(context);
+
+			let canEdit = await BoardModel.canEdit(id, context.payload!.userId);
+			if (!canEdit) {
+				throw new ForbiddenError("No edit permission");
+			}
 
 			try {
 				// Verify categories exist
@@ -133,7 +141,6 @@ export const buildResolvers: IResolvers<any, Context> = {
 
 				return { result: board };
 			} catch (error) {
-				console.log("A", error.name);
 				switch (error.name) {
 					case "ValidationError":
 						console.log(`Update board mutation error: ${error.message}`);

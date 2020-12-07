@@ -57,6 +57,17 @@ BoardSchema.pre("save", async function (this: BoardDocument, next) {
 
 export interface BoardDocument extends Board, Document {}
 
-interface BoardModel extends Model<BoardDocument> {}
+interface BoardModel extends Model<BoardDocument> {
+	canEdit: (boardId: string, userId: string) => Promise<boolean>;
+}
+
+BoardSchema.statics.canEdit = async function (boardId: string, userId: string): Promise<boolean> {
+	let board = await BoardModel.findById(boardId).exec();
+	if (!board) {
+		return false;
+	}
+
+	return userId == board.creator;
+};
 
 export const BoardModel = model<BoardDocument>("board", BoardSchema) as BoardModel;

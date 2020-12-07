@@ -4,31 +4,35 @@ import { RouteComponentProps, withRouter } from "react-router-dom";
 import { gql, useQuery } from "@apollo/client";
 
 import { EditBoard, Error, Loading, Page, ViewBoard } from "../..";
+import { QueryError } from "../../../models/shared";
 import { BoardModel } from "../../../models/build";
 
 const BOARD_BY_ID = gql`
 	query BoardById($id: String!) {
 		boardById(id: $id) {
-			id
-			name
-			description
-			categories {
+			result {
 				id
 				name
 				description
+				categories {
+					id
+					name
+					description
+				}
+				creator {
+					id
+					nickname
+				}
+				created
+				updated
 			}
-			creator {
-				id
-				nickname
-			}
-			created
-			updated
+			canEdit
 		}
 	}
 `;
 
 interface Data {
-	boardById: BoardModel;
+	boardById: QueryError<BoardModel>;
 }
 
 interface PathVariables {
@@ -53,8 +57,10 @@ const BoardWithoutRouter = (props: Props) => {
 					Cancel
 				</Button>
 			);
-		} else {
+		} else if (data!.boardById.canEdit) {
 			return <Button onClick={() => setEditing(true)}>Edit</Button>;
+		} else {
+			return undefined;
 		}
 	};
 
@@ -66,12 +72,16 @@ const BoardWithoutRouter = (props: Props) => {
 		return <Loading />;
 	}
 
+	if (!data?.boardById.result) {
+		return <Error message={"Board not found"} />;
+	}
+
 	return (
-		<Page title={data!.boardById.name} titleRight={editButton()}>
+		<Page title={data!.boardById.result.name} titleRight={editButton()}>
 			{editing ? (
-				<EditBoard board={data!.boardById} onSubmit={() => setEditing(false)} />
+				<EditBoard board={data!.boardById.result} onSubmit={() => setEditing(false)} />
 			) : (
-				<ViewBoard board={data!.boardById} />
+				<ViewBoard board={data!.boardById.result} />
 			)}
 		</Page>
 	);

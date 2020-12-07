@@ -78,7 +78,6 @@ export const EditCategory = (props: Props) => {
 			}
 		} catch (error) {
 			setError("name", { type: "manual", message: "Error updating category" });
-			console.error(error);
 		}
 	});
 

@@ -1,6 +1,6 @@
 scalar Date
 
-type FormError {
+type FieldError {
 	message: String!
 	field: String!
 }
@@ -17,7 +17,7 @@ type User {
 type AuthResult {
 	accessToken: String
 	user: User
-	errors: [FormError!]
+	errors: [FieldError!]
 }
 
 # -----
@@ -45,7 +45,7 @@ type Category {
 
 type CategoryResult {
 	result: Category
-	errors: [FormError!]
+	errors: [FieldError!]
 }
 
 type Board {
@@ -60,7 +60,12 @@ type Board {
 
 type BoardResult {
 	result: Board
-	errors: [FormError!]
+	errors: [FieldError!]
+}
+
+type QueryResult {
+	result: Board
+	canEdit: Boolean
 }
 
 # -------
@@ -73,7 +78,7 @@ type Query {
 
 	# Build
 	boards(showAll: Boolean!): [Board!]
-	boardById(id: String!): Board
+	boardById(id: String!): QueryResult
 	categories(showAll: Boolean!): [Category!]
 	categoryById(id: String!): Category
 }

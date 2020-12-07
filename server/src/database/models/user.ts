@@ -57,7 +57,7 @@ export interface UserDocument extends User, Document {
 	comparePassword: (this: UserDocument, candidatePassword: string) => Promise<boolean>;
 }
 
-UserSchema.methods.comparePassword = async function (this: UserDocument, candidatePassword: string) {
+UserSchema.methods.comparePassword = async function (this: UserDocument, candidatePassword: string): Promise<boolean> {
 	let result = await bcrypt.compare(candidatePassword, this.password);
 	return result;
 };
