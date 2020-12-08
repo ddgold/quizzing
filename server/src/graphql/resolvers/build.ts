@@ -1,13 +1,13 @@
 import { IResolvers } from "graphql-tools";
 import { ForbiddenError } from "apollo-server-express";
 
-import { FormResult, QueryResult } from "../types";
+import { FormResult, QueryResult, ResultObject } from "../types";
 import { BoardDocument, BoardModel, CategoryDocument, CategoryModel, ClueDocument, ClueModel } from "../../database";
 import { Context, assertAuthorized } from "../../auth";
 
 export const buildResolvers: IResolvers<any, Context> = {
 	ResultObject: {
-		__resolveType(object: BoardDocument | CategoryDocument) {
+		__resolveType(object: ResultObject) {
 			if ((object as BoardDocument).categories) {
 				return "Board";
 			}
@@ -50,6 +50,10 @@ export const buildResolvers: IResolvers<any, Context> = {
 				.populate("creator")
 				.exec();
 
+			if (!board) {
+				return {};
+			}
+
 			let canEdit = await BoardModel.canEdit(id, context.payload!.userId);
 			return { result: board, canEdit: canEdit };
 		},
@@ -67,6 +71,10 @@ export const buildResolvers: IResolvers<any, Context> = {
 		categoryById: async (_, { id }, context): Promise<QueryResult<CategoryDocument>> => {
 			await assertAuthorized(context);
 			let category = await CategoryModel.findById(id).populate("clues").populate("creator").exec();
+
+			if (!category) {
+				return {};
+			}
 
 			let canEdit = await CategoryModel.canEdit(id, context.payload!.userId);
 			return { result: category, canEdit: canEdit };
