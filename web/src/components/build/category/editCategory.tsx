@@ -128,7 +128,7 @@ export const EditCategory = (props: Props) => {
 				<h3>Clues</h3>
 			</Form.Group>
 			{fields.length > 0 ? (
-				fields.map((item, index) => {
+				fields.map((clue, index) => {
 					let answerError = "";
 					let questionError = "";
 					let errorString = "";
@@ -150,7 +150,7 @@ export const EditCategory = (props: Props) => {
 					}
 
 					return (
-						<InputGroup key={item.id} style={{ marginBottom: "0.5rem" }}>
+						<InputGroup key={clue.id} style={{ marginBottom: "0.5rem" }}>
 							<Form.Control
 								name={`clues[${index}].answer`}
 								id={`clues[${index}].answer`}
@@ -167,7 +167,7 @@ export const EditCategory = (props: Props) => {
 										message: "Answer must be at most 128 characters"
 									}
 								})}
-								defaultValue={item.answer}
+								defaultValue={clue.answer}
 								placeholder="Enter answer"
 								isInvalid={!!answerError}
 							/>
@@ -188,7 +188,7 @@ export const EditCategory = (props: Props) => {
 										message: "Question must be at most 64 characters"
 									}
 								})}
-								defaultValue={item.question}
+								defaultValue={clue.question}
 								placeholder="Enter question"
 								isInvalid={!!questionError}
 							/>

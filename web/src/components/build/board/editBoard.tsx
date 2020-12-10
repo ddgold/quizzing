@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React from "react";
 import { Button, Col, Form, InputGroup, Row } from "react-bootstrap";
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { gql, useMutation } from "@apollo/client";
 
 import { FieldError, FormResult } from "../../../models/shared";
@@ -55,14 +55,9 @@ interface State {
 
 export const EditBoard = (props: Props) => {
 	const { control, errors, handleSubmit, register, setError } = useForm<State>({
-		defaultValues: {
-			...props.board,
-			categoryIds: props.board.categories.map((category: CategoryModel) => {
-				return category.id;
-			})
-		}
+		defaultValues: props.board
 	});
-	const [size, setSize] = useState(props.board.categories.length);
+	const { fields, append, remove } = useFieldArray<CategoryModel>({ control, name: "categories" });
 	const [updateBoardMutation] = useMutation<Data, State>(UPDATE_BOARD);
 
 	const onSubmit = handleSubmit(async (state: State) => {
@@ -91,14 +86,6 @@ export const EditBoard = (props: Props) => {
 			setError("name", { type: "manual", message: "Error updating board" });
 		}
 	});
-
-	const indexArray = (size: number): number[] => {
-		let array = [];
-		for (let i = 0; i < size; i++) {
-			array.push(i);
-		}
-		return array;
-	};
 
 	return (
 		<Form noValidate onSubmit={onSubmit}>
@@ -143,64 +130,33 @@ export const EditBoard = (props: Props) => {
 
 			<Form.Group>
 				<h3>Categories</h3>
-				{size > 0 ? (
-					indexArray(size).map((index: number) => {
-						let errorMessage = "";
-						if (errors.categoryIds && errors.categoryIds![index]) {
-							errorMessage = errors.categoryIds![index]!.message ?? "";
-						}
-
+				{fields.length > 0 ? (
+					fields.map((category, index) => {
 						return (
-							<InputGroup key={index} style={{ marginBottom: "0.5rem" }}>
-								<Form.Control
-									name={`categoryIds[${index}]`}
-									id={`categoryIds[${index}]`}
-									ref={register({
-										required: {
-											value: true,
-											message: "Category ID is required"
-										},
-										pattern: {
-											value: /^[A-Fa-f0-9]{24}$/i,
-											message: "Category ID must be 24 hex characters"
-										}
-									})}
-									placeholder="Enter category ID"
-									isInvalid={!!errorMessage}
-								/>
+							<InputGroup key={category.id} style={{ marginBottom: "0.5rem" }}>
+								<Form.Control as="div" style={{ height: "100%" }}>
+									<p className="lead">{category.name}</p>
+									{category.description}
+								</Form.Control>
 
 								<InputGroup.Append>
-									<Button
-										variant="outline-secondary"
-										size="sm"
-										style={{ borderTopRightRadius: "0.2rem", borderBottomRightRadius: "0.2rem" }}
-										onClick={() => {
-											let categoryIds = control.getValues().categoryIds;
-											categoryIds.splice(index, 1);
-											control.setValue("categoryIds", categoryIds);
-											setSize(size - 1);
-										}}
-									>
-										-
+									<Button variant="outline-secondary" onClick={() => console.log(`edit #${index}`)}>
+										Edit
+									</Button>
+									<Button variant="outline-secondary" onClick={() => remove(index)}>
+										Remove
 									</Button>
 								</InputGroup.Append>
-
-								<Form.Control.Feedback type="invalid">{errorMessage}</Form.Control.Feedback>
 							</InputGroup>
 						);
 					})
 				) : (
-					<Form.Control plaintext disabled type="text" placeholder="No categories" />
+					<p>No Categories</p>
 				)}
 			</Form.Group>
 			<Row style={{ paddingTop: "1rem" }}>
 				<Col>
-					<Button
-						variant="outline-secondary"
-						onClick={() => {
-							setSize(size + 1);
-						}}
-					>
+					<Button variant="outline-secondary" onClick={() => append({ id: "" })}>
 						Add Category
 					</Button>
 				</Col>
