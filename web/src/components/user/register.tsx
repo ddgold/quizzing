@@ -6,7 +6,7 @@ import { useHistory } from "react-router-dom";
 
 import { AuthResult, FieldError } from "../../models/user";
 import { isLoggedIn, setAccessToken } from "../../auth";
-import { Error, Page } from "..";
+import { Error, Page } from "../shared";
 
 const REGISTER = gql`
 	mutation Register($nickname: String!, $email: String!, $password: String!) {

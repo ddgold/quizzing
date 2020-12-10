@@ -3,19 +3,9 @@ import Navbar from "react-bootstrap/esm/Navbar";
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 
 import { setAccessToken } from "./auth";
-import {
-	BoardList,
-	Board,
-	CategoryList,
-	Category,
-	Error,
-	Home,
-	Header,
-	Login,
-	Register,
-	Loading,
-	User
-} from "./components";
+import { Error, Home, Header, Loading } from "./components/shared";
+import { BoardList, Board, CategoryList, Category } from "./components/build";
+import { Login, Register, User } from "./components/user";
 
 export const App = () => {
 	const [loading, setLoading] = useState(true);

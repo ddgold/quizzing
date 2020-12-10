@@ -2,7 +2,7 @@ import React from "react";
 import { Navbar, Nav } from "react-bootstrap";
 import { Link, NavLink } from "react-router-dom";
 
-import { useUserStatus, UserStatus } from "..";
+import { useUserStatus, UserStatus } from "../user";
 
 export const Header = () => {
 	const [userStatus, nickname] = useUserStatus();

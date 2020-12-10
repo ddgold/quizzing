@@ -3,7 +3,8 @@ import { Button } from "react-bootstrap";
 import { RouteComponentProps, withRouter } from "react-router-dom";
 import { gql, useQuery } from "@apollo/client";
 
-import { EditCategory, Error, Loading, Page, ViewCategory } from "../..";
+import { Error, Loading, Page } from "../../shared";
+import { EditCategory, ViewCategory } from ".";
 import { QueryError } from "../../../models/shared";
 import { CategoryModel } from "../../../models/build";
 

@@ -1,6 +1,6 @@
 import React from "react";
 
-import { Page } from "..";
+import { Page } from ".";
 
 interface Props {
 	message: string;

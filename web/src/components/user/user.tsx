@@ -4,7 +4,7 @@ import { gql, useQuery, useMutation } from "@apollo/client";
 import { useHistory } from "react-router-dom";
 
 import { setAccessToken } from "../../auth";
-import { Error, Loading, Page } from "..";
+import { Error, Loading, Page } from "../shared";
 
 const CURRENT_USER = gql`
 	query CurrentUser {

@@ -3,7 +3,8 @@ import { Table } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { gql, useQuery } from "@apollo/client";
 
-import { CreateBoard, Error, Loading, Page } from "../..";
+import { Error, Loading, Page } from "../../shared";
+import { CreateBoard } from ".";
 import { BoardModel } from "../../../models/build";
 
 const BOARDS = gql`
