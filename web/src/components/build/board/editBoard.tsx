@@ -4,7 +4,8 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { gql, useMutation } from "@apollo/client";
 
 import { FieldError, FormResult } from "../../../models/shared";
-import { BoardModel, CategoryModel } from "../../../models/build";
+import { BoardModel, CategoryModel, Record } from "../../../models/build";
+import { RecordSelect } from "../recordSelect";
 
 const UPDATE_BOARD = gql`
 	mutation UpdateBoard($id: String!, $name: String!, $description: String!, $categoryIds: [String!]!) {
@@ -50,6 +51,7 @@ interface State {
 	id: string;
 	name: string;
 	description: string;
+	categories: CategoryModel[];
 	categoryIds: string[];
 }
 
@@ -57,14 +59,14 @@ export const EditBoard = (props: Props) => {
 	const { control, errors, handleSubmit, register, setError } = useForm<State>({
 		defaultValues: props.board
 	});
-	const { fields, append, remove } = useFieldArray<CategoryModel>({ control, name: "categories" });
+	const { append, fields, remove } = useFieldArray<CategoryModel>({ control, name: "categories" });
 	const [updateBoardMutation] = useMutation<Data, State>(UPDATE_BOARD);
 
 	const onSubmit = handleSubmit(async (state: State) => {
 		try {
-			if (!state.categoryIds) {
-				state.categoryIds = [];
-			}
+			state.categoryIds = fields.map((category) => {
+				return category.id!;
+			});
 
 			const variables = {
 				...state,
@@ -86,6 +88,10 @@ export const EditBoard = (props: Props) => {
 			setError("name", { type: "manual", message: "Error updating board" });
 		}
 	});
+
+	const onSelect = (record: Record) => {
+		append(record as CategoryModel);
+	};
 
 	return (
 		<Form noValidate onSubmit={onSubmit}>
@@ -156,9 +162,9 @@ export const EditBoard = (props: Props) => {
 			</Form.Group>
 			<Row style={{ paddingTop: "1rem" }}>
 				<Col>
-					<Button variant="outline-secondary" onClick={() => append({ id: "" })}>
-						Add Category
-					</Button>
+					<RecordSelect recordType="Category" onSelect={onSelect}>
+						<Button variant="outline-secondary">Add Category</Button>
+					</RecordSelect>
 				</Col>
 				<Col style={{ textAlign: "right" }}>
 					<Button variant="primary" type="submit">

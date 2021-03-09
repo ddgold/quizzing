@@ -1,11 +1,11 @@
 import React from "react";
-import { Table } from "react-bootstrap";
-import { Link } from "react-router-dom";
+import { Button, Table } from "react-bootstrap";
+import { Link, useHistory } from "react-router-dom";
 import { gql, useQuery } from "@apollo/client";
 
 import { Error, Loading, Page } from "../../shared";
-import { CreateCategory } from ".";
-import { CategoryModel } from "../../../models/build";
+import { RecordSelect } from "../recordSelect";
+import { CategoryModel, Record } from "../../../models/build";
 
 const CATEGORIES = gql`
 	query Categories($showAll: Boolean!) {
@@ -29,10 +29,16 @@ interface Props {
 }
 
 export const CategoryList = ({ showAll }: Props) => {
+	const history = useHistory();
 	const { data, error, loading } = useQuery<Data, Props>(CATEGORIES, {
 		fetchPolicy: "network-only",
 		variables: { showAll }
 	});
+
+	const onSelect = (record: Record) => {
+		const category = record as CategoryModel;
+		history.push(`/categories/id/${category.id}`);
+	};
 
 	if (error) {
 		return <Error message={error.message} />;
@@ -43,7 +49,14 @@ export const CategoryList = ({ showAll }: Props) => {
 	}
 
 	return (
-		<Page title={showAll ? "All Categories" : "My Categories"} titleRight={<CreateCategory />}>
+		<Page
+			title={showAll ? "All Categories" : "My Categories"}
+			titleRight={
+				<RecordSelect recordType="Category" onSelect={onSelect} createOnly>
+					<Button variant="primary">Create New</Button>
+				</RecordSelect>
+			}
+		>
 			<Table striped bordered hover>
 				<thead>
 					<tr>

@@ -37,7 +37,7 @@ type Category {
 	id: String!
 	name: String!
 	description: String!
-	clues: [Clue]!
+	clues: [Clue!]!
 	creator: User!
 	created: Date!
 	updated: Date!
@@ -47,7 +47,7 @@ type Board {
 	id: String!
 	name: String!
 	description: String!
-	categories: [Category]!
+	categories: [Category!]!
 	creator: User!
 	created: Date!
 	updated: Date!
@@ -65,6 +65,10 @@ type QueryResult {
 	canEdit: Boolean
 }
 
+type SearchResult {
+	result: [Category!]
+}
+
 # -------
 # Queries
 # -------
@@ -76,8 +80,10 @@ type Query {
 	# Build
 	boards(showAll: Boolean!): [Board!]
 	boardById(id: String!): QueryResult
+
 	categories(showAll: Boolean!): [Category!]
 	categoryById(id: String!): QueryResult
+	categorySearch(name: String!): SearchResult!
 }
 
 # ---------
@@ -92,6 +98,7 @@ type Mutation {
 	# Build
 	createBoard(name: String!): FormResult!
 	updateBoard(id: String!, name: String!, description: String!, categoryIds: [String!]!): FormResult!
+
 	createCategory(name: String!): FormResult!
 	updateCategory(id: String!, name: String!, description: String!, clues: [ClueInput!]!): FormResult!
 }

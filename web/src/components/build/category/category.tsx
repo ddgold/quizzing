@@ -60,7 +60,11 @@ const CategoryWithoutRouter = (props: Props) => {
 				</Button>
 			);
 		} else if (data!.categoryById.canEdit) {
-			return <Button onClick={() => setEditing(true)}>Edit</Button>;
+			return (
+				<Button variant="primary" onClick={() => setEditing(true)}>
+					Edit
+				</Button>
+			);
 		} else {
 			return undefined;
 		}

@@ -1,7 +1,7 @@
 import { IResolvers } from "graphql-tools";
 import { ForbiddenError } from "apollo-server-express";
 
-import { FormResult, QueryResult, ResultObject } from "../types";
+import { FormResult, QueryResult, ResultObject, SearchResult } from "../types";
 import { BoardDocument, BoardModel, CategoryDocument, CategoryModel, ClueDocument, ClueModel } from "../../database";
 import { Context, assertAuthorized } from "../../auth";
 
@@ -78,6 +78,13 @@ export const buildResolvers: IResolvers<any, Context> = {
 
 			let canEdit = await CategoryModel.canEdit(id, context.payload!.userId);
 			return { result: category, canEdit: canEdit };
+		},
+		categorySearch: async (_, { name }, context): Promise<SearchResult<CategoryDocument>> => {
+			await assertAuthorized(context);
+			let categories = await CategoryModel.find({ name: { $regex: name } })
+				.populate("creator")
+				.exec();
+			return { result: categories };
 		}
 	},
 	Mutation: {

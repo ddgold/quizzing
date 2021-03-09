@@ -16,3 +16,7 @@ export interface QueryResult<Result extends ResultObject> {
 	result?: Result;
 	canEdit?: Boolean;
 }
+
+export interface SearchResult<Result extends ResultObject> {
+	result?: Result[];
+}

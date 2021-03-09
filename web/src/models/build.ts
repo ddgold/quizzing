@@ -24,3 +24,7 @@ export interface ClueModel {
 	question: string;
 	answer: string;
 }
+
+export type Record = BoardModel | CategoryModel;
+
+export type RecordType = "Board" | "Category";

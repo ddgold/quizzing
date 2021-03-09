@@ -2,7 +2,8 @@
 *node_modules/
 
 # Build directories
-*build/
+server/build/
+web/build/
 
 # Local environment files
 *.env.*.local

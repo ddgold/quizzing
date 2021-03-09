@@ -12,3 +12,7 @@ export interface QueryError<Result> {
 	result: Result;
 	canEdit: Boolean;
 }
+
+export interface SearchResult<Result> {
+	result: Result[];
+}

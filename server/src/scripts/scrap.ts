@@ -1,6 +1,6 @@
 import Database from "../database";
 
-const createDummyUsers = (url: string): void => {
+const testMongoose = (url: string): void => {
 	let database = new Database();
 	database
 		.connect(url)
@@ -14,4 +14,4 @@ const createDummyUsers = (url: string): void => {
 		});
 };
 
-createDummyUsers("mongodb://localhost:27017/");
+testMongoose("mongodb://localhost:27017/");
