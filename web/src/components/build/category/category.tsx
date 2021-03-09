@@ -4,7 +4,8 @@ import { RouteComponentProps, withRouter } from "react-router-dom";
 import { gql, useQuery } from "@apollo/client";
 
 import { Error, Loading, Page } from "../../shared";
-import { EditCategory, ViewCategory } from ".";
+import { EditCategory } from "./editCategory";
+import { ViewCategory } from "./viewCategory";
 import { QueryError } from "../../../models/shared";
 import { CategoryModel } from "../../../models/build";
 

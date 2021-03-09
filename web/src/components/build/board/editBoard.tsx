@@ -6,6 +6,7 @@ import { gql, useMutation } from "@apollo/client";
 import { FieldError, FormResult } from "../../../models/shared";
 import { BoardModel, CategoryModel, Record } from "../../../models/build";
 import { RecordSelect } from "../recordSelect";
+import { EditCategoryControl } from "../category";
 
 const UPDATE_BOARD = gql`
 	mutation UpdateBoard($id: String!, $name: String!, $description: String!, $categoryIds: [String!]!) {
@@ -139,16 +140,16 @@ export const EditBoard = (props: Props) => {
 				{fields.length > 0 ? (
 					fields.map((category, index) => {
 						return (
-							<InputGroup key={category.id} style={{ marginBottom: "0.5rem" }}>
+							<InputGroup key={index} style={{ marginBottom: "0.5rem" }}>
 								<Form.Control as="div" style={{ height: "100%" }}>
 									<p className="lead">{category.name}</p>
 									{category.description}
 								</Form.Control>
 
 								<InputGroup.Append>
-									<Button variant="outline-secondary" onClick={() => console.log(`edit #${index}`)}>
-										Edit
-									</Button>
+									<EditCategoryControl categoryId={category.id!}>
+										<Button variant="outline-secondary">Edit</Button>
+									</EditCategoryControl>
 									<Button variant="outline-secondary" onClick={() => remove(index)}>
 										Remove
 									</Button>
