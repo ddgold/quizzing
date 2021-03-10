@@ -45,7 +45,7 @@ export const assertAuthorized = async (context: Context): Promise<void> => {
 		const token = authorization.split(" ")[1];
 		context.payload = verify(token, getDockerSecret("access_token")) as TokenPayload;
 	} catch (error) {
-		console.log(`Authentication error: ${error}`);
+		console.error(`Authentication error: ${error}`);
 		throw new AuthenticationError("Not Authorized");
 	}
 };
@@ -75,7 +75,7 @@ export const postRefreshToken = async (
 		sendRefreshToken(res, signRefreshToken({ userId: user.id }));
 		return res.send({ success: true, accessToken: signAccessToken({ userId: user.id }) });
 	} catch (error) {
-		console.log("Refresh token error:", error);
+		console.error("Refresh token error:", error);
 		return res.send({ success: false, accessToken: "" });
 	}
 };

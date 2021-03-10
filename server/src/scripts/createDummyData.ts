@@ -17,10 +17,10 @@ const createDummyUsers = async (): Promise<void> => {
 	for (const user of users) {
 		try {
 			await UserModel.create(user);
-			console.log(`Created user '${user.nickname}'`);
+			console.info(`Created user '${user.nickname}'`);
 		} catch (error) {
 			if (error.name === "MongoError" && error.code === 11000) {
-				console.log(`User '${user.nickname}' already exists.`);
+				console.info(`User '${user.nickname}' already exists.`);
 			} else {
 				throw error;
 			}
@@ -98,10 +98,10 @@ const createDummyBoards = async (): Promise<void> => {
 	for (const board of boards) {
 		try {
 			await getBoard(board.name);
-			console.log(`Board '${board.name}' already exists.`);
+			console.info(`Board '${board.name}' already exists.`);
 		} catch (error) {
 			await BoardModel.create(board);
-			console.log(`Created board '${board.name}'`);
+			console.info(`Created board '${board.name}'`);
 		}
 	}
 };
@@ -213,10 +213,10 @@ const createDummyCategories = async (): Promise<void> => {
 	for (const category of categories) {
 		try {
 			await getCategory(category.name);
-			console.log(`Category '${category.name}' already exists.`);
+			console.info(`Category '${category.name}' already exists.`);
 		} catch (error) {
 			await CategoryModel.create(category);
-			console.log(`Created category '${category.name}'`);
+			console.info(`Created category '${category.name}'`);
 		}
 	}
 };
@@ -246,18 +246,18 @@ const createDummyData = async (scripts: string[], url: string): Promise<void> =>
 							break;
 						}
 						default: {
-							console.log(`Unknown script '${script}'.`);
+							console.error(`Unknown script '${script}'.`);
 						}
 					}
 				} catch (error) {
-					console.log(`Error running '${script}' script:`, error);
+					console.error(`Error running '${script}' script:`, error);
 				}
 			}
 
 			database.disconnect();
 		})
 		.catch((error) => {
-			console.log("Error connecting to database:", error);
+			console.error("Error connecting to database:", error);
 		});
 };
 
@@ -284,7 +284,7 @@ const parseArgs = (args: string[]): string[] => {
 	if (scripts.length === 0) {
 		console.error("No scripts provided.");
 	} else {
-		console.log("Running scripts...", scripts);
+		console.info("Running scripts...", scripts);
 	}
 
 	return scripts;

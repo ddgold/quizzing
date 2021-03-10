@@ -10,9 +10,9 @@ const dropCollections = (collections: string[], url: string): void => {
 					await database.connection.dropCollection(collection);
 				} catch (error) {
 					if (error.codeName === "NamespaceNotFound") {
-						console.log(`No '${collection}' collection found.`);
+						console.error(`No '${collection}' collection found.`);
 					} else {
-						console.log(`Error dropping '${collection}' collection:`, error);
+						console.error(`Error dropping '${collection}' collection:`, error);
 					}
 				}
 			}
@@ -20,7 +20,7 @@ const dropCollections = (collections: string[], url: string): void => {
 			database.disconnect();
 		})
 		.catch((error) => {
-			console.log("Error connecting to database:", error);
+			console.error("Error connecting to database:", error);
 		});
 };
 
@@ -32,12 +32,12 @@ const parseArgs = (args: string[]): string[] => {
 
 	if (collections.length === 0) {
 		collections = ["boards", "categories", "clues"];
-		console.log("Dropping default collections...", collections);
+		console.info("Dropping default collections...", collections);
 	} else if (collections.includes("all")) {
 		collections = ["boards", "categories", "clues", "users"];
-		console.log("Dropping ALL collections...", collections);
+		console.info("Dropping ALL collections...", collections);
 	} else {
-		console.log("Dropping collections...", collections);
+		console.info("Dropping collections...", collections);
 	}
 
 	return collections;

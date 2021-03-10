@@ -222,11 +222,11 @@ export const buildResolvers: IResolvers<any, Context> = {
 			} catch (error) {
 				switch (error.name) {
 					case "ValidationError": {
-						console.log(`Update board mutation error: ${error.message}`);
+						console.error(`Update board mutation error: ${error.message}`);
 						break;
 					}
 					default: {
-						console.log("Update board mutation unknown error:", error.name, error);
+						console.error("Update board mutation unknown error:", error.name, error);
 					}
 				}
 				return { errors: [{ message: "Error updating board", field: "name" }] };
@@ -265,11 +265,11 @@ export const buildResolvers: IResolvers<any, Context> = {
 			} catch (error) {
 				switch (error.name) {
 					case "ValidationError": {
-						console.log(`Update category mutation error: ${error.message}`);
+						console.error(`Update category mutation error: ${error.message}`);
 						break;
 					}
 					default: {
-						console.log("Update category mutation unknown error:", error);
+						console.error("Update category mutation unknown error:", error);
 					}
 				}
 				return { errors: [{ message: "Error updating category", field: "name" }] };

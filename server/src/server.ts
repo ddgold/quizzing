@@ -26,10 +26,10 @@ const database = new Database();
 database
 	.connect(process.env.MONGODB_URL)
 	.then((url) => {
-		console.log(`Database connected at ${url}`);
+		console.info(`Database connected at ${url}`);
 	})
 	.catch((error) => {
-		console.log("Error connecting to database:", error);
+		console.error("Error connecting to database:", error);
 	});
 
 // -------------
@@ -58,5 +58,5 @@ const server = new ApolloServer({
 server.applyMiddleware({ app, cors: false });
 
 app.listen({ port: process.env.GRAPHQL_PORT }, () => {
-	console.log(`Server running at http://localhost:${process.env.GRAPHQL_PORT}${server.graphqlPath}`);
+	console.info(`Server running at http://localhost:${process.env.GRAPHQL_PORT}${server.graphqlPath}`);
 });

@@ -84,11 +84,11 @@ export const userResolvers: IResolvers<any, Context> = {
 			} catch (error) {
 				switch (error.name) {
 					case "ValidationError": {
-						console.log(`Register mutation error: ${error.message}`);
+						console.error(`Register mutation error: ${error.message}`);
 						break;
 					}
 					default: {
-						console.log("Register mutation unknown error:", error);
+						console.error("Register mutation unknown error:", error);
 					}
 				}
 				return { errors: [{ message: "Error creating new account", field: "email" }] };
