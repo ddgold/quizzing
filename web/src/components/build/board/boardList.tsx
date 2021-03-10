@@ -1,11 +1,11 @@
 import React from "react";
-import { Table } from "react-bootstrap";
-import { Link } from "react-router-dom";
+import { Button, Table } from "react-bootstrap";
+import { Link, useHistory } from "react-router-dom";
 import { gql, useQuery } from "@apollo/client";
 
 import { Error, Loading, Page } from "../../shared";
-import { CreateBoard } from ".";
-import { BoardModel } from "../../../models/build";
+import { RecordSelect } from "../recordSelect";
+import { BoardModel, RecordModel, RecordType } from "../../../models/build";
 
 const BOARDS = gql`
 	query Boards($showAll: Boolean!) {
@@ -29,10 +29,16 @@ interface Props {
 }
 
 export const BoardList = ({ showAll }: Props) => {
+	const history = useHistory();
 	const { data, error, loading } = useQuery<Data, Props>(BOARDS, {
 		fetchPolicy: "network-only",
 		variables: { showAll }
 	});
+
+	const onSelect = (record: RecordModel) => {
+		const board = record as BoardModel;
+		history.push(`/boards/id/${board.id}`);
+	};
 
 	if (error) {
 		return <Error message={error.message} />;
@@ -43,7 +49,14 @@ export const BoardList = ({ showAll }: Props) => {
 	}
 
 	return (
-		<Page title={showAll ? "All Boards" : "My Boards"} titleRight={<CreateBoard />}>
+		<Page
+			title={showAll ? "All Boards" : "My Boards"}
+			titleRight={
+				<RecordSelect type={RecordType.Board} onSelect={onSelect} createOnly>
+					<Button variant="primary">Create New</Button>
+				</RecordSelect>
+			}
+		>
 			<Table striped bordered hover>
 				<thead>
 					<tr>

@@ -53,11 +53,13 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
 	if (graphQLErrors) {
 		for (let error of graphQLErrors) {
 			switch (error.extensions?.code) {
-				case "UNAUTHENTICATED":
+				case "UNAUTHENTICATED": {
 					// Unauthenticated errors handled
 					break;
-				default:
+				}
+				default: {
 					console.error("GraphQL error:", error);
+				}
 			}
 		}
 	}

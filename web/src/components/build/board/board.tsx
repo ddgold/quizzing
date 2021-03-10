@@ -4,13 +4,14 @@ import { RouteComponentProps, withRouter } from "react-router-dom";
 import { gql, useQuery } from "@apollo/client";
 
 import { Error, Loading, Page } from "../../shared";
-import { EditBoard, ViewBoard } from ".";
+import { EditBoard } from "./editBoard";
+import { ViewBoard } from "./viewBoard";
 import { QueryError } from "../../../models/shared";
-import { BoardModel } from "../../../models/build";
+import { BoardModel, RecordType } from "../../../models/build";
 
-const BOARD_BY_ID = gql`
-	query BoardById($id: String!) {
-		boardById(id: $id) {
+const RECORD_BY_ID = gql`
+	query RecordById($type: RecordType!, $id: String!) {
+		recordById(type: $type, id: $id) {
 			result {
 				... on Board {
 					id
@@ -35,21 +36,23 @@ const BOARD_BY_ID = gql`
 `;
 
 interface Data {
-	boardById: QueryError<BoardModel>;
+	recordById: QueryError<BoardModel>;
 }
 
-interface PathVariables {
+interface Variables {
 	id: string;
+	type: RecordType;
 }
 
 interface Props extends RouteComponentProps {}
 
 const BoardWithoutRouter = (props: Props) => {
 	const [editing, setEditing] = useState<boolean>(false);
-	const { data, error, loading } = useQuery<Data, PathVariables>(BOARD_BY_ID, {
+	const { data, error, loading } = useQuery<Data, Variables>(RECORD_BY_ID, {
 		fetchPolicy: "network-only",
 		variables: {
-			id: (props.match.params as PathVariables).id
+			id: (props.match.params as Variables).id,
+			type: RecordType.Board
 		}
 	});
 
@@ -60,8 +63,12 @@ const BoardWithoutRouter = (props: Props) => {
 					Cancel
 				</Button>
 			);
-		} else if (data!.boardById.canEdit) {
-			return <Button onClick={() => setEditing(true)}>Edit</Button>;
+		} else if (data!.recordById.canEdit) {
+			return (
+				<Button variant="primary" onClick={() => setEditing(true)}>
+					Edit
+				</Button>
+			);
 		} else {
 			return undefined;
 		}
@@ -75,16 +82,16 @@ const BoardWithoutRouter = (props: Props) => {
 		return <Loading />;
 	}
 
-	if (!data?.boardById.result) {
+	if (!data?.recordById.result) {
 		return <Error message={"Board not found"} />;
 	}
 
 	return (
-		<Page title={data!.boardById.result.name} titleRight={editButton()}>
+		<Page title={data!.recordById.result.name} titleRight={editButton()}>
 			{editing ? (
-				<EditBoard board={data!.boardById.result} onSubmit={() => setEditing(false)} />
+				<EditBoard board={data!.recordById.result} onSubmit={() => setEditing(false)} />
 			) : (
-				<ViewBoard board={data!.boardById.result} />
+				<ViewBoard board={data!.recordById.result} />
 			)}
 		</Page>
 	);

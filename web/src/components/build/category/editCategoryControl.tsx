@@ -4,7 +4,7 @@ import { Modal } from "react-bootstrap";
 
 import { QueryError } from "../../../models/shared";
 import { CategoryModel } from "../../../models/build";
-import { Loading } from "../../shared";
+import { Error, Loading } from "../../shared";
 import { EditCategory } from "./editCategory";
 
 const CATEGORY_BY_ID = gql`
@@ -54,12 +54,7 @@ const EditCategoryModal = ({ categoryId, onSubmit }: ModalProps) => {
 	});
 
 	if (error) {
-		return (
-			<>
-				<p>Oops! Something went wrong loading category:</p>
-				<p>{error.message}</p>
-			</>
-		);
+		return <Error message={error.message} modelError />;
 	}
 
 	if (loading) {

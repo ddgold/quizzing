@@ -5,7 +5,7 @@ import { gql, useQuery } from "@apollo/client";
 
 import { Error, Loading, Page } from "../../shared";
 import { RecordSelect } from "../recordSelect";
-import { CategoryModel, Record } from "../../../models/build";
+import { CategoryModel, RecordModel, RecordType } from "../../../models/build";
 
 const CATEGORIES = gql`
 	query Categories($showAll: Boolean!) {
@@ -35,7 +35,7 @@ export const CategoryList = ({ showAll }: Props) => {
 		variables: { showAll }
 	});
 
-	const onSelect = (record: Record) => {
+	const onSelect = (record: RecordModel) => {
 		const category = record as CategoryModel;
 		history.push(`/categories/id/${category.id}`);
 	};
@@ -52,7 +52,7 @@ export const CategoryList = ({ showAll }: Props) => {
 		<Page
 			title={showAll ? "All Categories" : "My Categories"}
 			titleRight={
-				<RecordSelect recordType="Category" onSelect={onSelect} createOnly>
+				<RecordSelect type={RecordType.Category} onSelect={onSelect} createOnly>
 					<Button variant="primary">Create New</Button>
 				</RecordSelect>
 			}

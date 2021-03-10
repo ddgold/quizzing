@@ -7,11 +7,11 @@ import { Error, Loading, Page } from "../../shared";
 import { EditCategory } from "./editCategory";
 import { ViewCategory } from "./viewCategory";
 import { QueryError } from "../../../models/shared";
-import { CategoryModel } from "../../../models/build";
+import { CategoryModel, RecordType } from "../../../models/build";
 
-const CATEGORY_BY_ID = gql`
-	query CategoryById($id: String!) {
-		categoryById(id: $id) {
+const RECORD_BY_ID = gql`
+	query RecordById($type: RecordType!, $id: String!) {
+		recordById(type: $type, id: $id) {
 			result {
 				... on Category {
 					id
@@ -35,21 +35,23 @@ const CATEGORY_BY_ID = gql`
 `;
 
 interface Data {
-	categoryById: QueryError<CategoryModel>;
+	recordById: QueryError<CategoryModel>;
 }
 
-interface PathVariables {
+interface Variables {
 	id: string;
+	type: RecordType;
 }
 
 interface Props extends RouteComponentProps {}
 
 const CategoryWithoutRouter = (props: Props) => {
 	const [editing, setEditing] = useState<boolean>(false);
-	const { data, error, loading } = useQuery<Data, PathVariables>(CATEGORY_BY_ID, {
+	const { data, error, loading } = useQuery<Data, Variables>(RECORD_BY_ID, {
 		fetchPolicy: "network-only",
 		variables: {
-			id: (props.match.params as PathVariables).id
+			id: (props.match.params as Variables).id,
+			type: RecordType.Category
 		}
 	});
 
@@ -60,7 +62,7 @@ const CategoryWithoutRouter = (props: Props) => {
 					Cancel
 				</Button>
 			);
-		} else if (data!.categoryById.canEdit) {
+		} else if (data!.recordById.canEdit) {
 			return (
 				<Button variant="primary" onClick={() => setEditing(true)}>
 					Edit
@@ -79,16 +81,16 @@ const CategoryWithoutRouter = (props: Props) => {
 		return <Loading />;
 	}
 
-	if (!data?.categoryById.result) {
+	if (!data?.recordById.result) {
 		return <Error message={"Board not found"} />;
 	}
 
 	return (
-		<Page title={data!.categoryById.result.name} titleRight={editButton()}>
+		<Page title={data!.recordById.result.name} titleRight={editButton()}>
 			{editing ? (
-				<EditCategory category={data!.categoryById.result} onSubmit={() => setEditing(false)} />
+				<EditCategory category={data!.recordById.result} onSubmit={() => setEditing(false)} />
 			) : (
-				<ViewCategory category={data!.categoryById.result} />
+				<ViewCategory category={data!.recordById.result} />
 			)}
 		</Page>
 	);

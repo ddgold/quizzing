@@ -3,23 +3,23 @@ import { Modal, Nav, Tab } from "react-bootstrap";
 
 import { CreateTab } from "./createTab";
 import { SearchTab } from "./searchTab";
-import { Record, RecordType } from "../../../models/build";
+import { RecordModel, RecordType } from "../../../models/build";
 
 interface Props {
 	children: ReactNode;
 	createOnly?: boolean;
-	onSelect: (record: Record) => void;
-	recordType: RecordType;
+	onSelect: (record: RecordModel) => void;
+	type: RecordType;
 }
 
-export const RecordSelect = ({ children, createOnly, onSelect, recordType }: Props) => {
+export const RecordSelect = ({ children, createOnly, onSelect, type }: Props) => {
 	const [showModal, setShowModal] = useState(false);
 
 	const onCancel = () => {
 		setShowModal(false);
 	};
 
-	const onTabSelect = (record: Record) => {
+	const onTabSelect = (record: RecordModel) => {
 		setShowModal(false);
 		onSelect(record);
 	};
@@ -29,12 +29,12 @@ export const RecordSelect = ({ children, createOnly, onSelect, recordType }: Pro
 			<Modal show={showModal} backdrop="static" size="lg">
 				<Tab.Container defaultActiveKey={createOnly ? "createTab" : "searchTab"}>
 					<Modal.Header closeButton onHide={onCancel}>
-						<Modal.Title>{`${createOnly ? "Create" : "Select"} ${recordType}`}</Modal.Title>
+						<Modal.Title>{`${createOnly ? "Create" : "Select"} ${type}`}</Modal.Title>
 					</Modal.Header>
 
 					{createOnly ? (
 						<Tab.Content>
-							<CreateTab recordType={recordType} onSelect={onTabSelect} />
+							<CreateTab type={type} onSelect={onTabSelect} />
 						</Tab.Content>
 					) : (
 						<>
@@ -50,8 +50,8 @@ export const RecordSelect = ({ children, createOnly, onSelect, recordType }: Pro
 							</Modal.Body>
 
 							<Tab.Content>
-								<SearchTab recordType={recordType} onSelect={onTabSelect} />
-								<CreateTab recordType={recordType} onSelect={onTabSelect} />
+								<SearchTab type={type} onSelect={onTabSelect} />
+								<CreateTab type={type} onSelect={onTabSelect} />
 							</Tab.Content>
 						</>
 					)}

@@ -4,12 +4,17 @@ import { useForm } from "react-hook-form";
 import { gql, useMutation } from "@apollo/client";
 
 import { FieldError, FormResult } from "../../../models/shared";
-import { CategoryModel, Record, RecordType } from "../../../models/build";
+import { RecordModel, RecordType } from "../../../models/build";
 
-const CREATE_CATEGORY = gql`
-	mutation CreateCategory($name: String!) {
-		createCategory(name: $name) {
+const CREATE_RECORD = gql`
+	mutation CreateRecord($type: RecordType!, $name: String!) {
+		createRecord(type: $type, name: $name) {
 			result {
+				... on Board {
+					id
+					name
+					description
+				}
 				... on Category {
 					id
 					name
@@ -27,7 +32,12 @@ const CREATE_CATEGORY = gql`
 type Fields = "name";
 
 interface Data {
-	createCategory: FormResult<CategoryModel, Fields>;
+	createRecord: FormResult<RecordModel, Fields>;
+}
+
+interface Variable {
+	name: string;
+	type: RecordType;
 }
 
 interface State {
@@ -35,13 +45,13 @@ interface State {
 }
 
 interface Props {
-	onSelect: (record: Record) => void;
-	recordType: RecordType;
+	onSelect: (record: RecordModel) => void;
+	type: RecordType;
 }
 
-export const CreateTab = ({ onSelect, recordType }: Props) => {
+export const CreateTab = ({ onSelect, type }: Props) => {
 	const { errors, handleSubmit, register, setError } = useForm<State>();
-	const [createMutation] = useMutation<Data, State>(CREATE_CATEGORY);
+	const [createMutation] = useMutation<Data, Variable>(CREATE_RECORD);
 
 	const sanitizeName = (name: string): string => {
 		return name.trim();
@@ -52,18 +62,18 @@ export const CreateTab = ({ onSelect, recordType }: Props) => {
 			state.name = sanitizeName(state.name);
 
 			const result = await createMutation({
-				variables: state
+				variables: { name: state.name, type: type }
 			});
 
-			if (result.data!.createCategory.errors) {
-				result.data!.createCategory.errors.forEach((error: FieldError<Fields>) => {
+			if (result.data!.createRecord.errors) {
+				result.data!.createRecord.errors.forEach((error: FieldError<Fields>) => {
 					setError(error.field, { type: "manual", message: error.message });
 				});
 			} else {
-				onSelect(result.data!.createCategory.result);
+				onSelect(result.data!.createRecord.result);
 			}
 		} catch (error) {
-			setError("name", { type: "manual", message: `Error creating new ${recordType.toLocaleLowerCase()}` });
+			setError("name", { type: "manual", message: `Error creating new ${type.toLocaleLowerCase()}` });
 			console.error(error);
 		}
 	});
@@ -73,7 +83,7 @@ export const CreateTab = ({ onSelect, recordType }: Props) => {
 			<Form noValidate>
 				<Modal.Body>
 					<Form.Group controlId="name">
-						<Form.Label>{`${recordType} name`}</Form.Label>
+						<Form.Label>{`${type} name`}</Form.Label>
 						<Row>
 							<Col>
 								<Form.Control
@@ -82,14 +92,14 @@ export const CreateTab = ({ onSelect, recordType }: Props) => {
 									ref={register({
 										required: {
 											value: true,
-											message: `${recordType} name is required`
+											message: `${type} name is required`
 										},
 										maxLength: {
 											value: 32,
-											message: `${recordType} name must be at most 32 characters`
+											message: `${type} name must be at most 32 characters`
 										}
 									})}
-									placeholder={`Enter ${recordType.toLocaleLowerCase()} name`}
+									placeholder={`Enter ${type.toLocaleLowerCase()} name`}
 									isInvalid={!!errors.name}
 								/>
 								<Form.Control.Feedback type="invalid">{errors.name?.message}</Form.Control.Feedback>

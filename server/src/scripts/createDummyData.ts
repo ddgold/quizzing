@@ -233,17 +233,21 @@ const createDummyData = async (scripts: string[], url: string): Promise<void> =>
 			for (const script of scripts) {
 				try {
 					switch (script) {
-						case "boards":
+						case "boards": {
 							await createDummyBoards();
 							break;
-						case "categories":
+						}
+						case "categories": {
 							await createDummyCategories();
 							break;
-						case "users":
+						}
+						case "users": {
 							await createDummyUsers();
 							break;
-						default:
+						}
+						default: {
 							console.log(`Unknown script '${script}'.`);
+						}
 					}
 				} catch (error) {
 					console.log(`Error running '${script}' script:`, error);

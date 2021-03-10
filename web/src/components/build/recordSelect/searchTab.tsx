@@ -4,13 +4,22 @@ import { useForm } from "react-hook-form";
 import { gql, useQuery } from "@apollo/client";
 
 import { SearchResult } from "../../../models/shared";
-import { CategoryModel, Record, RecordType } from "../../../models/build";
+import { RecordModel, RecordType } from "../../../models/build";
 import { Error, Loading } from "../../shared";
 
-const CATEGORY_SEARCH = gql`
-	query CategorySearch($name: String!) {
-		categorySearch(name: $name) {
+const RECORD_SEARCH = gql`
+	query RecordSearch($type: RecordType!, $name: String!) {
+		recordSearch(type: $type, name: $name) {
 			result {
+				... on Board {
+					id
+					name
+					created
+					description
+					creator {
+						nickname
+					}
+				}
 				... on Category {
 					id
 					name
@@ -26,25 +35,27 @@ const CATEGORY_SEARCH = gql`
 `;
 
 interface Data {
-	categorySearch: SearchResult<CategoryModel>;
+	recordSearch: SearchResult<RecordModel>;
 }
 
-interface State {
+interface Variable {
 	name: string;
+	type: RecordType;
 }
 
 interface ResultProps {
 	name: string;
-	onSelect: (record: Record) => void;
+	onSelect: (record: RecordModel) => void;
+	type: RecordType;
 }
 
-const SearchResults = ({ name, onSelect }: ResultProps) => {
-	const { data, error, loading } = useQuery<Data, State>(CATEGORY_SEARCH, {
-		variables: { name }
+const SearchResults = ({ name, onSelect, type }: ResultProps) => {
+	const { data, error, loading } = useQuery<Data, Variable>(RECORD_SEARCH, {
+		variables: { name: name, type: type }
 	});
 
 	if (error) {
-		return <Error message={error.message} />;
+		return <Error message={error.message} modelError />;
 	}
 
 	if (loading) {
@@ -60,21 +71,20 @@ const SearchResults = ({ name, onSelect }: ResultProps) => {
 				</tr>
 			</thead>
 			<tbody>
-				{data!.categorySearch.result.map((category: CategoryModel, index: number) => {
-					console.log(category);
-					const created = new Date(category.created);
+				{data!.recordSearch.result.map((record: RecordModel, index: number) => {
+					const created = new Date(record.created);
 					return (
 						<tr key={index}>
 							<td>
 								<Button
 									onClick={() => {
-										onSelect(category);
+										onSelect(record);
 									}}
 								>
-									{category.name}
+									{record.name}
 								</Button>
 							</td>
-							<td>{`${created.toLocaleString()} by ${category.creator.nickname}`}</td>
+							<td>{`${created.toLocaleString()} by ${record.creator.nickname}`}</td>
 						</tr>
 					);
 				})}
@@ -83,12 +93,16 @@ const SearchResults = ({ name, onSelect }: ResultProps) => {
 	);
 };
 
-interface TabProps {
-	onSelect: (record: Record) => void;
-	recordType: RecordType;
+interface State {
+	name: string;
 }
 
-export const SearchTab = ({ onSelect, recordType }: TabProps) => {
+interface TabProps {
+	onSelect: (record: RecordModel) => void;
+	type: RecordType;
+}
+
+export const SearchTab = ({ onSelect, type }: TabProps) => {
 	const { errors, handleSubmit, register, setError } = useForm<State>();
 	const [searchName, setSearchName] = useState<string | undefined>();
 
@@ -96,12 +110,12 @@ export const SearchTab = ({ onSelect, recordType }: TabProps) => {
 		return name.trim();
 	};
 
-	const onSearch = handleSubmit(async (state: State) => {
+	const onSearch = handleSubmit(async ({ name }: State) => {
 		try {
-			state.name = sanitizeName(state.name);
-			setSearchName(state.name);
+			name = sanitizeName(name);
+			setSearchName(name);
 		} catch (error) {
-			setError("name", { type: "manual", message: `Error creating new ${recordType.toLocaleLowerCase()}` });
+			setError("name", { type: "manual", message: `Error creating new ${type.toLocaleLowerCase()}` });
 			console.error(error);
 		}
 	});
@@ -111,7 +125,7 @@ export const SearchTab = ({ onSelect, recordType }: TabProps) => {
 			<Form noValidate>
 				<Modal.Body>
 					<Form.Group controlId="name">
-						<Form.Label>{`${recordType} name`}</Form.Label>
+						<Form.Label>{`${type} name`}</Form.Label>
 						<Row>
 							<Col>
 								<Form.Control
@@ -120,14 +134,14 @@ export const SearchTab = ({ onSelect, recordType }: TabProps) => {
 									ref={register({
 										required: {
 											value: true,
-											message: `${recordType} name is required`
+											message: `${type} name is required`
 										},
 										maxLength: {
 											value: 32,
-											message: `${recordType} name must be at most 32 characters`
+											message: `${type} name must be at most 32 characters`
 										}
 									})}
-									placeholder={`Enter ${recordType.toLocaleLowerCase()} name`}
+									placeholder={`Enter ${type.toLocaleLowerCase()} name`}
 									isInvalid={!!errors.name}
 								/>
 								<Form.Control.Feedback type="invalid">{errors.name?.message}</Form.Control.Feedback>
@@ -142,7 +156,7 @@ export const SearchTab = ({ onSelect, recordType }: TabProps) => {
 				</Modal.Body>
 				{searchName ? (
 					<Modal.Body style={{ paddingTop: 0 }}>
-						<SearchResults name={searchName} onSelect={onSelect} />
+						<SearchResults name={searchName} onSelect={onSelect} type={type} />
 					</Modal.Body>
 				) : null}
 			</Form>

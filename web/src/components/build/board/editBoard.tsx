@@ -4,7 +4,7 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { gql, useMutation } from "@apollo/client";
 
 import { FieldError, FormResult } from "../../../models/shared";
-import { BoardModel, CategoryModel, Record } from "../../../models/build";
+import { BoardModel, CategoryModel, RecordModel, RecordType } from "../../../models/build";
 import { RecordSelect } from "../recordSelect";
 import { EditCategoryControl } from "../category";
 
@@ -90,7 +90,7 @@ export const EditBoard = (props: Props) => {
 		}
 	});
 
-	const onSelect = (record: Record) => {
+	const onSelect = (record: RecordModel) => {
 		append(record as CategoryModel);
 	};
 
@@ -163,7 +163,7 @@ export const EditBoard = (props: Props) => {
 			</Form.Group>
 			<Row style={{ paddingTop: "1rem" }}>
 				<Col>
-					<RecordSelect recordType="Category" onSelect={onSelect}>
+					<RecordSelect type={RecordType.Category} onSelect={onSelect}>
 						<Button variant="outline-secondary">Add Category</Button>
 					</RecordSelect>
 				</Col>

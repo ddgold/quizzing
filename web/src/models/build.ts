@@ -1,23 +1,11 @@
 import { User } from "./user";
 
-export interface BoardModel {
-	id: string;
-	name: string;
-	description: string;
+export interface BoardModel extends RecordModel {
 	categories: CategoryModel[];
-	creator: User;
-	created: Date;
-	updated: Date;
 }
 
-export interface CategoryModel {
-	id: string;
-	name: string;
-	description: string;
+export interface CategoryModel extends RecordModel {
 	clues: ClueModel[];
-	creator: User;
-	created: Date;
-	updated: Date;
 }
 
 export interface ClueModel {
@@ -25,6 +13,16 @@ export interface ClueModel {
 	answer: string;
 }
 
-export type Record = BoardModel | CategoryModel;
+export interface RecordModel {
+	id: string;
+	name: string;
+	description: string;
+	creator: User;
+	created: Date;
+	updated: Date;
+}
 
-export type RecordType = "Board" | "Category";
+export enum RecordType {
+	Board = "BOARD",
+	Category = "CATEGORY"
+}

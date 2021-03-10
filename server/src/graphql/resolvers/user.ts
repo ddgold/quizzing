@@ -83,11 +83,13 @@ export const userResolvers: IResolvers<any, Context> = {
 				return { accessToken: signAccessToken({ userId: newUser.id }), user: newUser };
 			} catch (error) {
 				switch (error.name) {
-					case "ValidationError":
+					case "ValidationError": {
 						console.log(`Register mutation error: ${error.message}`);
 						break;
-					default:
+					}
+					default: {
 						console.log("Register mutation unknown error:", error);
+					}
 				}
 				return { errors: [{ message: "Error creating new account", field: "email" }] };
 			}

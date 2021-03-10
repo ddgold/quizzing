@@ -55,6 +55,11 @@ type Board {
 
 union ResultObject = Board | Category
 
+enum RecordType {
+	BOARD
+	CATEGORY
+}
+
 type FormResult {
 	result: ResultObject
 	errors: [FieldError!]
@@ -66,7 +71,7 @@ type QueryResult {
 }
 
 type SearchResult {
-	result: [Category!]
+	result: [ResultObject!]
 }
 
 # -------
@@ -79,11 +84,9 @@ type Query {
 
 	# Build
 	boards(showAll: Boolean!): [Board!]
-	boardById(id: String!): QueryResult
-
 	categories(showAll: Boolean!): [Category!]
-	categoryById(id: String!): QueryResult
-	categorySearch(name: String!): SearchResult!
+	recordById(type: RecordType!, id: String!): QueryResult
+	recordSearch(type: RecordType!, name: String!): SearchResult!
 }
 
 # ---------
@@ -96,9 +99,7 @@ type Mutation {
 	register(nickname: String!, email: String!, password: String!): AuthResult!
 
 	# Build
-	createBoard(name: String!): FormResult!
+	createRecord(type: RecordType!, name: String!): FormResult!
 	updateBoard(id: String!, name: String!, description: String!, categoryIds: [String!]!): FormResult!
-
-	createCategory(name: String!): FormResult!
 	updateCategory(id: String!, name: String!, description: String!, clues: [ClueInput!]!): FormResult!
 }
