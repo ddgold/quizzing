@@ -1,6 +1,6 @@
 FROM node:15.2.0 as builder
-ARG server_url
-ENV REACT_APP_SERVER_URL=${server_url}
+ARG server_uri
+ENV REACT_APP_SERVER_URI=${server_uri}
 WORKDIR /app
 COPY ./ ./
 RUN yarn install

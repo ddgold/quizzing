@@ -37,7 +37,7 @@ export const CategoryList = ({ showAll }: Props) => {
 
 	const onSelect = (record: RecordModel) => {
 		const category = record as CategoryModel;
-		history.push(`/categories/id/${category.id}`);
+		history.push(`/build/categories/${category.id}`);
 	};
 
 	if (error) {
@@ -70,7 +70,7 @@ export const CategoryList = ({ showAll }: Props) => {
 						return (
 							<tr key={index}>
 								<td>
-									<Link to={"/categories/id/" + category.id}>{category.name}</Link>
+									<Link to={"/build/categories/" + category.id}>{category.name}</Link>
 								</td>
 								<td>
 									{showAll ? `${created.toLocaleString()} by ${category.creator.nickname}` : created.toLocaleString()}

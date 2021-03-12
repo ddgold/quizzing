@@ -2,18 +2,10 @@ import { IResolvers } from "graphql-tools";
 import { ForbiddenError, SyntaxError } from "apollo-server-express";
 
 import { FormResult, QueryResult, ResultObject, SearchResult } from "../types";
-import {
-	BoardDocument,
-	BoardModel,
-	CategoryDocument,
-	CategoryModel,
-	ClueDocument,
-	ClueModel,
-	RecordDocument
-} from "../../database";
+import { BoardDocument, BoardModel, CategoryDocument, CategoryModel, ClueModel, RecordDocument } from "../../database";
 import { Context, assertAuthorized } from "../../auth";
 
-export const buildResolvers: IResolvers<any, Context> = {
+export const BuildResolvers: IResolvers<any, Context> = {
 	RecordType: {
 		BOARD: "Board",
 		CATEGORY: "Category"
@@ -172,32 +164,19 @@ export const buildResolvers: IResolvers<any, Context> = {
 
 			try {
 				// Verify categories exist
-				let errors: { message: string; field: string }[] = [];
 				categoryIds = await Promise.all(
-					categoryIds.map(async (categoryId: string, index: number) => {
-						try {
-							const categoryDoc = await CategoryModel.findById(categoryId).exec();
+					categoryIds.map(async (categoryId: string) => {
+						const category = await CategoryModel.findById(categoryId).exec();
 
-							if (!categoryDoc) {
-								errors.push({ message: "Category not found", field: `categoryIds[${index}]` });
-								return;
-							}
-
-							return categoryDoc.id;
-						} catch (error) {
-							if (error.name === "CastError") {
-								errors.push({ message: "Category not found", field: `categoryIds[${index}]` });
-								return;
-							}
-
+						if (!category) {
+							let error = Error(`Category with id '${categoryId}' not found`);
+							error.name = "ValidationError";
 							throw error;
 						}
+
+						return category.id;
 					})
 				);
-
-				if (errors.length) {
-					return { errors: errors };
-				}
 
 				const board = await BoardModel.findByIdAndUpdate(id, {
 					name: name,
@@ -212,7 +191,7 @@ export const buildResolvers: IResolvers<any, Context> = {
 					.populate("creator")
 					.exec();
 
-				if (board === null) {
+				if (!board) {
 					let error = Error(`Board with id '${id}' not found`);
 					error.name = "ValidationError";
 					throw error;
@@ -242,13 +221,9 @@ export const buildResolvers: IResolvers<any, Context> = {
 
 			try {
 				let clueIds: string[] = await Promise.all(
-					clues.map(async (clue: ClueDocument, index: number) => {
-						const clueDoc = await ClueModel.findOneAndUpdate(
-							{ answer: clue.answer, question: clue.question },
-							{},
-							{ upsert: true }
-						).exec();
-						return clueDoc.id;
+					clues.map(async (clueObj: { answer: string; question: string }) => {
+						const clue = await ClueModel.findOneAndUpdate(clueObj, {}, { upsert: true }).exec();
+						return clue.id;
 					})
 				);
 
@@ -261,6 +236,13 @@ export const buildResolvers: IResolvers<any, Context> = {
 					.populate("clues")
 					.populate("creator")
 					.exec();
+
+				if (!category) {
+					let error = Error(`Category with id '${id}' not found`);
+					error.name = "ValidationError";
+					throw error;
+				}
+
 				return { result: category };
 			} catch (error) {
 				switch (error.name) {

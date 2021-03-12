@@ -1,13 +1,15 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { ApolloClient, ApolloLink, ApolloProvider, createHttpLink, InMemoryCache } from "@apollo/client";
+import { ApolloClient, ApolloLink, ApolloProvider, createHttpLink, InMemoryCache, split } from "@apollo/client";
 import { setContext } from "@apollo/client/link/context";
 import { onError } from "@apollo/client/link/error";
+import { WebSocketLink } from "@apollo/client/link/ws";
+import { getMainDefinition } from "@apollo/client/utilities";
 import { TokenRefreshLink } from "apollo-link-token-refresh";
 import jwt_decode from "jwt-decode";
 
 import { getAccessToken, setAccessToken } from "./auth";
-import { App } from "./app";
+import { App, serverURL } from "./app";
 
 import "./index.scss";
 
@@ -35,7 +37,7 @@ const refreshLink = new TokenRefreshLink({
 		}
 	},
 	fetchAccessToken: () => {
-		return fetch(process.env.REACT_APP_SERVER_URL + "/refreshToken", {
+		return fetch(serverURL("http", "refreshToken"), {
 			method: "POST",
 			credentials: "include"
 		});
@@ -81,14 +83,32 @@ const authLink = setContext((_, { headers }) => {
 	}
 }).concat(
 	createHttpLink({
-		uri: process.env.REACT_APP_SERVER_URL + "/graphql",
+		uri: serverURL("http", "graphql"),
 		credentials: "include"
 	})
 );
 
+// Websocket link for subscriptions
+const wsLink = new WebSocketLink({
+	uri: serverURL("ws", "graphql"),
+	options: {
+		reconnect: true
+	}
+});
+
+// Split traffic between websocket (subscriptions) and http (queries, mutations, refresh token) links
+const splitLink = split(
+	({ query }) => {
+		const definition = getMainDefinition(query);
+		return definition.kind === "OperationDefinition" && definition.operation === "subscription";
+	},
+	wsLink,
+	ApolloLink.from([refreshLink, errorLink, authLink])
+);
+
 const client = new ApolloClient({
 	credentials: "include",
-	link: ApolloLink.from([refreshLink, errorLink, authLink]),
+	link: splitLink,
 	cache: new InMemoryCache()
 });
 

@@ -9,7 +9,7 @@ interface AuthResult {
 	errors?: { message: string; field: string }[];
 }
 
-export const userResolvers: IResolvers<any, Context> = {
+export const UserResolvers: IResolvers<any, Context> = {
 	Query: {
 		currentUser: async (_, {}, context): Promise<UserDocument> => {
 			try {

@@ -1,15 +1,16 @@
 import React from "react";
-import { Navbar, Nav } from "react-bootstrap";
-import { Link, NavLink } from "react-router-dom";
+import { Navbar, Nav, NavDropdown } from "react-bootstrap";
+import { Link, NavLink, useLocation } from "react-router-dom";
 
 import { useUserStatus, UserStatus } from "../user";
 
 export const Header = () => {
 	const [userStatus, nickname] = useUserStatus();
+	const location = useLocation();
 
 	return (
 		<>
-			<Navbar bg="primary" variant="dark" expand="md" style={{ marginBottom: "20px" }}>
+			<Navbar bg="primary" variant="dark" expand="sm" style={{ marginBottom: "20px" }}>
 				<Navbar.Brand as={Link} to="/">
 					Quizzing
 				</Navbar.Brand>
@@ -17,18 +18,24 @@ export const Header = () => {
 					<Nav className="mr-auto">
 						{userStatus === UserStatus.LoggedIn ? (
 							<>
-								<Nav.Link as={NavLink} to="/boards/all">
-									All Boards
+								<Nav.Link as={NavLink} to="/play">
+									Play
 								</Nav.Link>
-								<Nav.Link as={NavLink} to="/boards/my">
-									My Boards
-								</Nav.Link>
-								<Nav.Link as={NavLink} to="/categories/all">
-									All Categories
-								</Nav.Link>
-								<Nav.Link as={NavLink} to="/categories/my">
-									My Categories
-								</Nav.Link>
+								<NavDropdown id="buildDropdown" title="Build" active={location.pathname.split("/")[1] === "build"}>
+									<NavDropdown.Item as={NavLink} to="/build/boards/all">
+										All Boards
+									</NavDropdown.Item>
+									<NavDropdown.Item as={NavLink} to="/build/boards/my">
+										My Boards
+									</NavDropdown.Item>
+									<NavDropdown.Divider />
+									<NavDropdown.Item as={NavLink} to="/build/categories/all">
+										All Categories
+									</NavDropdown.Item>
+									<NavDropdown.Item as={NavLink} to="/build/categories/my">
+										My Categories
+									</NavDropdown.Item>
+								</NavDropdown>
 							</>
 						) : null}
 					</Nav>
@@ -37,8 +44,7 @@ export const Header = () => {
 							<Nav.Link as={NavLink} to="/user">
 								{nickname}
 							</Nav.Link>
-						) : null}
-						{userStatus === UserStatus.LoggedOut ? (
+						) : userStatus === UserStatus.LoggedOut ? (
 							<>
 								<Nav.Link as={NavLink} to="/login">
 									Login

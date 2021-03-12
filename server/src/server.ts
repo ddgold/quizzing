@@ -3,10 +3,11 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import { ApolloServer } from "apollo-server-express";
 import { config } from "dotenv-flow";
+import { createServer } from "http";
 
 import { resolvers, typeDefs } from "./graphql";
 import Database from "./database/database";
-import { Context, postRefreshToken } from "./auth";
+import { postRefreshToken } from "./auth";
 import { environmentConfig } from "./environment";
 
 // ------------------
@@ -35,28 +36,32 @@ database
 // -------------
 // Apollo Server
 // -------------
-const app = express();
+const expressApp = express();
 
-app.use(cookieParser());
+expressApp.use(cookieParser());
 
-app.use(
+expressApp.use(
 	cors({
 		origin: process.env.FRONTEND_URL,
 		credentials: true
 	})
 );
 
-app.post("/refreshToken", postRefreshToken);
+expressApp.post("/refreshToken", postRefreshToken);
 
-const server = new ApolloServer({
+const apolloServer = new ApolloServer({
 	playground: process.env.NODE_ENV !== "production",
 	resolvers,
 	typeDefs,
 	context: (Context) => Context
 });
 
-server.applyMiddleware({ app, cors: false });
+apolloServer.applyMiddleware({ app: expressApp, cors: false });
 
-app.listen({ port: process.env.GRAPHQL_PORT }, () => {
-	console.info(`Server running at http://localhost:${process.env.GRAPHQL_PORT}${server.graphqlPath}`);
+const httpServer = createServer(expressApp);
+apolloServer.installSubscriptionHandlers(httpServer);
+
+httpServer.listen({ port: process.env.GRAPHQL_PORT }, () => {
+	console.info(`Server running at http://localhost:${process.env.GRAPHQL_PORT}${apolloServer.graphqlPath}`);
+	console.info(`Websocket running at ws://localhost:${process.env.GRAPHQL_PORT}${apolloServer.subscriptionsPath}`);
 });

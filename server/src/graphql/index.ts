@@ -2,8 +2,9 @@ import "graphql-import-node";
 
 import typeDefs from "./schema.graphql";
 
-import { userResolvers } from "./resolvers/user";
-import { buildResolvers } from "./resolvers/build";
-const resolvers = [userResolvers, buildResolvers];
+import { BuildResolvers } from "./resolvers/build";
+import { PlayResolvers } from "./resolvers/play";
+import { UserResolvers } from "./resolvers/user";
+const resolvers = [BuildResolvers, PlayResolvers, UserResolvers];
 
 export { typeDefs, resolvers };

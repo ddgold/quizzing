@@ -103,3 +103,10 @@ type Mutation {
 	updateBoard(id: String!, name: String!, description: String!, categoryIds: [String!]!): FormResult!
 	updateCategory(id: String!, name: String!, description: String!, clues: [ClueInput!]!): FormResult!
 }
+
+# -------------
+# Subscriptions
+# -------------
+type Subscription {
+	playGame(id: String!): String!
+}

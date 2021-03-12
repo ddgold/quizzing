@@ -37,7 +37,7 @@ export const BoardList = ({ showAll }: Props) => {
 
 	const onSelect = (record: RecordModel) => {
 		const board = record as BoardModel;
-		history.push(`/boards/id/${board.id}`);
+		history.push(`/build/boards/${board.id}`);
 	};
 
 	if (error) {
@@ -70,7 +70,7 @@ export const BoardList = ({ showAll }: Props) => {
 						return (
 							<tr key={index}>
 								<td>
-									<Link to={"/boards/id/" + board.id}>{board.name}</Link>
+									<Link to={`/build/boards/${board.id}`}>{board.name}</Link>
 								</td>
 								<td>
 									{showAll ? `${created.toLocaleString()} by ${board.creator.nickname}` : created.toLocaleString()}

@@ -24,7 +24,8 @@
 		"react-bootstrap": "^1.4.0",
 		"react-dom": "^16.8.0",
 		"react-hook-form": "^6.9.6",
-		"react-router-dom": "^5.2.0"
+		"react-router-dom": "^5.2.0",
+		"subscriptions-transport-ws": "^0.9.18"
 	},
 	"scripts": {
 		"dev": "react-scripts start",
