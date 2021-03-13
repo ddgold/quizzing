@@ -27,25 +27,28 @@ export const signRefreshToken = (payload: TokenPayload): string => {
 	});
 };
 
-export const sendRefreshToken = (res: Response, token: string): void => {
-	res.cookie("qid", token, {
+export const sendRefreshToken = (res: Response, refreshToken: string): void => {
+	res.cookie("qid", refreshToken, {
 		httpOnly: true,
 		path: "/refreshToken"
 	});
 };
 
-export const assertAuthorized = async (context: Context): Promise<void> => {
-	const authorization = context.req.headers["authorization"];
-
-	if (!authorization) {
+export const assertWsAuthorized = (accessToken: string) => {
+	try {
+		verify(accessToken, getDockerSecret("access_token"));
+	} catch (error) {
+		console.error(`Authorization error: ${error}`);
 		throw new AuthenticationError("Not Authorized");
 	}
+};
 
+export const assertHttpAuthorized = async (context: Context): Promise<void> => {
 	try {
-		const token = authorization.split(" ")[1];
-		context.payload = verify(token, getDockerSecret("access_token")) as TokenPayload;
+		const accessToken = context.req.headers["authorization"].split(" ")[1];
+		context.payload = verify(accessToken, getDockerSecret("access_token")) as TokenPayload;
 	} catch (error) {
-		console.error(`Authentication error: ${error}`);
+		console.error(`Authorization error: ${error}`);
 		throw new AuthenticationError("Not Authorized");
 	}
 };
@@ -59,13 +62,13 @@ export const postRefreshToken = async (
 	req: Request,
 	res: Response<RefreshResult>
 ): Promise<Response<RefreshResult>> => {
-	const token = req.cookies.qid;
-	if (!token) {
+	const refreshToken = req.cookies.qid;
+	if (!refreshToken) {
 		return res.send({ success: false, accessToken: "" });
 	}
 
 	try {
-		const payload = verify(token, getDockerSecret("refresh_token")) as TokenPayload;
+		const payload = verify(refreshToken, getDockerSecret("refresh_token")) as TokenPayload;
 
 		const user = await UserModel.findOne({ _id: payload.userId });
 		if (!user) {

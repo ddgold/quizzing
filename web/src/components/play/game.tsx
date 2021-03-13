@@ -1,17 +1,27 @@
 import React from "react";
+import { Container } from "react-bootstrap";
 import { gql, useSubscription } from "@apollo/client";
 import { RouteComponentProps, withRouter } from "react-router-dom";
 
-import { Error, Loading, Page } from "../shared";
+import { Error, Loading } from "../shared";
+import { GameModel, RowModel } from "../../models/play";
+
+import "./game.scss";
 
 const PLAY_GAME = gql`
 	subscription PlayGame($id: String!) {
-		playGame(id: $id)
+		playGame(id: $id) {
+			categories
+			rows {
+				cols
+				value
+			}
+		}
 	}
 `;
 
 interface Data {
-	playGame: string;
+	playGame: GameModel;
 }
 
 interface Variables {
@@ -20,7 +30,7 @@ interface Variables {
 
 interface Props extends RouteComponentProps {}
 
-export const GameWithoutRouter = (props: Props) => {
+const GameWithoutRouter = (props: Props) => {
 	const { data, error, loading } = useSubscription<Data, Variables>(PLAY_GAME, {
 		variables: { id: (props.match.params as Variables).id }
 	});
@@ -32,15 +42,30 @@ export const GameWithoutRouter = (props: Props) => {
 	if (loading) {
 		return <Loading />;
 	}
-
-	console.log(data);
-
 	return (
-		<Page title="Game">
-			<p className="lead" style={{ marginBottom: "0px" }}>
-				{data!.playGame}
-			</p>
-		</Page>
+		<Container className="board" fluid>
+			<h1>{(props.match.params as Variables).id}</h1>
+			<table>
+				<thead>
+					<tr>
+						{data!.playGame.categories.map((category: string, index: number) => (
+							<th key={index}>
+								<div>{category}</div>
+							</th>
+						))}
+					</tr>
+				</thead>
+				<tbody>
+					{data!.playGame.rows.map((row: RowModel, index: number) => (
+						<tr key={index}>
+							{row.cols.map((seen: boolean, index: number) => (
+								<td key={index}>{!seen ? row.value : ""}</td>
+							))}
+						</tr>
+					))}
+				</tbody>
+			</table>
+		</Container>
 	);
 };
 

@@ -1,6 +1,14 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { ApolloClient, ApolloLink, ApolloProvider, createHttpLink, InMemoryCache, split } from "@apollo/client";
+import {
+	ApolloClient,
+	ApolloLink,
+	ApolloProvider,
+	createHttpLink,
+	InMemoryCache,
+	Operation,
+	split
+} from "@apollo/client";
 import { setContext } from "@apollo/client/link/context";
 import { onError } from "@apollo/client/link/error";
 import { WebSocketLink } from "@apollo/client/link/ws";
@@ -23,14 +31,14 @@ interface TokenPayload {
 const refreshLink = new TokenRefreshLink({
 	accessTokenField: "accessToken",
 	isTokenValidOrUndefined: () => {
-		const token = getAccessToken();
+		const accessToken = getAccessToken();
 
-		if (!token) {
+		if (!accessToken) {
 			return true;
 		}
 
 		try {
-			const decoded = jwt_decode(token) as TokenPayload;
+			const decoded = jwt_decode(accessToken) as TokenPayload;
 			return Date.now() < decoded.exp * 1000;
 		} catch {
 			return false;
@@ -71,7 +79,7 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
 });
 
 // Pass access token, if there is one, with all requests
-const authLink = setContext((_, { headers }) => {
+const httpLink = setContext((_, { headers }) => {
 	const accessToken = getAccessToken();
 	if (accessToken) {
 		return {
@@ -89,12 +97,24 @@ const authLink = setContext((_, { headers }) => {
 );
 
 // Websocket link for subscriptions
-const wsLink = new WebSocketLink({
-	uri: serverURL("ws", "graphql"),
-	options: {
-		reconnect: true
+const wsLink = new (class extends ApolloLink {
+	link: WebSocketLink | undefined;
+
+	request(operation: Operation) {
+		// Only create WebSocketLink at run time
+		if (this.link === undefined) {
+			this.link = new WebSocketLink({
+				uri: serverURL("ws", "graphql"),
+				options: {
+					reconnect: true,
+					connectionParams: () => ({ authorization: getAccessToken() })
+				}
+			});
+		}
+
+		return this.link.request(operation);
 	}
-});
+})();
 
 // Split traffic between websocket (subscriptions) and http (queries, mutations, refresh token) links
 const splitLink = split(
@@ -103,12 +123,12 @@ const splitLink = split(
 		return definition.kind === "OperationDefinition" && definition.operation === "subscription";
 	},
 	wsLink,
-	ApolloLink.from([refreshLink, errorLink, authLink])
+	httpLink
 );
 
 const client = new ApolloClient({
 	credentials: "include",
-	link: splitLink,
+	link: ApolloLink.from([refreshLink, errorLink, splitLink]),
 	cache: new InMemoryCache()
 });
 

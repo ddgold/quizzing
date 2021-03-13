@@ -7,7 +7,7 @@ import { createServer } from "http";
 
 import { resolvers, typeDefs } from "./graphql";
 import Database from "./database/database";
-import { postRefreshToken } from "./auth";
+import { assertWsAuthorized, postRefreshToken } from "./auth";
 import { environmentConfig } from "./environment";
 
 // ------------------
@@ -42,7 +42,7 @@ expressApp.use(cookieParser());
 
 expressApp.use(
 	cors({
-		origin: process.env.FRONTEND_URL,
+		origin: process.env.FRONTEND_URL.split("|"),
 		credentials: true
 	})
 );
@@ -53,7 +53,12 @@ const apolloServer = new ApolloServer({
 	playground: process.env.NODE_ENV !== "production",
 	resolvers,
 	typeDefs,
-	context: (Context) => Context
+	context: (Context) => Context,
+	subscriptions: {
+		onConnect: (connectionParams: { authorization: string }) => {
+			assertWsAuthorized(connectionParams.authorization);
+		}
+	}
 });
 
 apolloServer.applyMiddleware({ app: expressApp, cors: false });

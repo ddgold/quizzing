@@ -1,0 +1,58 @@
+@import "../../index.scss";
+
+$clue-color: #0000ff;
+$font-color: #ffffff;
+$border-color: #111111;
+
+$ratio: 16 / 9;
+$cell-height: #{"min((100vh - 5rem) / 6, (100vw - 2rem) / 6 / #{$ratio})"};
+$cell-width: calc(#{$cell-height} * #{$ratio});
+
+.board {
+	background: #ffffff;
+	box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+	padding: 1rem;
+}
+
+.board table {
+	table-layout: fixed;
+	background: #333333;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.board th,
+.board td {
+	color: $font-color;
+	text-align: center;
+	vertical-align: middle;
+	height: $cell-height;
+	width: $cell-width;
+	background: $clue-color;
+	user-select: none;
+
+	@include media-breakpoint-down(sm) {
+		border: 0.2rem solid $border-color;
+	}
+
+	@include media-breakpoint-only(md) {
+		border: 0.35rem solid $border-color;
+	}
+	@include media-breakpoint-up(lg) {
+		border: 0.5rem solid $border-color;
+	}
+}
+
+.board th > div {
+	font-size: calc(#{$cell-height} * 0.2);
+	font-weight: normal;
+
+	display: -webkit-box;
+	-webkit-line-clamp: 3;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+
+.board td {
+	font-size: calc(#{$cell-height} * 0.35);
+}

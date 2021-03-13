@@ -3,7 +3,7 @@ import { ForbiddenError, SyntaxError } from "apollo-server-express";
 
 import { FormResult, QueryResult, ResultObject, SearchResult } from "../types";
 import { BoardDocument, BoardModel, CategoryDocument, CategoryModel, ClueModel, RecordDocument } from "../../database";
-import { Context, assertAuthorized } from "../../auth";
+import { Context, assertHttpAuthorized } from "../../auth";
 
 export const BuildResolvers: IResolvers<any, Context> = {
 	RecordType: {
@@ -25,7 +25,7 @@ export const BuildResolvers: IResolvers<any, Context> = {
 	},
 	Query: {
 		boards: async (_, { showAll }, context): Promise<BoardDocument[]> => {
-			await assertAuthorized(context);
+			await assertHttpAuthorized(context);
 			if (showAll) {
 				return await BoardModel.find()
 					.populate({
@@ -45,7 +45,7 @@ export const BuildResolvers: IResolvers<any, Context> = {
 			}
 		},
 		categories: async (_, { showAll }, context): Promise<CategoryDocument[]> => {
-			await assertAuthorized(context);
+			await assertHttpAuthorized(context);
 			if (showAll) {
 				return await CategoryModel.find().populate("clues").populate("creator").exec();
 			} else {
@@ -58,7 +58,7 @@ export const BuildResolvers: IResolvers<any, Context> = {
 		recordById: async (_, { type, id }, context): Promise<QueryResult<RecordDocument>> => {
 			switch (type) {
 				case "Board": {
-					await assertAuthorized(context);
+					await assertHttpAuthorized(context);
 					let board = await BoardModel.findById(id)
 						.populate({
 							path: "categories",
@@ -75,7 +75,7 @@ export const BuildResolvers: IResolvers<any, Context> = {
 					return { result: board, canEdit: canEdit };
 				}
 				case "Category": {
-					await assertAuthorized(context);
+					await assertHttpAuthorized(context);
 					let category = await CategoryModel.findById(id).populate("clues").populate("creator").exec();
 
 					if (!category) {
@@ -92,7 +92,7 @@ export const BuildResolvers: IResolvers<any, Context> = {
 			}
 		},
 		recordSearch: async (_, { type, name }, context): Promise<SearchResult<RecordDocument>> => {
-			await assertAuthorized(context);
+			await assertHttpAuthorized(context);
 			switch (type) {
 				case "Category": {
 					let categories = await CategoryModel.find({ name: { $regex: name } })
@@ -109,7 +109,7 @@ export const BuildResolvers: IResolvers<any, Context> = {
 	},
 	Mutation: {
 		createRecord: async (_, { type, name }, context): Promise<FormResult<RecordDocument>> => {
-			await assertAuthorized(context);
+			await assertHttpAuthorized(context);
 			try {
 				switch (type) {
 					case "Board": {
@@ -155,7 +155,7 @@ export const BuildResolvers: IResolvers<any, Context> = {
 			}
 		},
 		updateBoard: async (_, { id, name, description, categoryIds }, context): Promise<FormResult<BoardDocument>> => {
-			await assertAuthorized(context);
+			await assertHttpAuthorized(context);
 
 			let canEdit = await BoardModel.canEdit(id, context.payload!.userId);
 			if (!canEdit) {
@@ -212,7 +212,7 @@ export const BuildResolvers: IResolvers<any, Context> = {
 			}
 		},
 		updateCategory: async (_, { id, name, description, clues }, context): Promise<FormResult<CategoryDocument>> => {
-			await assertAuthorized(context);
+			await assertHttpAuthorized(context);
 
 			let canEdit = await CategoryModel.canEdit(id, context.payload!.userId);
 			if (!canEdit) {

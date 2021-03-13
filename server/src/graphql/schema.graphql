@@ -74,6 +74,21 @@ type SearchResult {
 	result: [ResultObject!]
 }
 
+# ----
+# Play
+# ----
+type Row {
+	cols: [Boolean!]!
+	value: Int!
+}
+
+type Game {
+	categories: [String!]!
+	rows: [Row!]!
+	# host: User!
+	# started: Date!
+}
+
 # -------
 # Queries
 # -------
@@ -108,5 +123,6 @@ type Mutation {
 # Subscriptions
 # -------------
 type Subscription {
-	playGame(id: String!): String!
+	# Play
+	playGame(id: String!): Game!
 }
