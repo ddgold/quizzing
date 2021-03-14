@@ -1,12 +1,20 @@
 # Dependency directories
 *node_modules/
 
+# Yarn
+.yarn/*
+!.yarn/patches
+!.yarn/releases
+!.yarn/plugins
+!.yarn/sdks
+!.yarn/versions
+
 # Build directories
 server/build/
 web/build/
 
-# Local environment files
-*.env.*.local
+# Environment files
+*.env.*
 
 # Logs
 *.log

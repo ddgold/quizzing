@@ -128,7 +128,7 @@ const splitLink = split(
 
 const client = new ApolloClient({
 	credentials: "include",
-	link: ApolloLink.from([refreshLink, errorLink, splitLink]),
+	link: ApolloLink.from([refreshLink as any, errorLink, splitLink]), // 'as any' needed for bug in apollo-link-token-refresh
 	cache: new InMemoryCache()
 });
 

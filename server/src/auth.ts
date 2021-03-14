@@ -38,17 +38,15 @@ export const assertWsAuthorized = (accessToken: string) => {
 	try {
 		verify(accessToken, getDockerSecret("access_token"));
 	} catch (error) {
-		console.error(`Authorization error: ${error}`);
 		throw new AuthenticationError("Not Authorized");
 	}
 };
 
 export const assertHttpAuthorized = async (context: Context): Promise<void> => {
 	try {
-		const accessToken = context.req.headers["authorization"].split(" ")[1];
+		const accessToken = context.req.headers["authorization"] && context.req.headers["authorization"].split(" ")[1];
 		context.payload = verify(accessToken, getDockerSecret("access_token")) as TokenPayload;
 	} catch (error) {
-		console.error(`Authorization error: ${error}`);
 		throw new AuthenticationError("Not Authorized");
 	}
 };

@@ -2,7 +2,6 @@ import express from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import { ApolloServer } from "apollo-server-express";
-import { config } from "dotenv-flow";
 import { createServer } from "http";
 
 import { resolvers, typeDefs } from "./graphql";
@@ -13,11 +12,7 @@ import { environmentConfig } from "./environment";
 // ------------------
 // Environment Config
 // ------------------
-config({
-	default_node_env: "development"
-});
-
-environmentConfig(["SECRETS_DIR", "GRAPHQL_PORT", "FRONTEND_URL", "MONGODB_URL"], ["access_token", "refresh_token"]);
+environmentConfig(["SECRETS_DIR", "FRONTEND_URL", "MONGODB_URL"], ["access_token", "refresh_token"]);
 
 // ----------------
 // mongoDB Database
@@ -66,7 +61,8 @@ apolloServer.applyMiddleware({ app: expressApp, cors: false });
 const httpServer = createServer(expressApp);
 apolloServer.installSubscriptionHandlers(httpServer);
 
-httpServer.listen({ port: process.env.GRAPHQL_PORT }, () => {
-	console.info(`Server running at http://localhost:${process.env.GRAPHQL_PORT}${apolloServer.graphqlPath}`);
-	console.info(`Websocket running at ws://localhost:${process.env.GRAPHQL_PORT}${apolloServer.subscriptionsPath}`);
+const port = process.env.GRAPHQL_PORT || 8000;
+httpServer.listen({ port: port }, () => {
+	console.info(`Server running at http://localhost:${port}${apolloServer.graphqlPath}`);
+	console.info(`Websocket running at ws://localhost:${port}${apolloServer.subscriptionsPath}`);
 });

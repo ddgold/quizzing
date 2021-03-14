@@ -11,12 +11,12 @@
 		"web"
 	],
 	"devDependencies": {
-		"concurrently": "^5.3.0"
+		"concurrently": "^6.0.0"
 	},
 	"scripts": {
-		"dev": "concurrently -n \"server, web  ,\" -c \"bgGreen,bgBlue\"  \"yarn --cwd server dev\" \"yarn --cwd web dev\"",
+		"dev": "concurrently -n \"server, web  ,\" -c \"bgGreen,bgBlue\"  \"yarn workspace @quizzing/server dev\" \"yarn workspace @quizzing/web dev\"",
+		"remove-build": "yarn workspaces foreach run remove-build",
 		"compose": "docker-compose up -d --build",
-		"create-mongo": "docker run -it -v /Volumes/mongodata:/data/db -p 27017:27017 --name mongo -d mongo:4.4.1",
-		"remove-modules": "rm -rf ./node_modules && yarn --cwd server remove-modules && yarn --cwd web remove-modules"
+		"create-mongo": "docker run -it -v /Volumes/mongodata:/data/db -p 27017:27017 --name mongo -d mongo:4.4.1"
 	}
 }

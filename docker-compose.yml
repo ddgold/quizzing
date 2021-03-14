@@ -3,10 +3,10 @@ services:
   web:
     container_name: web
     build:
-      context: ./web
+      context: .
+      dockerfile: ./web/Dockerfile
       args:
-        server_url: http://192.168.1.191:8000
-        graphqL_port:
+        REACT_APP_SERVER_URI: 192.168.50.191:8000
     depends_on:
       - server
     ports:
@@ -15,11 +15,12 @@ services:
       - graphql
   server:
     container_name: server
-    build: ./server
+    build:
+      context: .
+      dockerfile: ./server/Dockerfile
     environment:
-      - GRAPHQL_PORT=8000
-      - MONGODB_URL=mongodb://192.168.1.191:27017
-      - FRONTEND_URL=http://192.168.1.191:3000
+      - FRONTEND_URL=http://192.168.50.191:3000|http://localhost:3000
+      - MONGODB_URL=mongodb://192.168.50.191:27017
       - SECRETS_DIR=/run/secrets
     secrets:
       - access_token

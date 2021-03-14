@@ -13,8 +13,12 @@ export const UserResolvers: IResolvers<any, Context> = {
 	Query: {
 		currentUser: async (_, {}, context): Promise<UserDocument> => {
 			try {
-				await assertHttpAuthorized(context);
-				return await UserModel.findById(context.payload!.userId).exec();
+				if (context.req.headers["authorization"]) {
+					await assertHttpAuthorized(context);
+					return await UserModel.findById(context.payload!.userId).exec();
+				} else {
+					return null;
+				}
 			} catch (error) {
 				return null;
 			}
