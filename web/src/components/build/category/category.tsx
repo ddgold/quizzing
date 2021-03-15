@@ -17,6 +17,7 @@ const RECORD_BY_ID = gql`
 					id
 					name
 					description
+					format
 					clues {
 						answer
 						question

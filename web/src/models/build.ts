@@ -5,6 +5,7 @@ export interface BoardModel extends RecordModel {
 }
 
 export interface CategoryModel extends RecordModel {
+	format: CategoryFormat;
 	clues: ClueModel[];
 }
 
@@ -25,4 +26,10 @@ export interface RecordModel {
 export enum RecordType {
 	Board = "BOARD",
 	Category = "CATEGORY"
+}
+
+export enum CategoryFormat {
+	Fix = "FIX",
+	Random = "RANDOM",
+	Sorted = "SORTED"
 }

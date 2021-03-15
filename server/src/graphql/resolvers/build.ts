@@ -229,7 +229,11 @@ export const BuildResolvers: IResolvers<any, Context> = {
 				return { errors: [{ message: "Error updating board", field: "name" }] };
 			}
 		},
-		updateCategory: async (_, { id, name, description, clues }, context): Promise<FormResult<CategoryDocument>> => {
+		updateCategory: async (
+			_,
+			{ id, name, description, format, clues },
+			context
+		): Promise<FormResult<CategoryDocument>> => {
 			await assertHttpAuthorized(context);
 
 			let canEdit = await CategoryModel.canEdit(id, context.payload!.userId);
@@ -248,6 +252,7 @@ export const BuildResolvers: IResolvers<any, Context> = {
 				const category = await CategoryModel.findByIdAndUpdate(id, {
 					name: name,
 					description: description,
+					format: format,
 					clues: clueIds,
 					updated: new Date()
 				})

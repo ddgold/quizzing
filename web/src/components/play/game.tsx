@@ -48,7 +48,7 @@ const GameWithoutRouter = (props: Props) => {
 				variables: { id: boardId, row: row, col: col }
 			});
 		} catch (error) {
-			console.log("selectCell", error);
+			console.error("selectCell", error);
 		}
 	};
 
@@ -58,7 +58,7 @@ const GameWithoutRouter = (props: Props) => {
 				variables: { id: boardId }
 			});
 		} catch (error) {
-			console.log("answerClue", error);
+			console.error("answerClue", error);
 		}
 	};
 
@@ -68,7 +68,7 @@ const GameWithoutRouter = (props: Props) => {
 				variables: { id: boardId }
 			});
 		} catch (error) {
-			console.log("closeLightbox", error);
+			console.error("closeLightbox", error);
 		}
 	};
 

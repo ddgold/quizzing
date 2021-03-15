@@ -34,10 +34,17 @@ input ClueInput {
 	question: String!
 }
 
+enum CategoryFormat {
+	FIXED
+	RANDOM
+	SORTED
+}
+
 type Category {
 	id: String!
 	name: String!
 	description: String!
+	format: CategoryFormat!
 	clues: [Clue!]!
 	creator: User!
 	created: Date!
@@ -124,7 +131,13 @@ type Mutation {
 	# Build
 	createRecord(type: RecordType!, name: String!): FormResult!
 	updateBoard(id: String!, name: String!, description: String!, categoryIds: [String!]!): FormResult!
-	updateCategory(id: String!, name: String!, description: String!, clues: [ClueInput!]!): FormResult!
+	updateCategory(
+		id: String!
+		name: String!
+		description: String!
+		format: CategoryFormat!
+		clues: [ClueInput!]!
+	): FormResult!
 
 	# Play
 	selectClue(id: String!, row: Int!, col: Int!): Void

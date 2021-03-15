@@ -3,10 +3,17 @@ import { Document, Model, model, Schema } from "mongoose";
 interface Category {
 	name: string;
 	description: string;
+	format: CategoryFormat;
 	clues: string[];
 	creator: string;
 	created: Date;
 	updated: Date;
+}
+
+export enum CategoryFormat {
+	Fixed = "FIXED",
+	Random = "RANDOM",
+	Sorted = "SORTED"
 }
 
 const CategorySchema = new Schema({
@@ -20,6 +27,11 @@ const CategorySchema = new Schema({
 		type: Schema.Types.String,
 		required: false,
 		maxlength: 265
+	},
+	format: {
+		type: Schema.Types.String,
+		enum: [CategoryFormat.Fixed, CategoryFormat.Random, CategoryFormat.Sorted],
+		default: CategoryFormat.Random
 	},
 	clues: {
 		type: [{ type: Schema.Types.ObjectId, ref: "clue" }],

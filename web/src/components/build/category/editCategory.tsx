@@ -1,5 +1,5 @@
 import React from "react";
-import { Button, Col, Form, InputGroup, Row } from "react-bootstrap";
+import { Button, Col, Form, FormCheck, InputGroup, Row } from "react-bootstrap";
 import { useForm, useFieldArray } from "react-hook-form";
 import { gql, useMutation } from "@apollo/client";
 
@@ -7,13 +7,20 @@ import { FieldError, FormResult } from "../../../models/shared";
 import { CategoryModel, ClueModel } from "../../../models/build";
 
 const UPDATE_CATEGORY = gql`
-	mutation UpdateCategory($id: String!, $name: String!, $description: String!, $clues: [ClueInput!]!) {
-		updateCategory(id: $id, name: $name, description: $description, clues: $clues) {
+	mutation UpdateCategory(
+		$id: String!
+		$name: String!
+		$description: String!
+		$format: CategoryFormat!
+		$clues: [ClueInput!]!
+	) {
+		updateCategory(id: $id, name: $name, description: $description, format: $format, clues: $clues) {
 			result {
 				... on Category {
 					id
 					name
 					description
+					format
 					clues {
 						answer
 						question
@@ -122,6 +129,23 @@ export const EditCategory = (props: Props) => {
 					isInvalid={!!errors.description}
 				/>
 				<Form.Control.Feedback type="invalid">{errors.description?.message}</Form.Control.Feedback>
+			</Form.Group>
+
+			<Form.Group controlId="format">
+				<Form.Label>Format</Form.Label>
+				<Form.Check>
+					<FormCheck.Input type="radio" name="format" value="FIXED" ref={register} />
+					<FormCheck.Label>Fixed</FormCheck.Label>
+				</Form.Check>
+				<Form.Check>
+					<FormCheck.Input type="radio" name="format" value="RANDOM" ref={register} />
+					<FormCheck.Label>Random</FormCheck.Label>
+				</Form.Check>
+				<Form.Check>
+					<FormCheck.Input type="radio" name="format" value="SORTED" ref={register} />
+					<FormCheck.Label>Sorted</FormCheck.Label>
+				</Form.Check>
+				<Form.Control.Feedback type="invalid">{errors.format?.message}</Form.Control.Feedback>
 			</Form.Group>
 
 			<Form.Group>

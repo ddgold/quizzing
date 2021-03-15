@@ -11,6 +11,7 @@ export const ViewCategory = ({ category }: Props) => {
 	return (
 		<>
 			<p>{category.description}</p>
+			<p>{`Format: ${category.format}`}</p>
 			{category.clues.length > 0 ? (
 				<Table striped bordered>
 					<thead>

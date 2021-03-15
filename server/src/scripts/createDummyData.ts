@@ -53,42 +53,20 @@ const getCategory = async (name: string): Promise<CategoryDocument> => {
 };
 
 const createDummyBoards = async (): Promise<void> => {
-	const foobar = await getUser("foobar");
 	const kingKong = await getUser("king_kong");
 
 	const kraftDynasty = await getCategory("The Kraft Dynasty");
 	const solSystem = await getCategory("The Sol System");
 	const collegeMascots = await getCategory("College Mascots");
+	const colors = await getCategory("1st Grade Colors");
+	const capitals = await getCategory("State Capitals");
+	const languages = await getCategory("Foreign Languages");
 
 	const boards = [
 		{
-			name: "Civil War History",
+			name: "Random Trivia",
 			description: "",
-			categories: [],
-			creator: foobar.id,
-			created: new Date(),
-			updated: new Date()
-		},
-		{
-			name: "American Geography",
-			description: "",
-			categories: [],
-			creator: foobar.id,
-			created: new Date(),
-			updated: new Date()
-		},
-		{
-			name: "Sports Universal",
-			description: "",
-			categories: [kraftDynasty.id, collegeMascots.id],
-			creator: foobar.id,
-			created: new Date(),
-			updated: new Date()
-		},
-		{
-			name: "Science Fun",
-			description: "",
-			categories: [solSystem.id],
+			categories: [kraftDynasty.id, solSystem.id, collegeMascots.id, colors.id, capitals.id, languages.id],
 			creator: kingKong.id,
 			created: new Date(),
 			updated: new Date()
@@ -115,13 +93,13 @@ const processCategoryClues = async (clues: { answer: string; question: string }[
 };
 
 const createDummyCategories = async (): Promise<void> => {
-	const foobarUser = await getUser("foobar");
 	const kingKongUser = await getUser("king_kong");
 
 	const categories = [
 		{
 			name: "The Kraft Dynasty",
 			description: "Fun fact about the great Kraft Dynasty",
+			format: "FIXED",
 			creator: kingKongUser.id,
 			created: new Date(),
 			updated: new Date(),
@@ -152,6 +130,7 @@ const createDummyCategories = async (): Promise<void> => {
 		{
 			name: "The Sol System",
 			description: "How well do you know our solar system?",
+			format: "FIXED",
 			creator: kingKongUser.id,
 			created: new Date(),
 			updated: new Date(),
@@ -181,13 +160,14 @@ const createDummyCategories = async (): Promise<void> => {
 		{
 			name: "College Mascots",
 			description: "Name the college mascot",
+			format: "FIXED",
 			creator: kingKongUser.id,
 			created: new Date(),
 			updated: new Date(),
 			clues: await processCategoryClues([
 				{
 					answer: "Brown bears Joe & Josephine Bruin are the mascots for this Golden State university.",
-					question: "What UCLA?"
+					question: "What is UCLA?"
 				},
 				{
 					answer: "Not to be confused with Bevo, this costumed longhorn can be found on the sidelines at Texas games.",
@@ -201,10 +181,103 @@ const createDummyCategories = async (): Promise<void> => {
 					answer: "This mammal is known for jumping around in his red and white sweater.",
 					question: "Who is Bucky Badger?"
 				},
-
 				{
 					answer: "Ten different Bluetick Coonhound have donned this moniker.",
 					question: "What is Smokey?"
+				}
+			])
+		},
+		{
+			name: "1st Grade Colors",
+			description: "Simple question about colors",
+			format: "FIXED",
+			creator: kingKongUser.id,
+			created: new Date(),
+			updated: new Date(),
+			clues: await processCategoryClues([
+				{
+					answer: "Fire trucks are traditionally this color.",
+					question: "What is red?"
+				},
+				{
+					answer: "Chloroplasts organelles responsible for photosynthesis give plants this color.",
+					question: "What is green?"
+				},
+				{
+					answer: "When ripe, bananas turn this color.",
+					question: "What is yellow?"
+				},
+				{
+					answer: "The two Gs in Google's logo are this color.",
+					question: "What is blue?"
+				},
+				{
+					answer: "This color has the shortest wave length in ROYGBIV.",
+					question: "What is violet?"
+				}
+			])
+		},
+		{
+			name: "State Capitals",
+			description: "Can you name all the state capitals? There are only 50.",
+			format: "RANDOM",
+			creator: kingKongUser.id,
+			created: new Date(),
+			updated: new Date(),
+			clues: await processCategoryClues([
+				{
+					answer: "This city become a state capital in 1832, moving from Portland.",
+					question: "What is Augusta?"
+				},
+				{
+					answer: "At over 1.7 million residents, this is the largest state capital.",
+					question: "What is Phoenix?"
+				},
+				{
+					answer: "Originally called Waterloo, this city received its current name when it became the state capital.",
+					question: "What is Austin?"
+				},
+				{
+					answer: "This city is the badger state's capital.",
+					question: "What is Madison?"
+				},
+				{
+					answer: "This state capital is named for a Germany chancellor.",
+					question: "What is Bismark?"
+				},
+				{
+					answer: "Independence Hall is located in this state capital.",
+					question: "What is Philadelphia?"
+				}
+			])
+		},
+		{
+			name: "Foreign Languages",
+			description: "Name the college mascot",
+			format: "FIXED",
+			creator: kingKongUser.id,
+			created: new Date(),
+			updated: new Date(),
+			clues: await processCategoryClues([
+				{
+					answer: "Now an internationally recognized phrase, Ciao originated from this language.",
+					question: "What is Italian?"
+				},
+				{
+					answer: "With approximately 250,000, this language has the most distinct words.",
+					question: "What is English?"
+				},
+				{
+					answer: "This artifact help decipher ancient Egyptian hieroglyphs.",
+					question: "What is the Rosetta Stone?"
+				},
+				{
+					answer: "Nein, not to be confused with the number nine, means no in this language",
+					question: "Who is German?"
+				},
+				{
+					answer: "This language has the most native speakings, at over 900 million.",
+					question: "What is Mandarin Chinese?"
 				}
 			])
 		}
