@@ -1,39 +1,76 @@
 import React from "react";
 import { Container } from "react-bootstrap";
-import { gql, useSubscription } from "@apollo/client";
+import { gql, useMutation } from "@apollo/client";
 import { RouteComponentProps, withRouter } from "react-router-dom";
 
 import { Error, Loading } from "../shared";
-import { GameModel, RowModel } from "../../models/play";
+import { usePlayGame } from "./usePlayGame";
 
 import "./game.scss";
 
-const PLAY_GAME = gql`
-	subscription PlayGame($id: String!) {
-		playGame(id: $id) {
-			categories
-			rows {
-				cols
-				value
-			}
-		}
+const SELECT_CLUE = gql`
+	mutation SelectClue($id: String!, $row: Int!, $col: Int!) {
+		selectClue(id: $id, row: $row, col: $col)
 	}
 `;
 
-interface Data {
-	playGame: GameModel;
-}
+const ANSWER_CLUE = gql`
+	mutation AnswerClue($id: String!) {
+		answerClue(id: $id)
+	}
+`;
+
+const CLOSE_CLUE = gql`
+	mutation CloseClue($id: String!) {
+		closeClue(id: $id)
+	}
+`;
 
 interface Variables {
 	id: string;
+	row?: number;
+	col?: number;
 }
 
 interface Props extends RouteComponentProps {}
 
 const GameWithoutRouter = (props: Props) => {
-	const { data, error, loading } = useSubscription<Data, Variables>(PLAY_GAME, {
-		variables: { id: (props.match.params as Variables).id }
-	});
+	const boardId = (props.match.params as Variables).id;
+	const [loading, error, game] = usePlayGame(boardId);
+
+	const [selectClueMutation] = useMutation<{}, Variables>(SELECT_CLUE);
+	const [answerClueMutation] = useMutation<{}, Variables>(ANSWER_CLUE);
+	const [closeClueMutation] = useMutation<{}, Variables>(CLOSE_CLUE);
+
+	const selectClue = async (row: number, col: number) => {
+		try {
+			await selectClueMutation({
+				variables: { id: boardId, row: row, col: col }
+			});
+		} catch (error) {
+			console.log("selectCell", error);
+		}
+	};
+
+	const answerClue = async () => {
+		try {
+			await answerClueMutation({
+				variables: { id: boardId }
+			});
+		} catch (error) {
+			console.log("answerClue", error);
+		}
+	};
+
+	const closeClue = async () => {
+		try {
+			await closeClueMutation({
+				variables: { id: boardId }
+			});
+		} catch (error) {
+			console.log("closeLightbox", error);
+		}
+	};
 
 	if (error) {
 		return <Error message={error.message} />;
@@ -42,13 +79,18 @@ const GameWithoutRouter = (props: Props) => {
 	if (loading) {
 		return <Loading />;
 	}
+
+	if (!game) {
+		return <Error message={"Game not found"} />;
+	}
+
 	return (
 		<Container className="board" fluid>
-			<h1>{(props.match.params as Variables).id}</h1>
+			<h1>{boardId}</h1>
 			<table>
 				<thead>
 					<tr>
-						{data!.playGame.categories.map((category: string, index: number) => (
+						{game.categories.map((category: string, index: number) => (
 							<th key={index}>
 								<div>{category}</div>
 							</th>
@@ -56,15 +98,30 @@ const GameWithoutRouter = (props: Props) => {
 					</tr>
 				</thead>
 				<tbody>
-					{data!.playGame.rows.map((row: RowModel, index: number) => (
-						<tr key={index}>
-							{row.cols.map((seen: boolean, index: number) => (
-								<td key={index}>{!seen ? row.value : ""}</td>
-							))}
+					{game.rows.map((row: { value: number; cols: boolean[] }, rowIndex: number) => (
+						<tr key={rowIndex}>
+							{row.cols.map((selected: boolean, colIndex: number) => {
+								if (!selected) {
+									return (
+										<td key={colIndex} onClick={() => selectClue(rowIndex, colIndex)}>
+											{row.value}
+										</td>
+									);
+								} else {
+									return <td key={colIndex} />;
+								}
+							})}
 						</tr>
 					))}
 				</tbody>
 			</table>
+			{game.activeClue ? (
+				<div className="lightbox">
+					<div onClick={() => (game.activeClue?.showingAnswer ? answerClue() : closeClue())}>
+						<p>{`${game.activeClue.text} ${game.activeClue.showingAnswer}`}</p>
+					</div>
+				</div>
+			) : undefined}
 		</Container>
 	);
 };

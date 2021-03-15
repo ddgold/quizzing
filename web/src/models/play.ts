@@ -1,9 +1,5 @@
-export interface RowModel {
-	value: number;
-	cols: boolean[];
-}
-
 export interface GameModel {
 	categories: string[];
-	rows: RowModel[];
+	rows: { value: number; cols: boolean[] }[];
+	activeClue?: { text: string; showingAnswer: boolean };
 }

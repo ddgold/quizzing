@@ -1,5 +1,5 @@
 import { IResolvers } from "graphql-tools";
-import { ForbiddenError, SyntaxError } from "apollo-server-express";
+import { ForbiddenError, SyntaxError, ValidationError } from "apollo-server-express";
 
 import { FormResult, QueryResult, ResultObject, SearchResult } from "../types";
 import { BoardDocument, BoardModel, CategoryDocument, CategoryModel, ClueModel, RecordDocument } from "../../database";
@@ -59,31 +59,53 @@ export const BuildResolvers: IResolvers<any, Context> = {
 			switch (type) {
 				case "Board": {
 					await assertHttpAuthorized(context);
-					let board = await BoardModel.findById(id)
-						.populate({
-							path: "categories",
-							populate: ["clues", "creator"]
-						})
-						.populate("creator")
-						.exec();
+					try {
+						let board = await BoardModel.findById(id)
+							.populate({
+								path: "categories",
+								populate: ["clues", "creator"]
+							})
+							.populate("creator")
+							.exec();
 
-					if (!board) {
-						return {};
+						if (!board) {
+							return {};
+						}
+
+						const canEdit = await BoardModel.canEdit(id, context.payload!.userId);
+						return { result: board, canEdit: canEdit };
+					} catch (error) {
+						switch (error.name) {
+							case "CastError": {
+								return {};
+							}
+							default: {
+								throw error;
+							}
+						}
 					}
-
-					const canEdit = await BoardModel.canEdit(id, context.payload!.userId);
-					return { result: board, canEdit: canEdit };
 				}
 				case "Category": {
 					await assertHttpAuthorized(context);
-					let category = await CategoryModel.findById(id).populate("clues").populate("creator").exec();
+					try {
+						let category = await CategoryModel.findById(id).populate("clues").populate("creator").exec();
 
-					if (!category) {
-						return {};
+						if (!category) {
+							return {};
+						}
+
+						const canEdit = await CategoryModel.canEdit(id, context.payload!.userId);
+						return { result: category, canEdit: canEdit };
+					} catch (error) {
+						switch (error.name) {
+							case "CastError": {
+								return {};
+							}
+							default: {
+								throw error;
+							}
+						}
 					}
-
-					const canEdit = await CategoryModel.canEdit(id, context.payload!.userId);
-					return { result: category, canEdit: canEdit };
 				}
 				default: {
 					console.error(`Record by ID query error: Unknown record type '${type}'`);
@@ -169,9 +191,7 @@ export const BuildResolvers: IResolvers<any, Context> = {
 						const category = await CategoryModel.findById(categoryId).exec();
 
 						if (!category) {
-							let error = Error(`Category with id '${categoryId}' not found`);
-							error.name = "ValidationError";
-							throw error;
+							throw new ValidationError(`Category with id '${categoryId}' not found`);
 						}
 
 						return category.id;
@@ -192,9 +212,7 @@ export const BuildResolvers: IResolvers<any, Context> = {
 					.exec();
 
 				if (!board) {
-					let error = Error(`Board with id '${id}' not found`);
-					error.name = "ValidationError";
-					throw error;
+					throw new ValidationError(`Board with id '${id}' not found`);
 				}
 
 				return { result: board };
@@ -238,9 +256,7 @@ export const BuildResolvers: IResolvers<any, Context> = {
 					.exec();
 
 				if (!category) {
-					let error = Error(`Category with id '${id}' not found`);
-					error.name = "ValidationError";
-					throw error;
+					throw new ValidationError(`Category with id '${id}' not found`);
 				}
 
 				return { result: category };

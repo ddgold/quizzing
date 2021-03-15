@@ -1,4 +1,5 @@
 scalar Date
+scalar Void
 
 type FieldError {
 	message: String!
@@ -82,11 +83,15 @@ type Row {
 	value: Int!
 }
 
+type Active {
+	text: String!
+	showingAnswer: Boolean!
+}
+
 type Game {
 	categories: [String!]!
 	rows: [Row!]!
-	# host: User!
-	# started: Date!
+	activeClue: Active
 }
 
 # -------
@@ -102,6 +107,9 @@ type Query {
 	categories(showAll: Boolean!): [Category!]
 	recordById(type: RecordType!, id: String!): QueryResult
 	recordSearch(type: RecordType!, name: String!): SearchResult!
+
+	# Play
+	playGame(id: String!): Game!
 }
 
 # ---------
@@ -117,6 +125,11 @@ type Mutation {
 	createRecord(type: RecordType!, name: String!): FormResult!
 	updateBoard(id: String!, name: String!, description: String!, categoryIds: [String!]!): FormResult!
 	updateCategory(id: String!, name: String!, description: String!, clues: [ClueInput!]!): FormResult!
+
+	# Play
+	selectClue(id: String!, row: Int!, col: Int!): Void
+	answerClue(id: String!): Void
+	closeClue(id: String!): Void
 }
 
 # -------------

@@ -56,3 +56,37 @@ $cell-width: calc(#{$cell-height} * #{$ratio});
 .board td {
 	font-size: calc(#{$cell-height} * 0.35);
 }
+
+.lightbox {
+	position: fixed;
+	left: 0px;
+	top: 0px;
+	width: 100%;
+	height: 100%;
+	background-color: rgba(0, 0, 0, 0.5);
+}
+
+.lightbox > div {
+	position: absolute;
+	top: 40%;
+	left: 50%;
+	width: 60%;
+	max-height: 80%;
+	-ms-transform: translate(-50%, -50%);
+	transform: translate(-50%, -50%);
+	border-radius: 5px;
+	padding: 65px 20px;
+	margin: 0px;
+	background-color: $clue-color;
+	border: 5px solid $border-color;
+}
+
+.lightbox p {
+	color: $font-color;
+	font-size: calc(16px + 3vw);
+	text-align: center;
+	vertical-align: middle;
+	padding: 15px;
+	margin: 0px;
+	user-select: none;
+}

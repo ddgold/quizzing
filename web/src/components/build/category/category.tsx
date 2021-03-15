@@ -82,7 +82,7 @@ const CategoryWithoutRouter = (props: Props) => {
 	}
 
 	if (!data?.recordById.result) {
-		return <Error message={"Board not found"} />;
+		return <Error message={"Category not found"} />;
 	}
 
 	return (

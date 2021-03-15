@@ -1,0 +1,10 @@
+{
+	"recommendations": [
+		"apollographql.vscode-apollo",
+		"streetsidesoftware.code-spell-checker",
+		"ms-azuretools.vscode-docker",
+		"esbenp.prettier-vscode",
+		"redhat.vscode-yaml",
+		"gruntfuggly.todo-tree"
+	]
+}
