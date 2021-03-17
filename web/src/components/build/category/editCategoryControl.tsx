@@ -1,4 +1,4 @@
-import { gql, useQuery } from "@apollo/client";
+import { useQuery } from "@apollo/client";
 import React, { ReactNode, useState } from "react";
 import { Modal } from "react-bootstrap";
 
@@ -6,31 +6,7 @@ import { QueryError } from "../../../models/shared";
 import { CategoryModel } from "../../../models/build";
 import { Error, Loading } from "../../shared";
 import { EditCategory } from "./editCategory";
-
-const CATEGORY_BY_ID = gql`
-	query CategoryById($id: String!) {
-		categoryById(id: $id) {
-			result {
-				... on Category {
-					id
-					name
-					description
-					clues {
-						answer
-						question
-					}
-					creator {
-						id
-						nickname
-					}
-					created
-					updated
-				}
-			}
-			canEdit
-		}
-	}
-`;
+import { CATEGORY_BY_ID } from "./category";
 
 interface Data {
 	categoryById: QueryError<CategoryModel>;

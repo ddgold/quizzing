@@ -9,7 +9,7 @@ import { ViewCategory } from "./viewCategory";
 import { QueryError } from "../../../models/shared";
 import { CategoryModel, RecordType } from "../../../models/build";
 
-const RECORD_BY_ID = gql`
+export const CATEGORY_BY_ID = gql`
 	query RecordById($type: RecordType!, $id: String!) {
 		recordById(type: $type, id: $id) {
 			result {
@@ -48,7 +48,7 @@ interface Props extends RouteComponentProps {}
 
 const CategoryWithoutRouter = (props: Props) => {
 	const [editing, setEditing] = useState<boolean>(false);
-	const { data, error, loading } = useQuery<Data, Variables>(RECORD_BY_ID, {
+	const { data, error, loading } = useQuery<Data, Variables>(CATEGORY_BY_ID, {
 		fetchPolicy: "network-only",
 		variables: {
 			id: (props.match.params as Variables).id,

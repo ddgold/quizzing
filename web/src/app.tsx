@@ -3,7 +3,8 @@ import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 
 import { setAccessToken } from "./auth";
 import { Error, Home, Header, Loading } from "./components/shared";
-import { BoardList, Board, CategoryList, Category } from "./components/build";
+import { BoardList, Board } from "./components/build/board";
+import { CategoryList, Category } from "./components/build/category";
 import { Game, Play } from "./components/play";
 import { Login, Register, User } from "./components/user";
 
