@@ -1,32 +1,31 @@
 import { PubSub } from "apollo-server-express";
 
+import { BoardModel } from "../database";
 import { Game } from "./game";
 
 class DataTank {
-	private games: { [id: string]: Game } = {};
+	private _games: { [id: string]: Game } = {};
 
 	readonly pubsub = new PubSub();
 
-	host(id: string) {
-		let game = this.games[id];
-		if (game) {
-			throw Error("Game already exists");
-		}
-
-		this.games[id] = new Game(id);
+	async host(boardId: string): Promise<string> {
+		const [model, clues] = await BoardModel.generateGame(boardId);
+		const game = new Game(model, clues);
+		this._games[model.id] = game;
+		return model.id;
 	}
 
-	game(id: string): Game {
-		let game = this.games[id];
+	games(): Game[] {
+		return Object.values(this._games);
+	}
+
+	game(gameId: string): Game {
+		let game = this._games[gameId];
 		if (!game) {
 			throw Error("Game not found");
 		}
-
 		return game;
 	}
 }
 
 export const dataTank = new DataTank();
-
-dataTank.host("KingKong");
-dataTank.host("PingPong");

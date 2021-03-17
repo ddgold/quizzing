@@ -35,7 +35,7 @@ interface Data {
 	createRecord: FormResult<RecordModel, Fields>;
 }
 
-interface Variable {
+interface Variables {
 	name: string;
 	type: RecordType;
 }
@@ -51,7 +51,7 @@ interface Props {
 
 export const CreateTab = ({ onSelect, type }: Props) => {
 	const { errors, handleSubmit, register, setError } = useForm<State>();
-	const [createMutation] = useMutation<Data, Variable>(CREATE_RECORD);
+	const [createMutation] = useMutation<Data, Variables>(CREATE_RECORD);
 
 	const sanitizeName = (name: string): string => {
 		return name.trim();
@@ -61,9 +61,7 @@ export const CreateTab = ({ onSelect, type }: Props) => {
 		try {
 			state.name = sanitizeName(state.name);
 
-			const result = await createMutation({
-				variables: { name: state.name, type: type }
-			});
+			const result = await createMutation({ variables: { name: state.name, type: type } });
 
 			if (result.data!.createRecord.errors) {
 				result.data!.createRecord.errors.forEach((error: FieldError<Fields>) => {

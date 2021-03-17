@@ -1,9 +1,17 @@
 import { dataTank } from "./dataTank";
 
 export interface GameModel {
+	id: string;
+	name: string;
 	categories: string[];
 	rows: { value: number; cols: boolean[] }[];
 	activeClue?: { text: string; showingAnswer: boolean };
+	started: Date;
+}
+
+export interface ClueModel {
+	answer: string;
+	question: string;
 }
 
 enum State {
@@ -13,32 +21,15 @@ enum State {
 }
 
 export class Game {
-	readonly boardId: string;
 	private state: State;
 	private _model: GameModel;
+	private _clues: ClueModel[][];
+	private _active: ClueModel | undefined;
 
-	constructor(boardId: string) {
-		this.boardId = boardId;
-
-		this._model = {
-			categories: [
-				"Hello World",
-				"A Slightly Longer Title",
-				"King Kong",
-				"This Title is Just Plain Too Long, What Will Happen When The Title is Too Long?",
-				"Ping",
-				"Pong"
-			],
-			rows: [
-				{ cols: [false, false, false, false, false, false], value: 200 },
-				{ cols: [false, false, false, false, false, false], value: 400 },
-				{ cols: [false, false, false, false, false, false], value: 600 },
-				{ cols: [false, false, false, false, false, false], value: 800 },
-				{ cols: [false, false, false, false, false, false], value: 1000 }
-			]
-		};
-
+	constructor(model: GameModel, clues: ClueModel[][]) {
 		this.state = State.AwaitingSelection;
+		this._model = model;
+		this._clues = clues;
 	}
 
 	get rows(): number {
@@ -55,7 +46,6 @@ export class Game {
 
 	private publish(): void {
 		dataTank.pubsub.publish("PLAY_GAME", {
-			boardId: this.boardId,
 			playGame: this.model
 		});
 	}
@@ -87,7 +77,8 @@ export class Game {
 			this.model.categories[col] = "";
 		}
 
-		this.model.activeClue = { text: `Row: ${row}, Col: ${col}`, showingAnswer: true };
+		this._active = this._clues[col][row];
+		this.model.activeClue = { text: this._active.answer, showingAnswer: true };
 		this.state = State.ShowingAnswer;
 
 		this.publish();
@@ -98,7 +89,7 @@ export class Game {
 			throw new Error("Incorrect state");
 		}
 
-		this.model.activeClue = { text: this.model.activeClue.text, showingAnswer: false };
+		this.model.activeClue = { text: this._active.question, showingAnswer: false };
 		this.state = State.ShowingQuestion;
 
 		this.publish();
@@ -109,6 +100,7 @@ export class Game {
 			throw new Error("Incorrect state");
 		}
 
+		this._active = undefined;
 		this.model.activeClue = undefined;
 		this.state = State.AwaitingSelection;
 

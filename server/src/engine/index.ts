@@ -1,2 +1,2 @@
 export { dataTank } from "./dataTank";
-export { Game, GameModel } from "./game";
+export { ClueModel, Game, GameModel } from "./game";

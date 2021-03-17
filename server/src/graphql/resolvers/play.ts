@@ -2,23 +2,26 @@ import { withFilter } from "apollo-server-express";
 import { IResolvers } from "graphql-tools";
 
 import { assertHttpAuthorized, Context } from "../../auth";
-
 import { dataTank, GameModel } from "../../engine";
 
 export const PlayResolvers: IResolvers<any, Context> = {
 	Query: {
+		currentGames: async (_, __, context): Promise<GameModel[]> => {
+			await assertHttpAuthorized(context);
+			return dataTank.games().map((game) => {
+				return game.model;
+			});
+		},
 		playGame: async (_, { id }: { id: string }, context): Promise<GameModel> => {
 			await assertHttpAuthorized(context);
-
-			const game = dataTank.game(id);
-			if (game.boardId === id) {
-				return game.model;
-			}
-
-			return null;
+			return dataTank.game(id).model;
 		}
 	},
 	Mutation: {
+		hostGame: async (_, { boardId }: { boardId: string }, context): Promise<string> => {
+			await assertHttpAuthorized(context);
+			return await dataTank.host(boardId);
+		},
 		selectClue: async (_, { id, row, col }: { id: string; row: number; col: number }, context): Promise<void> => {
 			await assertHttpAuthorized(context);
 			dataTank.game(id).selectClue(row, col);
@@ -37,7 +40,7 @@ export const PlayResolvers: IResolvers<any, Context> = {
 			subscribe: withFilter(
 				() => dataTank.pubsub.asyncIterator("PLAY_GAME"),
 				(payload, variables) => {
-					return payload.boardId === variables.id;
+					return payload.playGame.id === variables.id;
 				}
 			)
 		}

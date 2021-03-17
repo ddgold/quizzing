@@ -70,7 +70,7 @@ export const CategoryList = ({ showAll }: Props) => {
 						return (
 							<tr key={index}>
 								<td>
-									<Link to={"/build/categories/" + category.id}>{category.name}</Link>
+									<Link to={`/build/categories/${category.id}`}>{category.name}</Link>
 								</td>
 								<td>
 									{showAll ? `${created.toLocaleString()} by ${category.creator.nickname}` : created.toLocaleString()}

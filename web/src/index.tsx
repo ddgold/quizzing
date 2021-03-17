@@ -107,7 +107,7 @@ const wsLink = new (class extends ApolloLink {
 				uri: serverURL("ws", "graphql"),
 				options: {
 					reconnect: true,
-					connectionParams: () => ({ authorization: getAccessToken() })
+					connectionParams: { authorization: getAccessToken() }
 				}
 			});
 		}

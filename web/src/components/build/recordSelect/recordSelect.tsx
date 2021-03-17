@@ -8,11 +8,12 @@ import { RecordModel, RecordType } from "../../../models/build";
 interface Props {
 	children: ReactNode;
 	createOnly?: boolean;
+	searchOnly?: boolean;
 	onSelect: (record: RecordModel) => void;
 	type: RecordType;
 }
 
-export const RecordSelect = ({ children, createOnly, onSelect, type }: Props) => {
+export const RecordSelect = ({ children, createOnly, searchOnly, onSelect, type }: Props) => {
 	const [showModal, setShowModal] = useState(false);
 
 	const onCancel = () => {
@@ -35,6 +36,10 @@ export const RecordSelect = ({ children, createOnly, onSelect, type }: Props) =>
 					{createOnly ? (
 						<Tab.Content>
 							<CreateTab type={type} onSelect={onTabSelect} />
+						</Tab.Content>
+					) : searchOnly ? (
+						<Tab.Content>
+							<SearchTab type={type} onSelect={onTabSelect} />
 						</Tab.Content>
 					) : (
 						<>

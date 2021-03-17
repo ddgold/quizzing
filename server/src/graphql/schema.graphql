@@ -96,9 +96,12 @@ type Active {
 }
 
 type Game {
+	id: String!
+	name: String!
 	categories: [String!]!
 	rows: [Row!]!
 	activeClue: Active
+	started: Date!
 }
 
 # -------
@@ -110,12 +113,13 @@ type Query {
 	userByEmail(email: String!): User
 
 	# Build
-	boards(showAll: Boolean!): [Board!]
-	categories(showAll: Boolean!): [Category!]
-	recordById(type: RecordType!, id: String!): QueryResult
+	boards(showAll: Boolean!): [Board!]!
+	categories(showAll: Boolean!): [Category!]!
+	recordById(type: RecordType!, id: String!): QueryResult!
 	recordSearch(type: RecordType!, name: String!): SearchResult!
 
 	# Play
+	currentGames: [Game!]!
 	playGame(id: String!): Game!
 }
 
@@ -140,6 +144,7 @@ type Mutation {
 	): FormResult!
 
 	# Play
+	hostGame(boardId: String!): String!
 	selectClue(id: String!, row: Int!, col: Int!): Void
 	answerClue(id: String!): Void
 	closeClue(id: String!): Void

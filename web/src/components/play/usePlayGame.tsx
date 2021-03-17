@@ -5,6 +5,7 @@ import { GameModel } from "../../models/play";
 const QUERY = gql`
 	query PlayGame($id: String!) {
 		playGame(id: $id) {
+			name
 			categories
 			rows {
 				cols
@@ -21,6 +22,7 @@ const QUERY = gql`
 const SUBSCRIPTION = gql`
 	subscription PlayGame($id: String!) {
 		playGame(id: $id) {
+			name
 			categories
 			rows {
 				cols

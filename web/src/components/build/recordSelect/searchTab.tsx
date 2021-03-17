@@ -38,7 +38,7 @@ interface Data {
 	recordSearch: SearchResult<RecordModel>;
 }
 
-interface Variable {
+interface Variables {
 	name: string;
 	type: RecordType;
 }
@@ -50,7 +50,7 @@ interface ResultProps {
 }
 
 const SearchResults = ({ name, onSelect, type }: ResultProps) => {
-	const { data, error, loading } = useQuery<Data, Variable>(RECORD_SEARCH, {
+	const { data, error, loading } = useQuery<Data, Variables>(RECORD_SEARCH, {
 		fetchPolicy: "network-only",
 		variables: { name: name, type: type }
 	});

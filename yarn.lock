@@ -5,36 +5,6 @@ __metadata:
   version: 4
   cacheKey: 7
 
-"@apollo/client@npm:3.3.11":
-  version: 3.3.11
-  resolution: "@apollo/client@npm:3.3.11"
-  dependencies:
-    "@graphql-typed-document-node/core": ^3.0.0
-    "@types/zen-observable": ^0.8.0
-    "@wry/context": ^0.5.2
-    "@wry/equality": ^0.3.0
-    fast-json-stable-stringify: ^2.0.0
-    graphql-tag: ^2.12.0
-    hoist-non-react-statics: ^3.3.2
-    optimism: ^0.14.0
-    prop-types: ^15.7.2
-    symbol-observable: ^2.0.0
-    ts-invariant: ^0.6.0
-    tslib: ^1.10.0
-    zen-observable: ^0.8.14
-  peerDependencies:
-    graphql: ^14.0.0 || ^15.0.0
-    react: ^16.8.0 || ^17.0.0
-    subscriptions-transport-ws: ^0.9.0
-  peerDependenciesMeta:
-    react:
-      optional: true
-    subscriptions-transport-ws:
-      optional: true
-  checksum: 512f62f956c1d51ad1a32d51cca56295e41f685cbcf2b623366b22a85b0bc6487338f8d90dbff6eae311eff9eb342c67a6adf577633851a9cbd85618c229e66b
-  languageName: node
-  linkType: hard
-
 "@apollo/client@npm:^3.0.0":
   version: 3.2.5
   resolution: "@apollo/client@npm:3.2.5"
@@ -62,6 +32,36 @@ __metadata:
     subscriptions-transport-ws:
       optional: true
   checksum: 0dc20d1c452cb6a8411b034d91d8fd34d242fd5e9493b68aaf80b0979a46f9ef6bf2668a5b30b81247171792a0426c716dcaecc094bb78592fef5451769eb4e7
+  languageName: node
+  linkType: hard
+
+"@apollo/client@npm:^3.3.11":
+  version: 3.3.12
+  resolution: "@apollo/client@npm:3.3.12"
+  dependencies:
+    "@graphql-typed-document-node/core": ^3.0.0
+    "@types/zen-observable": ^0.8.0
+    "@wry/context": ^0.5.2
+    "@wry/equality": ^0.3.0
+    fast-json-stable-stringify: ^2.0.0
+    graphql-tag: ^2.12.0
+    hoist-non-react-statics: ^3.3.2
+    optimism: ^0.14.0
+    prop-types: ^15.7.2
+    symbol-observable: ^2.0.0
+    ts-invariant: ^0.6.2
+    tslib: ^1.10.0
+    zen-observable: ^0.8.14
+  peerDependencies:
+    graphql: ^14.0.0 || ^15.0.0
+    react: ^16.8.0 || ^17.0.0
+    subscriptions-transport-ws: ^0.9.0
+  peerDependenciesMeta:
+    react:
+      optional: true
+    subscriptions-transport-ws:
+      optional: true
+  checksum: 18181dc9794b61b6ef314f15a07ffbebac9353bcd4715fc2ab2abd0a287bcc45c6a94aa6f23ddf2a2967b73435cfbcca721411e893a7874903eed07c308046e7
   languageName: node
   linkType: hard
 
@@ -3067,6 +3067,7 @@ __metadata:
     "@types/jsonwebtoken": ^8.5.0
     "@types/mongoose": ^5.10.3
     "@types/node": ^14.14.34
+    "@types/uuid": ^8.3.0
     apollo-server-express: ^2.21.1
     bcryptjs: ^2.4.3
     cookie-parser: ^1.4.5
@@ -3079,6 +3080,7 @@ __metadata:
     nodemon: ^2.0.7
     ts-node: ^9.1.1
     typescript: ^4.2.3
+    uuid: ^8.3.2
   languageName: unknown
   linkType: soft
 
@@ -3086,7 +3088,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@quizzing/web@workspace:web"
   dependencies:
-    "@apollo/client": 3.3.11
+    "@apollo/client": ^3.3.11
     "@types/node": ^14.14.34
     "@types/react": ^17.0.3
     "@types/react-bootstrap": ^0.32.25
@@ -3999,6 +4001,13 @@ __metadata:
   version: 0.3.1
   resolution: "@types/ungap__global-this@npm:0.3.1"
   checksum: c000b1f7792fa96def1e976d54bf23a127c99fa0bb0ee713e9792f9cf8fc97f4dba3313df9f9295e33f6461a54bd41279bb89ba1add1fb86d309b08e3a95f260
+  languageName: node
+  linkType: hard
+
+"@types/uuid@npm:^8.3.0":
+  version: 8.3.0
+  resolution: "@types/uuid@npm:8.3.0"
+  checksum: 620985aed8fdb4aed153daca5235f4303457a67a4d181efac0021712eabd9edd7e88895f79730c0e651effde7633b1b61e49a81519ac8d4e75019d2ac9b6412f
   languageName: node
   linkType: hard
 
@@ -17488,14 +17497,14 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"ts-invariant@npm:^0.6.0":
-  version: 0.6.1
-  resolution: "ts-invariant@npm:0.6.1"
+"ts-invariant@npm:^0.6.2":
+  version: 0.6.2
+  resolution: "ts-invariant@npm:0.6.2"
   dependencies:
     "@types/ungap__global-this": ^0.3.1
     "@ungap/global-this": ^0.4.2
     tslib: ^1.9.3
-  checksum: 1694c4ce3e8ffa74d0f9879c089b67ec30de29b48821223ba0c57e03cce00158fa55a48f294533a1be99207a06c08bb6da73ebd900f1bd9be599e9a543be719d
+  checksum: 64230c18f04ea17ca9b1222647372202c12be4a45e5c23cff308cace9ad45384f52faaa0cb93aec0b24d82e85e11e2dd77816bf626684ffa3a90d27c420a0727
   languageName: node
   linkType: hard
 
@@ -18047,6 +18056,15 @@ typescript@^4.2.3:
   bin:
     uuid: dist/bin/uuid
   checksum: 6a5d07c5564614271237d8bbc5c1c72abf056343e91af8f67a8e6d29957a1a061f347b8425a1e499af32f5a8f0039c44d200dff663b9a8090c51a7f7b5031534
+  languageName: node
+  linkType: hard
+
+"uuid@npm:^8.3.2":
+  version: 8.3.2
+  resolution: "uuid@npm:8.3.2"
+  bin:
+    uuid: dist/bin/uuid
+  checksum: aed2bcef341f95635f308fea8831fb9038b18c485fe7e71feb89d2e05602dfecad0cb6f2246fae096d4da425cca6e8a71056f28abd97ad98cf770a2018853248
   languageName: node
   linkType: hard
 

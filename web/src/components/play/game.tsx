@@ -1,7 +1,7 @@
 import React from "react";
 import { Container } from "react-bootstrap";
 import { gql, useMutation } from "@apollo/client";
-import { RouteComponentProps, withRouter } from "react-router-dom";
+import { RouteComponentProps, useHistory, withRouter } from "react-router-dom";
 
 import { Error, Loading } from "../shared";
 import { usePlayGame } from "./usePlayGame";
@@ -37,12 +37,12 @@ interface Props extends RouteComponentProps {}
 const GameWithoutRouter = (props: Props) => {
 	const boardId = (props.match.params as Variables).id;
 	const [loading, error, game] = usePlayGame(boardId);
-
 	const [selectClueMutation] = useMutation<{}, Variables>(SELECT_CLUE);
 	const [answerClueMutation] = useMutation<{}, Variables>(ANSWER_CLUE);
 	const [closeClueMutation] = useMutation<{}, Variables>(CLOSE_CLUE);
+	const history = useHistory();
 
-	const selectClue = async (row: number, col: number) => {
+	const selectClue = async (row: number, col: number): Promise<void> => {
 		try {
 			await selectClueMutation({
 				variables: { id: boardId, row: row, col: col }
@@ -52,7 +52,7 @@ const GameWithoutRouter = (props: Props) => {
 		}
 	};
 
-	const answerClue = async () => {
+	const answerClue = async (): Promise<void> => {
 		try {
 			await answerClueMutation({
 				variables: { id: boardId }
@@ -62,7 +62,7 @@ const GameWithoutRouter = (props: Props) => {
 		}
 	};
 
-	const closeClue = async () => {
+	const closeClue = async (): Promise<void> => {
 		try {
 			await closeClueMutation({
 				variables: { id: boardId }
@@ -71,6 +71,25 @@ const GameWithoutRouter = (props: Props) => {
 			console.error("closeLightbox", error);
 		}
 	};
+
+	const gameDone = (): boolean => {
+		for (const row of game!.rows) {
+			for (const selected of row.cols) {
+				if (!selected) {
+					return false;
+				}
+			}
+		}
+		return true;
+	};
+
+	const lightbox = (text: string, onClick: () => void) => (
+		<div className="lightbox">
+			<div onClick={onClick}>
+				<p>{text}</p>
+			</div>
+		</div>
+	);
 
 	if (error) {
 		return <Error message={error.message} />;
@@ -86,7 +105,7 @@ const GameWithoutRouter = (props: Props) => {
 
 	return (
 		<Container className="board" fluid>
-			<h1>{boardId}</h1>
+			<h1>{game.name}</h1>
 			<table>
 				<thead>
 					<tr>
@@ -115,13 +134,15 @@ const GameWithoutRouter = (props: Props) => {
 					))}
 				</tbody>
 			</table>
-			{game.activeClue ? (
-				<div className="lightbox">
-					<div onClick={() => (game.activeClue?.showingAnswer ? answerClue() : closeClue())}>
-						<p>{`${game.activeClue.text} ${game.activeClue.showingAnswer}`}</p>
-					</div>
-				</div>
-			) : undefined}
+			{game.activeClue
+				? lightbox(game.activeClue.text, () => {
+						game.activeClue?.showingAnswer ? answerClue() : closeClue();
+				  })
+				: gameDone()
+				? lightbox("Game Over!", () => {
+						history.push("/play");
+				  })
+				: undefined}
 		</Container>
 	);
 };

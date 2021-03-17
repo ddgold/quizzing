@@ -116,8 +116,14 @@ export const BuildResolvers: IResolvers<any, Context> = {
 		recordSearch: async (_, { type, name }, context): Promise<SearchResult<RecordDocument>> => {
 			await assertHttpAuthorized(context);
 			switch (type) {
+				case "Board": {
+					let boards = await BoardModel.find({ name: { $regex: new RegExp(name, "i") } })
+						.populate("creator")
+						.exec();
+					return { result: boards };
+				}
 				case "Category": {
-					let categories = await CategoryModel.find({ name: { $regex: name } })
+					let categories = await CategoryModel.find({ name: { $regex: new RegExp(name, "i") } })
 						.populate("creator")
 						.exec();
 					return { result: categories };
