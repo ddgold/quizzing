@@ -3,17 +3,18 @@ import React, { ReactNode, useState } from "react";
 import { Modal } from "react-bootstrap";
 
 import { QueryError } from "../../../models/shared";
-import { CategoryModel } from "../../../models/build";
+import { CategoryModel, RecordType } from "../../../models/build";
 import { Error, Loading } from "../../shared";
 import { EditCategory } from "./editCategory";
 import { CATEGORY_BY_ID } from "./category";
 
 interface Data {
-	categoryById: QueryError<CategoryModel>;
+	recordById: QueryError<CategoryModel>;
 }
 
-interface PathVariables {
+interface Variables {
 	id: string;
+	type: RecordType;
 }
 
 interface ModalProps {
@@ -22,10 +23,11 @@ interface ModalProps {
 }
 
 const EditCategoryModal = ({ categoryId, onSubmit }: ModalProps) => {
-	const { data, error, loading } = useQuery<Data, PathVariables>(CATEGORY_BY_ID, {
+	const { data, error, loading } = useQuery<Data, Variables>(CATEGORY_BY_ID, {
 		fetchPolicy: "network-only",
 		variables: {
-			id: categoryId
+			id: categoryId,
+			type: RecordType.Category
 		}
 	});
 
@@ -37,7 +39,7 @@ const EditCategoryModal = ({ categoryId, onSubmit }: ModalProps) => {
 		return <Loading />;
 	}
 
-	return <EditCategory category={data!.categoryById.result} onSubmit={onSubmit} />;
+	return <EditCategory category={data!.recordById.result} onSubmit={onSubmit} />;
 };
 
 interface ControlProps {
