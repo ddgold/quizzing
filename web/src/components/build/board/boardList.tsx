@@ -1,10 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import { Button, Table } from "react-bootstrap";
 import { Link, useHistory } from "react-router-dom";
 import { gql, useQuery } from "@apollo/client";
 
 import { Error, Loading, Page } from "../../shared";
-import { RecordSelect } from "../recordSelect";
+import { RecordSelectModal } from "../recordSelect";
 import { BoardModel, RecordModel, RecordType } from "../../../models/build";
 
 const BOARDS = gql`
@@ -29,15 +29,19 @@ interface Props {
 }
 
 export const BoardList = ({ showAll }: Props) => {
+	const [selectingBoard, setSelectingBoard] = useState(false);
 	const history = useHistory();
 	const { data, error, loading } = useQuery<Data, Props>(BOARDS, {
 		fetchPolicy: "network-only",
 		variables: { showAll }
 	});
 
-	const onSelect = (record: RecordModel) => {
-		const board = record as BoardModel;
-		history.push(`/build/boards/${board.id}`);
+	const onSelect = (record?: RecordModel) => {
+		setSelectingBoard(false);
+		if (record) {
+			const board = record as BoardModel;
+			history.push(`/build/boards/${board.id}`);
+		}
 	};
 
 	if (error) {
@@ -52,9 +56,9 @@ export const BoardList = ({ showAll }: Props) => {
 		<Page
 			title={showAll ? "All Boards" : "My Boards"}
 			titleRight={
-				<RecordSelect type={RecordType.Board} onSelect={onSelect} createOnly>
-					<Button variant="primary">Create New</Button>
-				</RecordSelect>
+				<Button variant="primary" onClick={() => setSelectingBoard(true)}>
+					Create New
+				</Button>
 			}
 		>
 			<Table striped bordered hover>
@@ -80,6 +84,8 @@ export const BoardList = ({ showAll }: Props) => {
 					})}
 				</tbody>
 			</Table>
+
+			<RecordSelectModal type={RecordType.Board} show={selectingBoard} onSelect={onSelect} createOnly />
 		</Page>
 	);
 };

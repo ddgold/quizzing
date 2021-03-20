@@ -58,14 +58,14 @@ interface State {
 	clues: ClueModel[];
 }
 
-export const EditCategory = (props: Props) => {
+export const EditCategory = ({ category, onSubmit }: Props) => {
 	const { control, errors, handleSubmit, register, setError } = useForm<CategoryModel>({
-		defaultValues: props.category
+		defaultValues: category
 	});
 	const { fields, append, remove } = useFieldArray<ClueModel>({ control, name: "clues" });
 	const [updateCategoryMutation] = useMutation<Data, State>(UPDATE_CATEGORY);
 
-	const onSubmit = handleSubmit(async (state: CategoryModel) => {
+	const onSubmitInternal = handleSubmit(async (state: CategoryModel) => {
 		try {
 			if (!state.clues) {
 				state.clues = [];
@@ -74,7 +74,7 @@ export const EditCategory = (props: Props) => {
 			const result = await updateCategoryMutation({
 				variables: {
 					...state,
-					id: props.category.id
+					id: category.id
 				}
 			});
 
@@ -83,7 +83,7 @@ export const EditCategory = (props: Props) => {
 					setError(error.field, { type: "manual", message: error.message });
 				});
 			} else {
-				props.onSubmit(result.data!.updateCategory.result!);
+				onSubmit(result.data!.updateCategory.result!);
 			}
 		} catch (error) {
 			setError("name", { type: "manual", message: "Error updating category" });
@@ -91,7 +91,7 @@ export const EditCategory = (props: Props) => {
 	});
 
 	return (
-		<Form noValidate onSubmit={onSubmit}>
+		<Form noValidate onSubmit={onSubmitInternal}>
 			<Form.Group controlId="name">
 				<Form.Label>Name</Form.Label>
 				<Form.Control

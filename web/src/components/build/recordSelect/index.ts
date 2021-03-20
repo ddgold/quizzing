@@ -1,1 +1,1 @@
-export { RecordSelect } from "./recordSelect";
+export { RecordSelectModal } from "./recordSelect";

@@ -57,11 +57,11 @@ export const CreateTab = ({ onSelect, type }: Props) => {
 		return name.trim();
 	};
 
-	const onSubmit = handleSubmit(async (state: State) => {
+	const onSubmit = handleSubmit(async ({ name }: State) => {
 		try {
-			state.name = sanitizeName(state.name);
+			name = sanitizeName(name);
 
-			const result = await createMutation({ variables: { name: state.name, type: type } });
+			const result = await createMutation({ variables: { name: name, type: type } });
 
 			if (result.data!.createRecord.errors) {
 				result.data!.createRecord.errors.forEach((error: FieldError<Fields>) => {
@@ -78,7 +78,7 @@ export const CreateTab = ({ onSelect, type }: Props) => {
 
 	return (
 		<Tab.Pane eventKey="createTab">
-			<Form noValidate>
+			<Form noValidate onSubmit={onSubmit}>
 				<Modal.Body>
 					<Form.Group controlId="name">
 						<Form.Label>{`${type} name`}</Form.Label>
@@ -103,7 +103,7 @@ export const CreateTab = ({ onSelect, type }: Props) => {
 								<Form.Control.Feedback type="invalid">{errors.name?.message}</Form.Control.Feedback>
 							</Col>
 							<Col xs="auto">
-								<Button variant="primary" onClick={onSubmit}>
+								<Button variant="primary" type="submit">
 									Create
 								</Button>
 							</Col>

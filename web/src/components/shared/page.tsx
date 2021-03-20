@@ -4,7 +4,7 @@ import { Col, Container, Row } from "react-bootstrap";
 interface Props {
 	title: string;
 	titleRight?: JSX.Element;
-	children?: JSX.Element;
+	children?: JSX.Element | JSX.Element[];
 }
 
 export const Page = (props: Props) => {

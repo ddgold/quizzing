@@ -1,11 +1,11 @@
-import { gql, useMutation, useQuery } from "@apollo/client";
-import React from "react";
+import React, { useState } from "react";
 import { Button, Table } from "react-bootstrap";
 import { Link, useHistory } from "react-router-dom";
+import { gql, useMutation, useQuery } from "@apollo/client";
 
 import { BoardModel, RecordModel, RecordType } from "../../models/build";
 import { Error, Loading, Page } from "../shared";
-import { RecordSelect } from "../build/recordSelect";
+import { RecordSelectModal } from "../build/recordSelect";
 import { GameModel } from "../../models/play";
 
 const CURRENT_GAMES = gql`
@@ -33,16 +33,24 @@ interface Variables {
 }
 
 export const Play = () => {
+	const [creatingGame, setCreatingGame] = useState(false);
 	const history = useHistory();
 	const { data, error, loading } = useQuery<Data>(CURRENT_GAMES, {
 		fetchPolicy: "network-only"
 	});
 	const [hostMutation] = useMutation<Data, Variables>(HOST_GAME);
 
-	const onSelect = async (record: RecordModel) => {
-		const board = record as BoardModel;
-		const result = await hostMutation({ variables: { boardId: board.id } });
-		history.push(`/play/${result.data?.hostGame}`);
+	const onSelect = async (record?: RecordModel) => {
+		setCreatingGame(false);
+		if (record) {
+			try {
+				const board = record as BoardModel;
+				const result = await hostMutation({ variables: { boardId: board.id } });
+				history.push(`/play/${result.data?.hostGame}`);
+			} catch (error) {
+				console.log(error);
+			}
+		}
 	};
 
 	if (error) {
@@ -54,14 +62,7 @@ export const Play = () => {
 	}
 
 	return (
-		<Page
-			title="Play"
-			titleRight={
-				<RecordSelect type={RecordType.Board} onSelect={onSelect} searchOnly>
-					<Button>Host Game</Button>
-				</RecordSelect>
-			}
-		>
+		<Page title="Play" titleRight={<Button onClick={() => setCreatingGame(true)}>Host Game</Button>}>
 			{data!.currentGames.length > 0 ? (
 				<Table striped bordered hover>
 					<thead>
@@ -89,6 +90,8 @@ export const Play = () => {
 					No active games
 				</p>
 			)}
+
+			<RecordSelectModal type={RecordType.Board} show={creatingGame} onSelect={onSelect} searchOnly />
 		</Page>
 	);
 };

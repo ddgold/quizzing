@@ -1,11 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import { Button, Col, Form, InputGroup, Row } from "react-bootstrap";
 import { useForm, useFieldArray } from "react-hook-form";
 import { gql, useMutation } from "@apollo/client";
 
 import { FieldError, FormResult } from "../../../models/shared";
 import { BoardModel, CategoryModel, RecordModel, RecordType } from "../../../models/build";
-import { RecordSelect } from "../recordSelect";
+import { RecordSelectModal } from "../recordSelect";
 import { EditCategoryControl } from "../category";
 
 const UPDATE_BOARD = gql`
@@ -62,6 +62,8 @@ export const EditBoard = (props: Props) => {
 	});
 	const { append, fields, remove } = useFieldArray<CategoryModel>({ control, name: "categories" });
 	const [updateBoardMutation] = useMutation<Data, State>(UPDATE_BOARD);
+	const [editingCategory, setEditingCategory] = useState<string | undefined>(undefined);
+	const [selectingCategory, setSelectingCategory] = useState(false);
 
 	const onSubmit = handleSubmit(async (state: State) => {
 		try {
@@ -90,89 +92,97 @@ export const EditBoard = (props: Props) => {
 		}
 	});
 
-	const onSelect = (record: RecordModel) => {
-		append(record as CategoryModel);
+	const onSelect = (record?: RecordModel) => {
+		setSelectingCategory(false);
+		if (record) {
+			append(record as CategoryModel);
+		}
 	};
 
 	return (
-		<Form noValidate onSubmit={onSubmit}>
-			<Form.Group controlId="name">
-				<Form.Label>Name</Form.Label>
-				<Form.Control
-					name="name"
-					ref={register({
-						required: {
-							value: true,
-							message: "Name is required"
-						},
-						maxLength: {
-							value: 32,
-							message: "Name must be at most 32 characters"
-						}
-					})}
-					placeholder="Enter name"
-					isInvalid={!!errors.name}
-				/>
-				<Form.Control.Feedback type="invalid">{errors.name?.message}</Form.Control.Feedback>
-			</Form.Group>
+		<>
+			<Form noValidate onSubmit={onSubmit}>
+				<Form.Group controlId="name">
+					<Form.Label>Name</Form.Label>
+					<Form.Control
+						name="name"
+						ref={register({
+							required: {
+								value: true,
+								message: "Name is required"
+							},
+							maxLength: {
+								value: 32,
+								message: "Name must be at most 32 characters"
+							}
+						})}
+						placeholder="Enter name"
+						isInvalid={!!errors.name}
+					/>
+					<Form.Control.Feedback type="invalid">{errors.name?.message}</Form.Control.Feedback>
+				</Form.Group>
 
-			<Form.Group controlId="description">
-				<Form.Label>Description</Form.Label>
-				<Form.Control
-					name="description"
-					as="textarea"
-					style={{ resize: "none" }}
-					rows={2}
-					ref={register({
-						maxLength: {
-							value: 265,
-							message: "Description must be at most 265 characters"
-						}
-					})}
-					placeholder="Enter description"
-					isInvalid={!!errors.description}
-				/>
-				<Form.Control.Feedback type="invalid">{errors.description?.message}</Form.Control.Feedback>
-			</Form.Group>
+				<Form.Group controlId="description">
+					<Form.Label>Description</Form.Label>
+					<Form.Control
+						name="description"
+						as="textarea"
+						style={{ resize: "none" }}
+						rows={2}
+						ref={register({
+							maxLength: {
+								value: 265,
+								message: "Description must be at most 265 characters"
+							}
+						})}
+						placeholder="Enter description"
+						isInvalid={!!errors.description}
+					/>
+					<Form.Control.Feedback type="invalid">{errors.description?.message}</Form.Control.Feedback>
+				</Form.Group>
 
-			<Form.Group>
-				<h3>Categories</h3>
-				{fields.length > 0 ? (
-					fields.map((category, index) => {
-						return (
-							<InputGroup key={index} style={{ marginBottom: "0.5rem" }}>
-								<Form.Control as="div" style={{ height: "100%" }}>
-									<p className="lead">{category.name}</p>
-									{category.description}
-								</Form.Control>
+				<Form.Group>
+					<h3>Categories</h3>
+					{fields.length > 0 ? (
+						fields.map((category, index) => {
+							return (
+								<InputGroup key={index} style={{ marginBottom: "0.5rem" }}>
+									<Form.Control as="div" style={{ height: "100%" }}>
+										<p className="lead">{category.name}</p>
+										{category.description}
+									</Form.Control>
 
-								<InputGroup.Append>
-									<EditCategoryControl categoryId={category.id!}>
-										<Button variant="outline-secondary">Edit</Button>
-									</EditCategoryControl>
-									<Button variant="outline-secondary" onClick={() => remove(index)}>
-										Remove
-									</Button>
-								</InputGroup.Append>
-							</InputGroup>
-						);
-					})
-				) : (
-					<p>No Categories</p>
-				)}
-			</Form.Group>
-			<Row style={{ paddingTop: "1rem" }}>
-				<Col>
-					<RecordSelect type={RecordType.Category} onSelect={onSelect}>
-						<Button variant="outline-secondary">Add Category</Button>
-					</RecordSelect>
-				</Col>
-				<Col style={{ textAlign: "right" }}>
-					<Button variant="primary" type="submit">
-						Submit
-					</Button>
-				</Col>
-			</Row>
-		</Form>
+									<InputGroup.Append>
+										<Button variant="outline-secondary" onClick={() => setEditingCategory(category.id!)}>
+											Edit
+										</Button>
+										<Button variant="outline-secondary" onClick={() => remove(index)}>
+											Remove
+										</Button>
+									</InputGroup.Append>
+								</InputGroup>
+							);
+						})
+					) : (
+						<p>No Categories</p>
+					)}
+				</Form.Group>
+				<Row style={{ paddingTop: "1rem" }}>
+					<Col>
+						<Button variant="outline-secondary" onClick={() => setSelectingCategory(true)}>
+							Add Category
+						</Button>
+					</Col>
+					<Col style={{ textAlign: "right" }}>
+						<Button variant="primary" type="submit">
+							Submit
+						</Button>
+					</Col>
+				</Row>
+			</Form>
+
+			<RecordSelectModal type={RecordType.Category} show={selectingCategory} onSelect={onSelect} />
+			<EditCategoryControl categoryId={editingCategory} onSubmit={() => setEditingCategory(undefined)} />
+		</>
 	);
 };

@@ -1,10 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import { Button, Table } from "react-bootstrap";
 import { Link, useHistory } from "react-router-dom";
 import { gql, useQuery } from "@apollo/client";
 
 import { Error, Loading, Page } from "../../shared";
-import { RecordSelect } from "../recordSelect";
+import { RecordSelectModal } from "../recordSelect";
 import { CategoryModel, RecordModel, RecordType } from "../../../models/build";
 
 const CATEGORIES = gql`
@@ -29,15 +29,19 @@ interface Props {
 }
 
 export const CategoryList = ({ showAll }: Props) => {
+	const [selectingCategory, setSelectingCategory] = useState(false);
 	const history = useHistory();
 	const { data, error, loading } = useQuery<Data, Props>(CATEGORIES, {
 		fetchPolicy: "network-only",
 		variables: { showAll }
 	});
 
-	const onSelect = (record: RecordModel) => {
-		const category = record as CategoryModel;
-		history.push(`/build/categories/${category.id}`);
+	const onSelect = (record?: RecordModel) => {
+		setSelectingCategory(false);
+		if (record) {
+			const category = record as CategoryModel;
+			history.push(`/build/categories/${category.id}`);
+		}
 	};
 
 	if (error) {
@@ -52,9 +56,9 @@ export const CategoryList = ({ showAll }: Props) => {
 		<Page
 			title={showAll ? "All Categories" : "My Categories"}
 			titleRight={
-				<RecordSelect type={RecordType.Category} onSelect={onSelect} createOnly>
-					<Button variant="primary">Create New</Button>
-				</RecordSelect>
+				<Button variant="primary" onClick={() => setSelectingCategory(true)}>
+					Create New
+				</Button>
 			}
 		>
 			<Table striped bordered hover>
@@ -80,6 +84,8 @@ export const CategoryList = ({ showAll }: Props) => {
 					})}
 				</tbody>
 			</Table>
+
+			<RecordSelectModal type={RecordType.Category} show={selectingCategory} onSelect={onSelect} createOnly />
 		</Page>
 	);
 };

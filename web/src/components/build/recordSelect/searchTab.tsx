@@ -111,7 +111,7 @@ export const SearchTab = ({ onSelect, type }: TabProps) => {
 		return name.trim();
 	};
 
-	const onSearch = handleSubmit(async ({ name }: State) => {
+	const onSubmit = handleSubmit(({ name }: State) => {
 		try {
 			name = sanitizeName(name);
 			setSearchName(name);
@@ -123,7 +123,7 @@ export const SearchTab = ({ onSelect, type }: TabProps) => {
 
 	return (
 		<Tab.Pane eventKey="searchTab">
-			<Form noValidate>
+			<Form noValidate onSubmit={onSubmit}>
 				<Modal.Body>
 					<Form.Group controlId="name">
 						<Form.Label>{`${type} name`}</Form.Label>
@@ -148,7 +148,7 @@ export const SearchTab = ({ onSelect, type }: TabProps) => {
 								<Form.Control.Feedback type="invalid">{errors.name?.message}</Form.Control.Feedback>
 							</Col>
 							<Col xs="auto">
-								<Button variant="primary" onClick={onSearch}>
+								<Button variant="primary" type="submit">
 									Search
 								</Button>
 							</Col>
