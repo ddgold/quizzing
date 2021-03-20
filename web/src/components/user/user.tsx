@@ -36,7 +36,7 @@ export const User = () => {
 		setAccessToken("");
 
 		history.push("/");
-		await client!.resetStore();
+		await client!.cache.reset();
 	};
 
 	if (error) {

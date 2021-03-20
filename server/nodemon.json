@@ -8,5 +8,6 @@
 	"exec": "ts-node",
 	"ext": "ts,json,graphql",
 	"ignore": ["src/scripts"],
-	"watch": "src/"
+	"watch": "src/",
+	"inspect": true
 }
