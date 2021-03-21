@@ -142,7 +142,7 @@ const GameWithoutRouter = (props: Props) => {
 				? lightbox("Game Over!", () => {
 						history.push("/play");
 				  })
-				: undefined}
+				: null}
 		</Container>
 	);
 };

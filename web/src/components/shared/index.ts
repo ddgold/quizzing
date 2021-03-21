@@ -1,3 +1,4 @@
+export { Alert } from "./alert";
 export { Error } from "./error";
 export { Header } from "./header";
 export { Home } from "./home";

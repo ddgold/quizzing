@@ -4,7 +4,7 @@ import { Link, useHistory } from "react-router-dom";
 import { gql, useMutation, useQuery } from "@apollo/client";
 
 import { BoardModel, RecordModel, RecordType } from "../../models/build";
-import { Error, Loading, Page } from "../shared";
+import { Alert, Error, Loading, Page } from "../shared";
 import { RecordSelectModal } from "../build/recordSelect";
 import { GameModel } from "../../models/play";
 
@@ -34,6 +34,7 @@ interface Variables {
 
 export const Play = () => {
 	const [creatingGame, setCreatingGame] = useState(false);
+	const [gameCreationError, setGameCreationError] = useState<string | undefined>(undefined);
 	const history = useHistory();
 	const { data, error, loading } = useQuery<Data>(CURRENT_GAMES, {
 		fetchPolicy: "network-only"
@@ -48,7 +49,8 @@ export const Play = () => {
 				const result = await hostMutation({ variables: { boardId: board.id } });
 				history.push(`/play/${result.data?.hostGame}`);
 			} catch (error) {
-				console.log(error);
+				setGameCreationError(error.message);
+				console.error(error);
 			}
 		}
 	};
@@ -62,36 +64,47 @@ export const Play = () => {
 	}
 
 	return (
-		<Page title="Play" titleRight={<Button onClick={() => setCreatingGame(true)}>Host Game</Button>}>
-			{data!.currentGames.length > 0 ? (
-				<Table striped bordered hover>
-					<thead>
-						<tr>
-							<th style={{ width: "50%" }}>Name</th>
-							<th style={{ width: "50%" }}>Started</th>
-						</tr>
-					</thead>
-					<tbody>
-						{data!.currentGames.map((game: GameModel, index: number) => {
-							const started = new Date(game.started);
-							return (
-								<tr key={index}>
-									<td>
-										<Link to={`play/${game.id}`}>{game.name}</Link>
-									</td>
-									<td>{started.toLocaleString()}</td>
-								</tr>
-							);
-						})}
-					</tbody>
-				</Table>
-			) : (
-				<p className="lead" style={{ marginBottom: "0px" }}>
-					No active games
-				</p>
-			)}
+		<>
+			<Alert
+				variant={"error"}
+				show={!!gameCreationError}
+				onDismiss={() => setGameCreationError(undefined)}
+				autoClose={5000}
+			>
+				{gameCreationError!}
+			</Alert>
 
-			<RecordSelectModal type={RecordType.Board} show={creatingGame} onSelect={onSelect} searchOnly />
-		</Page>
+			<Page title="Play" titleRight={<Button onClick={() => setCreatingGame(true)}>Host Game</Button>}>
+				{data!.currentGames.length > 0 ? (
+					<Table striped bordered hover>
+						<thead>
+							<tr>
+								<th style={{ width: "50%" }}>Name</th>
+								<th style={{ width: "50%" }}>Started</th>
+							</tr>
+						</thead>
+						<tbody>
+							{data!.currentGames.map((game: GameModel, index: number) => {
+								const started = new Date(game.started);
+								return (
+									<tr key={index}>
+										<td>
+											<Link to={`play/${game.id}`}>{game.name}</Link>
+										</td>
+										<td>{started.toLocaleString()}</td>
+									</tr>
+								);
+							})}
+						</tbody>
+					</Table>
+				) : (
+					<p className="lead" style={{ marginBottom: "0px" }}>
+						No active games
+					</p>
+				)}
+
+				<RecordSelectModal type={RecordType.Board} show={creatingGame} onSelect={onSelect} searchOnly />
+			</Page>
+		</>
 	);
 };

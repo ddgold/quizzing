@@ -3,22 +3,22 @@ import { Col, Container, Row } from "react-bootstrap";
 
 interface Props {
 	title: string;
-	titleRight?: JSX.Element;
-	children?: JSX.Element | JSX.Element[];
+	titleRight?: JSX.Element | JSX.Element[] | string;
+	children?: JSX.Element | JSX.Element[] | string;
 }
 
-export const Page = (props: Props) => {
+export const Page = ({ title, titleRight, children }: Props) => {
 	return (
 		<Container className="bodyContainer">
 			<Row>
 				<Col>
-					<h1>{props.title}</h1>
+					<h1>{title}</h1>
 				</Col>
 				<Col style={{ paddingTop: "8px" }} xs="auto">
-					{props.titleRight}
+					{titleRight}
 				</Col>
 			</Row>
-			{props.children}
+			{children}
 		</Container>
 	);
 };
