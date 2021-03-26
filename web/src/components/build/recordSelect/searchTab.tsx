@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { gql, useQuery } from "@apollo/client";
 
 import { SearchResult } from "../../../models/shared";
-import { RecordModel, RecordType } from "../../../models/build";
+import { getRecordTypeName, RecordModel, RecordType } from "../../../models/build";
 import { Error, Loading } from "../../shared";
 
 const RECORD_SEARCH = gql`
@@ -34,23 +34,49 @@ const RECORD_SEARCH = gql`
 	}
 `;
 
+const RECENT_RECORDS = gql`
+	query RecentRecords($type: RecordType!) {
+		recentRecords(type: $type) {
+			... on Board {
+				id
+				name
+				created
+				description
+				creator {
+					nickname
+				}
+			}
+			... on Category {
+				id
+				name
+				created
+				description
+				creator {
+					nickname
+				}
+			}
+		}
+	}
+`;
+
 interface Data {
 	recordSearch: SearchResult<RecordModel>;
+	recentRecords: RecordModel[];
 }
 
 interface Variables {
-	name: string;
+	name?: string;
 	type: RecordType;
 }
 
 interface ResultProps {
-	name: string;
+	name?: string;
 	onSelect: (record: RecordModel) => void;
 	type: RecordType;
 }
 
 const SearchResults = ({ name, onSelect, type }: ResultProps) => {
-	const { data, error, loading } = useQuery<Data, Variables>(RECORD_SEARCH, {
+	const { data, error, loading } = useQuery<Data, Variables>(name ? RECORD_SEARCH : RECENT_RECORDS, {
 		fetchPolicy: "network-only",
 		variables: { name: name, type: type }
 	});
@@ -63,34 +89,52 @@ const SearchResults = ({ name, onSelect, type }: ResultProps) => {
 		return <Loading />;
 	}
 
+	const result = name ? data!.recordSearch.result : data!.recentRecords;
+
+	const title = (
+		<p>{name ? `Results for '${name}':` : `Recent ${getRecordTypeName(type, { plural: true, lowerCase: true })}:`}</p>
+	);
+
+	if (result.length === 0) {
+		return (
+			<>
+				{title}
+				<p style={{ fontStyle: "italic" }}>None</p>
+			</>
+		);
+	}
+
 	return (
-		<Table striped bordered hover>
-			<thead>
-				<tr>
-					<th style={{ width: "50%" }}>Name</th>
-					<th style={{ width: "50%" }}>Created</th>
-				</tr>
-			</thead>
-			<tbody>
-				{data!.recordSearch.result.map((record: RecordModel, index: number) => {
-					const created = new Date(record.created);
-					return (
-						<tr key={index}>
-							<td>
-								<Button
-									onClick={() => {
-										onSelect(record);
-									}}
-								>
-									{record.name}
-								</Button>
-							</td>
-							<td>{`${created.toLocaleString()} by ${record.creator.nickname}`}</td>
-						</tr>
-					);
-				})}
-			</tbody>
-		</Table>
+		<>
+			{title}
+			<Table striped bordered hover>
+				<thead>
+					<tr>
+						<th style={{ width: "50%" }}>Name</th>
+						<th style={{ width: "50%" }}>Created</th>
+					</tr>
+				</thead>
+				<tbody>
+					{result.map((record: RecordModel, index: number) => {
+						const created = new Date(record.created);
+						return (
+							<tr key={index}>
+								<td>
+									<Button
+										onClick={() => {
+											onSelect(record);
+										}}
+									>
+										{record.name}
+									</Button>
+								</td>
+								<td>{`${created.toLocaleString()} by ${record.creator.nickname}`}</td>
+							</tr>
+						);
+					})}
+				</tbody>
+			</Table>
+		</>
 	);
 };
 
@@ -116,7 +160,10 @@ export const SearchTab = ({ onSelect, type }: TabProps) => {
 			name = sanitizeName(name);
 			setSearchName(name);
 		} catch (error) {
-			setError("name", { type: "manual", message: `Error creating new ${type.toLocaleLowerCase()}` });
+			setError("name", {
+				type: "manual",
+				message: `Error creating new ${getRecordTypeName(type, { lowerCase: true })}`
+			});
 			console.error(error);
 		}
 	});
@@ -126,7 +173,7 @@ export const SearchTab = ({ onSelect, type }: TabProps) => {
 			<Form noValidate onSubmit={onSubmit}>
 				<Modal.Body>
 					<Form.Group controlId="name">
-						<Form.Label>{`${type} name`}</Form.Label>
+						<Form.Label>{`${getRecordTypeName(type)} name`}</Form.Label>
 						<Row>
 							<Col>
 								<Form.Control
@@ -135,14 +182,14 @@ export const SearchTab = ({ onSelect, type }: TabProps) => {
 									ref={register({
 										required: {
 											value: true,
-											message: `${type} name is required`
+											message: `${getRecordTypeName(type)} name is required`
 										},
 										maxLength: {
 											value: 32,
-											message: `${type} name must be at most 32 characters`
+											message: `${getRecordTypeName(type)} name must be at most 32 characters`
 										}
 									})}
-									placeholder={`Enter ${type.toLocaleLowerCase()} name`}
+									placeholder={`Enter ${getRecordTypeName(type, { lowerCase: true })} name`}
 									isInvalid={!!errors.name}
 								/>
 								<Form.Control.Feedback type="invalid">{errors.name?.message}</Form.Control.Feedback>
@@ -155,11 +202,9 @@ export const SearchTab = ({ onSelect, type }: TabProps) => {
 						</Row>
 					</Form.Group>
 				</Modal.Body>
-				{searchName ? (
-					<Modal.Body style={{ paddingTop: 0 }}>
-						<SearchResults name={searchName} onSelect={onSelect} type={type} />
-					</Modal.Body>
-				) : null}
+				<Modal.Body style={{ paddingTop: 0 }}>
+					<SearchResults name={searchName} onSelect={onSelect} type={type} />
+				</Modal.Body>
 			</Form>
 		</Tab.Pane>
 	);

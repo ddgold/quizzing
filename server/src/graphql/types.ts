@@ -1,22 +1,20 @@
-import { BoardDocument, CategoryDocument } from "src/database";
-
-export type ResultObject = BoardDocument | CategoryDocument;
+import { RecordDocument } from "../database";
 
 export interface FieldError {
 	field: string;
 	message: string;
 }
 
-export interface FormResult<Result extends ResultObject> {
+export interface FormResult<Result extends RecordDocument> {
 	result?: Result;
 	errors?: FieldError[];
 }
 
-export interface QueryResult<Result extends ResultObject> {
+export interface QueryResult<Result extends RecordDocument> {
 	result?: Result;
 	canEdit?: Boolean;
 }
 
-export interface SearchResult<Result extends ResultObject> {
+export interface SearchResult<Result extends RecordDocument> {
 	result?: Result[];
 }

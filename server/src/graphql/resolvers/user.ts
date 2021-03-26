@@ -12,20 +12,12 @@ interface AuthResult {
 export const UserResolvers: IResolvers<any, Context> = {
 	Query: {
 		currentUser: async (_, {}, context): Promise<UserDocument> => {
-			try {
-				if (context.req.headers["authorization"]) {
-					await assertHttpAuthorized(context);
-					return await UserModel.findById(context.payload!.userId).exec();
-				} else {
-					return null;
-				}
-			} catch (error) {
-				return null;
-			}
+			await assertHttpAuthorized(context);
+			return UserModel.currentUser(context);
 		},
 		userByEmail: async (_, { email }, context): Promise<UserDocument> => {
 			await assertHttpAuthorized(context);
-			return await UserModel.findOne({ email: email }).exec();
+			return UserModel.findOne({ email: email }).exec();
 		}
 	},
 	Mutation: {

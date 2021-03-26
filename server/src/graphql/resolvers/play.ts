@@ -20,7 +20,7 @@ export const PlayResolvers: IResolvers<any, Context> = {
 	Mutation: {
 		hostGame: async (_, { boardId }: { boardId: string }, context): Promise<string> => {
 			await assertHttpAuthorized(context);
-			return await dataTank.host(boardId);
+			return dataTank.host(boardId);
 		},
 		selectClue: async (_, { id, row, col }: { id: string; row: number; col: number }, context): Promise<void> => {
 			await assertHttpAuthorized(context);

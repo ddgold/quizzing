@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { gql, useMutation } from "@apollo/client";
 
 import { FieldError, FormResult } from "../../../models/shared";
-import { RecordModel, RecordType } from "../../../models/build";
+import { getRecordTypeName, RecordModel, RecordType } from "../../../models/build";
 
 const CREATE_RECORD = gql`
 	mutation CreateRecord($type: RecordType!, $name: String!) {
@@ -71,7 +71,10 @@ export const CreateTab = ({ onSelect, type }: Props) => {
 				onSelect(result.data!.createRecord.result);
 			}
 		} catch (error) {
-			setError("name", { type: "manual", message: `Error creating new ${type.toLocaleLowerCase()}` });
+			setError("name", {
+				type: "manual",
+				message: `Error creating new ${getRecordTypeName(type, { lowerCase: true })}`
+			});
 			console.error(error);
 		}
 	});
@@ -81,7 +84,7 @@ export const CreateTab = ({ onSelect, type }: Props) => {
 			<Form noValidate onSubmit={onSubmit}>
 				<Modal.Body>
 					<Form.Group controlId="name">
-						<Form.Label>{`${type} name`}</Form.Label>
+						<Form.Label>{`${getRecordTypeName(type)} name`}</Form.Label>
 						<Row>
 							<Col>
 								<Form.Control
@@ -90,14 +93,14 @@ export const CreateTab = ({ onSelect, type }: Props) => {
 									ref={register({
 										required: {
 											value: true,
-											message: `${type} name is required`
+											message: `${getRecordTypeName(type)} name is required`
 										},
 										maxLength: {
 											value: 32,
-											message: `${type} name must be at most 32 characters`
+											message: `${getRecordTypeName(type)} name must be at most 32 characters`
 										}
 									})}
-									placeholder={`Enter ${type.toLocaleLowerCase()} name`}
+									placeholder={`Enter ${getRecordTypeName(type, { lowerCase: true })} name`}
 									isInvalid={!!errors.name}
 								/>
 								<Form.Control.Feedback type="invalid">{errors.name?.message}</Form.Control.Feedback>

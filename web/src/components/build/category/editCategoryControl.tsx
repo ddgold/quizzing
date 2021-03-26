@@ -44,16 +44,22 @@ const EditCategoryModal = ({ categoryId, onSubmit }: ModalProps) => {
 
 interface ControlProps {
 	categoryId?: string;
-	onSubmit: (foo: boolean) => void;
+	onSubmit: (edited: boolean) => void;
 }
 
-export const EditCategoryControl = ({ categoryId, onSubmit }: ControlProps) => (
-	<Modal show={categoryId} backdrop="static" size="lg">
-		<Modal.Header closeButton onHide={() => onSubmit(false)}>
-			<Modal.Title>Edit Category</Modal.Title>
-		</Modal.Header>
-		<Modal.Body>
-			<EditCategoryModal categoryId={categoryId!} onSubmit={() => onSubmit(true)} />
-		</Modal.Body>
-	</Modal>
-);
+export const EditCategoryControl = ({ categoryId, onSubmit }: ControlProps) => {
+	if (categoryId === undefined) {
+		return null;
+	}
+
+	return (
+		<Modal show backdrop="static" size="lg">
+			<Modal.Header closeButton onHide={() => onSubmit(false)}>
+				<Modal.Title>Edit Category</Modal.Title>
+			</Modal.Header>
+			<Modal.Body>
+				<EditCategoryModal categoryId={categoryId!} onSubmit={() => onSubmit(true)} />
+			</Modal.Body>
+		</Modal>
+	);
+};

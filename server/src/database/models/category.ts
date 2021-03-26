@@ -1,13 +1,15 @@
-import { Document, Model, model, Schema } from "mongoose";
+import { model, Schema } from "mongoose";
 
 import { ClueDocument } from "./clue";
+import { UserDocument } from "./user";
+import { RecordDocument, RecordModel } from "./record";
 
 interface Category {
 	name: string;
 	description: string;
 	format: CategoryFormat;
 	clues: string[] | ClueDocument[];
-	creator: string;
+	creator: string | UserDocument;
 	created: Date;
 	updated: Date;
 }
@@ -54,27 +56,42 @@ const CategorySchema = new Schema({
 	}
 });
 
-// Sanitize name
 CategorySchema.pre("save", async function (this: CategoryDocument, next) {
+	// Sanitize name
 	if (this.isModified("name")) {
 		this.name = this.name.trim();
 	}
+
+	// Sanitize description
+	if (this.isModified("description")) {
+		this.description = this.description.trim();
+	}
+
 	return next();
 });
 
-export interface CategoryDocument extends Category, Document {}
+export interface CategoryDocument extends Category, RecordDocument {}
 
-interface CategoryModel extends Model<CategoryDocument> {
-	canEdit: (categoryId: string, userId: string) => Promise<boolean>;
-}
-
-CategorySchema.statics.canEdit = async function (categoryId: string, userId: string): Promise<boolean> {
-	let category = await CategoryModel.findById(categoryId).exec();
-	if (!category) {
-		return false;
+CategorySchema.methods.canEdit = async function (this: CategoryDocument, userId: string): Promise<boolean> {
+	if (typeof this.creator === "string") {
+		return userId === this.creator;
+	} else {
+		return userId === this.creator._id.toString();
 	}
+};
 
-	return userId == category.creator;
+interface CategoryModel extends RecordModel<CategoryDocument> {}
+
+CategorySchema.statics.record = async function (id: string): Promise<CategoryDocument> {
+	return CategoryModel.findById(id).populate("clues").populate("creator").exec();
+};
+
+CategorySchema.statics.records = async function (ids: string[]): Promise<CategoryDocument[]> {
+	return Promise.all(
+		ids.map((id: string) => {
+			return CategoryModel.findById(id).populate("clues").populate("creator").exec();
+		})
+	);
 };
 
 export const CategoryModel = model<CategoryDocument>("category", CategorySchema) as CategoryModel;

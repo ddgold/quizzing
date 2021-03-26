@@ -1,8 +1,18 @@
 import { IResolvers } from "graphql-tools";
 import { ForbiddenError, SyntaxError, ValidationError } from "apollo-server-express";
 
-import { FormResult, QueryResult, ResultObject, SearchResult } from "../types";
-import { BoardDocument, BoardModel, CategoryDocument, CategoryModel, ClueModel, RecordDocument } from "../../database";
+import { FormResult, QueryResult, SearchResult } from "../types";
+import {
+	BoardDocument,
+	BoardModel,
+	CategoryDocument,
+	CategoryModel,
+	ClueModel,
+	getRecordTypeModel,
+	RecordDocument,
+	RecordType,
+	UserModel
+} from "../../database";
 import { Context, assertHttpAuthorized } from "../../auth";
 
 export const BuildResolvers: IResolvers<any, Context> = {
@@ -11,7 +21,7 @@ export const BuildResolvers: IResolvers<any, Context> = {
 		CATEGORY: "Category"
 	},
 	ResultObject: {
-		__resolveType(object: ResultObject) {
+		__resolveType(object: RecordDocument) {
 			if ((object as BoardDocument).categories) {
 				return "Board";
 			}
@@ -27,7 +37,7 @@ export const BuildResolvers: IResolvers<any, Context> = {
 		boards: async (_, { showAll }, context): Promise<BoardDocument[]> => {
 			await assertHttpAuthorized(context);
 			if (showAll) {
-				return await BoardModel.find()
+				return BoardModel.find()
 					.populate({
 						path: "categories",
 						populate: ["clues", "creator"]
@@ -35,7 +45,7 @@ export const BuildResolvers: IResolvers<any, Context> = {
 					.populate("creator")
 					.exec();
 			} else {
-				return await BoardModel.find({ creator: context.payload!.userId })
+				return BoardModel.find({ creator: context.payload!.userId })
 					.populate({
 						path: "categories",
 						populate: ["clues", "creator"]
@@ -47,90 +57,68 @@ export const BuildResolvers: IResolvers<any, Context> = {
 		categories: async (_, { showAll }, context): Promise<CategoryDocument[]> => {
 			await assertHttpAuthorized(context);
 			if (showAll) {
-				return await CategoryModel.find().populate("clues").populate("creator").exec();
+				return CategoryModel.find().populate("clues").populate("creator").exec();
 			} else {
-				return await CategoryModel.find({ creator: context.payload!.userId })
-					.populate("clues")
-					.populate("creator")
-					.exec();
+				return CategoryModel.find({ creator: context.payload!.userId }).populate("clues").populate("creator").exec();
+			}
+		},
+		recentRecords: async (_, { type }: { type: RecordType }, context): Promise<RecordDocument[]> => {
+			await assertHttpAuthorized(context);
+			try {
+				const user = await UserModel.currentUser(context);
+				const model = getRecordTypeModel(type);
+				return model.records(user.recent[type] as string[]);
+			} catch (error) {
+				switch (error.name) {
+					default: {
+						console.error("Recent records query error:", error);
+						throw error;
+					}
+				}
 			}
 		},
 		recordById: async (_, { type, id }, context): Promise<QueryResult<RecordDocument>> => {
-			switch (type) {
-				case "Board": {
-					await assertHttpAuthorized(context);
-					try {
-						let board = await BoardModel.findById(id)
-							.populate({
-								path: "categories",
-								populate: ["clues", "creator"]
-							})
-							.populate("creator")
-							.exec();
+			await assertHttpAuthorized(context);
+			try {
+				const model = getRecordTypeModel(type);
+				const record = await model.record(id);
 
-						if (!board) {
-							return {};
-						}
-
-						const canEdit = await BoardModel.canEdit(id, context.payload!.userId);
-						return { result: board, canEdit: canEdit };
-					} catch (error) {
-						switch (error.name) {
-							case "CastError": {
-								return {};
-							}
-							default: {
-								throw error;
-							}
-						}
-					}
+				if (!record) {
+					return {};
 				}
-				case "Category": {
-					await assertHttpAuthorized(context);
-					try {
-						let category = await CategoryModel.findById(id).populate("clues").populate("creator").exec();
 
-						if (!category) {
-							return {};
-						}
+				(await UserModel.currentUser(context)).recentRecord(type, id);
 
-						const canEdit = await CategoryModel.canEdit(id, context.payload!.userId);
-						return { result: category, canEdit: canEdit };
-					} catch (error) {
-						switch (error.name) {
-							case "CastError": {
-								return {};
-							}
-							default: {
-								throw error;
-							}
-						}
+				return { result: record, canEdit: record.canEdit(context.payload!.userId) };
+			} catch (error) {
+				switch (error.name) {
+					case "CastError": {
+						// id was not a valid ObjectId
+						return {};
 					}
-				}
-				default: {
-					console.error(`Record by ID query error: Unknown record type '${type}'`);
-					throw new SyntaxError(`Unknown record type '${type}'`);
+					default: {
+						console.error("Record by ID query error:", error);
+						throw error;
+					}
 				}
 			}
 		},
 		recordSearch: async (_, { type, name }, context): Promise<SearchResult<RecordDocument>> => {
 			await assertHttpAuthorized(context);
-			switch (type) {
-				case "Board": {
-					let boards = await BoardModel.find({ name: { $regex: new RegExp(name, "i") } })
+			try {
+				const model = getRecordTypeModel(type);
+				return {
+					result: await model
+						.find({ name: { $regex: new RegExp(name, "i") } })
 						.populate("creator")
-						.exec();
-					return { result: boards };
-				}
-				case "Category": {
-					let categories = await CategoryModel.find({ name: { $regex: new RegExp(name, "i") } })
-						.populate("creator")
-						.exec();
-					return { result: categories };
-				}
-				default: {
-					console.error(`Record search query error: Unknown record type '${type}'`);
-					throw new SyntaxError(`Unknown record type '${type}'`);
+						.exec()
+				};
+			} catch (error) {
+				switch (error.name) {
+					default: {
+						console.error("Record search query error:", error);
+						throw error;
+					}
 				}
 			}
 		}
@@ -185,7 +173,7 @@ export const BuildResolvers: IResolvers<any, Context> = {
 		updateBoard: async (_, { id, name, description, categoryIds }, context): Promise<FormResult<BoardDocument>> => {
 			await assertHttpAuthorized(context);
 
-			let canEdit = await BoardModel.canEdit(id, context.payload!.userId);
+			const canEdit = await (await BoardModel.findById(id)).canEdit(context.payload!.userId);
 			if (!canEdit) {
 				throw new ForbiddenError("No edit permission");
 			}
@@ -242,13 +230,13 @@ export const BuildResolvers: IResolvers<any, Context> = {
 		): Promise<FormResult<CategoryDocument>> => {
 			await assertHttpAuthorized(context);
 
-			let canEdit = await CategoryModel.canEdit(id, context.payload!.userId);
+			const canEdit = await (await CategoryModel.findById(id)).canEdit(context.payload!.userId);
 			if (!canEdit) {
 				throw new ForbiddenError("No edit permission");
 			}
 
 			try {
-				let clueIds: string[] = await Promise.all(
+				const clueIds: string[] = await Promise.all(
 					clues.map(async (clueObj: { answer: string; question: string }) => {
 						const clue = await ClueModel.findOneAndUpdate(clueObj, {}, { upsert: true }).exec();
 						return clue.id;

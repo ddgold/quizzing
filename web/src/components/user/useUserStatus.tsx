@@ -24,7 +24,9 @@ export enum UserStatus {
 export const useUserStatus = (): [UserStatus, String?] => {
 	const { data, error, loading } = useQuery<Data, {}>(CURRENT_USER, { fetchPolicy: "network-only" });
 
-	if (error) {
+	if (error?.message === "Not Authorized") {
+		return [UserStatus.LoggedOut];
+	} else if (error) {
 		return [UserStatus.Error];
 	} else if (loading) {
 		return [UserStatus.Loading];

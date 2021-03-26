@@ -1,10 +1,11 @@
-import { Document, Model, model, Schema } from "mongoose";
+import { model, Schema } from "mongoose";
 import { v4 as uuid } from "uuid";
 
 import { CategoryDocument, CategoryFormat } from "./category";
 import { ClueDocument } from "./clue";
 import { ClueModel, GameModel } from "../../engine";
 import { UserDocument } from "./user";
+import { RecordDocument, RecordModel } from "./record";
 
 interface Board {
 	name: string;
@@ -53,7 +54,7 @@ BoardSchema.pre("save", async function (this: BoardDocument, next) {
 		this.name = this.name.trim();
 	}
 
-	// Sanitize name
+	// Sanitize description
 	if (this.isModified("description")) {
 		this.description = this.description.trim();
 	}
@@ -61,25 +62,47 @@ BoardSchema.pre("save", async function (this: BoardDocument, next) {
 	return next();
 });
 
-export interface BoardDocument extends Board, Document {}
+export interface BoardDocument extends Board, RecordDocument {}
 
-interface BoardModel extends Model<BoardDocument> {
-	canEdit: (boardId: string, userId: string) => Promise<boolean>;
+BoardSchema.methods.canEdit = async function (this: BoardDocument, userId: string): Promise<boolean> {
+	if (typeof this.creator === "string") {
+		return userId === this.creator;
+	} else {
+		return userId === this.creator._id.toString();
+	}
+};
+
+interface BoardModel extends RecordModel<BoardDocument> {
 	generateGame: (boardId: string) => Promise<[GameModel, ClueModel[][]]>;
 }
 
-BoardSchema.statics.canEdit = async function (boardId: string, userId: string): Promise<boolean> {
-	let board = await BoardModel.findById(boardId).exec();
-	if (!board) {
-		return false;
-	}
-
-	return userId == board.creator;
+BoardSchema.statics.record = async function (id: string): Promise<BoardDocument> {
+	return BoardModel.findById(id)
+		.populate({
+			path: "categories",
+			populate: ["clues", "creator"]
+		})
+		.populate("creator")
+		.exec();
 };
 
-BoardSchema.statics.generateGame = async (boardId: string): Promise<[GameModel, ClueModel[][]]> => {
+BoardSchema.statics.records = async function (ids: string[]): Promise<BoardDocument[]> {
+	return Promise.all(
+		ids.map((id: string) => {
+			return BoardModel.findById(id)
+				.populate({
+					path: "categories",
+					populate: ["clues", "creator"]
+				})
+				.populate("creator")
+				.exec();
+		})
+	);
+};
+
+BoardSchema.statics.generateGame = async (id: string): Promise<[GameModel, ClueModel[][]]> => {
 	try {
-		let board = await BoardModel.findById(boardId)
+		let board = await BoardModel.findById(id)
 			.populate({
 				path: "categories",
 				populate: ["clues", "creator"]

@@ -115,6 +115,7 @@ type Query {
 	# Build
 	boards(showAll: Boolean!): [Board!]!
 	categories(showAll: Boolean!): [Category!]!
+	recentRecords(type: RecordType!): [ResultObject!]!
 	recordById(type: RecordType!, id: String!): QueryResult!
 	recordSearch(type: RecordType!, name: String!): SearchResult!
 
