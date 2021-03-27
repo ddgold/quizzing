@@ -60,7 +60,11 @@ export const EditBoard = (props: Props) => {
 	const { control, errors, handleSubmit, register, setError } = useForm<State>({
 		defaultValues: props.board
 	});
-	const { append, fields, remove } = useFieldArray<CategoryModel>({ control, name: "categories" });
+	const { append, fields, remove } = useFieldArray<CategoryModel>({
+		control,
+		name: "categories",
+		keyName: "key" as "id"
+	});
 	const [updateBoardMutation] = useMutation<Data, State>(UPDATE_BOARD);
 	const [editingCategory, setEditingCategory] = useState<string | undefined>(undefined);
 	const [selectingCategory, setSelectingCategory] = useState(false);
