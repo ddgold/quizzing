@@ -90,17 +90,13 @@ type Row {
 	value: Int!
 }
 
-type Active {
-	text: String!
-	showingAnswer: Boolean!
-}
-
 type Game {
 	id: String!
 	name: String!
 	categories: [String!]!
 	rows: [Row!]!
-	activeClue: Active
+	state: String!
+	currentText: String
 	started: Date!
 }
 
@@ -121,7 +117,7 @@ type Query {
 
 	# Play
 	currentGames: [Game!]!
-	playGame(id: String!): Game!
+	playGame(gameId: String!): Game!
 }
 
 # ---------
@@ -146,9 +142,10 @@ type Mutation {
 
 	# Play
 	hostGame(boardId: String!): String!
-	selectClue(id: String!, row: Int!, col: Int!): Void
-	answerClue(id: String!): Void
-	closeClue(id: String!): Void
+	joinGame(gameId: String!): String!
+	selectClue(gameId: String!, row: Int!, col: Int!): Void
+	answerClue(gameId: String!): Void
+	closeClue(gameId: String!): Void
 }
 
 # -------------
@@ -156,5 +153,5 @@ type Mutation {
 # -------------
 type Subscription {
 	# Play
-	playGame(id: String!): Game!
+	playGame(gameId: String!): Game!
 }

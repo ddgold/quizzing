@@ -14,8 +14,9 @@
 		"concurrently": "^6.0.0"
 	},
 	"scripts": {
-		"dev": "docker-compose up -d mongo && concurrently -n \"server, web  ,\" -c \"bgGreen,bgBlue\"  \"yarn workspace @quizzing/server dev\" \"yarn workspace @quizzing/web dev\" && docker-compose stop mongo",
+		"dev": "docker-compose up -d mongo redis && concurrently -n \"server, web  ,\" -c \"bgGreen,bgBlue\"  \"yarn workspace @quizzing/server dev\" \"yarn workspace @quizzing/web dev\" && docker-compose stop mongo redis",
 		"remove-build": "yarn workspaces foreach run remove-build",
-		"build": "docker-compose up -d --build"
+		"build": "docker-compose up -d --build",
+		"kill-port": "yarn workspaces foreach run kill-port"
 	}
 }

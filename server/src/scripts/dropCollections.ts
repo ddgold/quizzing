@@ -1,27 +1,26 @@
-import Database, { UserModel } from "../database";
+import Database from "../database";
 
-const dropCollections = (collections: string[], url: string): void => {
-	let database = new Database();
-	database
-		.connect(url)
-		.then(async () => {
-			for (const collection of collections) {
-				try {
-					await database.connection.dropCollection(collection);
-				} catch (error) {
-					if (error.codeName === "NamespaceNotFound") {
-						console.error(`No '${collection}' collection found.`);
-					} else {
-						console.error(`Error dropping '${collection}' collection:`, error);
-					}
+const dropCollections = async (collections: string[], url: string): Promise<void> => {
+	try {
+		await Database.connect(url);
+
+		for (const collection of collections) {
+			try {
+				await Database.connection.dropCollection(collection);
+			} catch (error) {
+				if (error.codeName === "NamespaceNotFound") {
+					console.error(`No '${collection}' collection found.`);
+				} else {
+					console.error(`Error dropping '${collection}' collection:`, error);
 				}
 			}
+		}
 
-			database.disconnect();
-		})
-		.catch((error) => {
-			console.error("Error connecting to database:", error);
-		});
+		await Database.disconnect();
+		console.info("done");
+	} catch (error) {
+		console.error("Error connecting to database:", error);
+	}
 };
 
 const parseArgs = (args: string[]): string[] => {

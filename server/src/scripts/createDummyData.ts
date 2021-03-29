@@ -299,39 +299,37 @@ const createDummyData = async (scripts: string[], url: string): Promise<void> =>
 		return;
 	}
 
-	let database = new Database();
-	database
-		.connect(url)
-		.then(async () => {
-			for (const script of scripts) {
-				try {
-					switch (script) {
-						case "boards": {
-							await createDummyBoards();
-							break;
-						}
-						case "categories": {
-							await createDummyCategories();
-							break;
-						}
-						case "users": {
-							await createDummyUsers();
-							break;
-						}
-						default: {
-							console.error(`Unknown script '${script}'.`);
-						}
+	try {
+		await Database.connect(url);
+		for (const script of scripts) {
+			try {
+				switch (script) {
+					case "boards": {
+						await createDummyBoards();
+						break;
 					}
-				} catch (error) {
-					console.error(`Error running '${script}' script:`, error);
+					case "categories": {
+						await createDummyCategories();
+						break;
+					}
+					case "users": {
+						await createDummyUsers();
+						break;
+					}
+					default: {
+						console.error(`Unknown script '${script}'.`);
+					}
 				}
+			} catch (error) {
+				console.error(`Error running '${script}' script:`, error);
 			}
+		}
 
-			database.disconnect();
-		})
-		.catch((error) => {
-			console.error("Error connecting to database:", error);
-		});
+		await Database.disconnect();
+		console.info("done");
+	} catch (error) {
+		console.error("Error connecting to database:", error);
+	}
 };
 
 const addScript = (scripts: string[], newScript: string): void => {

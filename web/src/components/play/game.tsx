@@ -5,29 +5,30 @@ import { RouteComponentProps, useHistory, withRouter } from "react-router-dom";
 
 import { Error, Loading } from "../shared";
 import { usePlayGame } from "./usePlayGame";
+import { RowModel } from "../../models/play";
 
 import "./game.scss";
 
 const SELECT_CLUE = gql`
-	mutation SelectClue($id: String!, $row: Int!, $col: Int!) {
-		selectClue(id: $id, row: $row, col: $col)
+	mutation SelectClue($gameId: String!, $row: Int!, $col: Int!) {
+		selectClue(gameId: $gameId, row: $row, col: $col)
 	}
 `;
 
 const ANSWER_CLUE = gql`
-	mutation AnswerClue($id: String!) {
-		answerClue(id: $id)
+	mutation AnswerClue($gameId: String!) {
+		answerClue(gameId: $gameId)
 	}
 `;
 
 const CLOSE_CLUE = gql`
-	mutation CloseClue($id: String!) {
-		closeClue(id: $id)
+	mutation CloseClue($gameId: String!) {
+		closeClue(gameId: $gameId)
 	}
 `;
 
 interface Variables {
-	id: string;
+	gameId: string;
 	row?: number;
 	col?: number;
 }
@@ -35,8 +36,8 @@ interface Variables {
 interface Props extends RouteComponentProps {}
 
 const GameWithoutRouter = (props: Props) => {
-	const boardId = (props.match.params as Variables).id;
-	const [loading, error, game] = usePlayGame(boardId);
+	const gameId = (props.match.params as Variables).gameId;
+	const { loading, error, game } = usePlayGame(gameId);
 	const [selectClueMutation] = useMutation<{}, Variables>(SELECT_CLUE);
 	const [answerClueMutation] = useMutation<{}, Variables>(ANSWER_CLUE);
 	const [closeClueMutation] = useMutation<{}, Variables>(CLOSE_CLUE);
@@ -45,7 +46,7 @@ const GameWithoutRouter = (props: Props) => {
 	const selectClue = async (row: number, col: number): Promise<void> => {
 		try {
 			await selectClueMutation({
-				variables: { id: boardId, row: row, col: col }
+				variables: { gameId: gameId, row: row, col: col }
 			});
 		} catch (error) {
 			console.error("selectCell", error);
@@ -55,7 +56,7 @@ const GameWithoutRouter = (props: Props) => {
 	const answerClue = async (): Promise<void> => {
 		try {
 			await answerClueMutation({
-				variables: { id: boardId }
+				variables: { gameId: gameId }
 			});
 		} catch (error) {
 			console.error("answerClue", error);
@@ -65,7 +66,7 @@ const GameWithoutRouter = (props: Props) => {
 	const closeClue = async (): Promise<void> => {
 		try {
 			await closeClueMutation({
-				variables: { id: boardId }
+				variables: { gameId: gameId }
 			});
 		} catch (error) {
 			console.error("closeLightbox", error);
@@ -117,7 +118,7 @@ const GameWithoutRouter = (props: Props) => {
 					</tr>
 				</thead>
 				<tbody>
-					{game.rows.map((row: { value: number; cols: boolean[] }, rowIndex: number) => (
+					{game.rows.map((row: RowModel, rowIndex: number) => (
 						<tr key={rowIndex}>
 							{row.cols.map((selected: boolean, colIndex: number) => {
 								if (!selected) {
@@ -134,9 +135,9 @@ const GameWithoutRouter = (props: Props) => {
 					))}
 				</tbody>
 			</table>
-			{game.activeClue
-				? lightbox(game.activeClue.text, () => {
-						game.activeClue?.showingAnswer ? answerClue() : closeClue();
+			{game.currentText
+				? lightbox(game.currentText, () => {
+						game.state === "ShowingAnswer" ? answerClue() : closeClue();
 				  })
 				: gameDone()
 				? lightbox("Game Over!", () => {

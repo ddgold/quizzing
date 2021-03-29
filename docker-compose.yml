@@ -20,13 +20,15 @@ services:
       dockerfile: ./server/Dockerfile
     environment:
       - FRONTEND_URL=http://192.168.50.191:3000|http://localhost:3000
-      - MONGODB_URL=mongodb://192.168.50.191:27017
+      - DATABASE_URL=mongodb://192.168.50.191:27017
+      - ENGINE_CACHE_URL=redis://192.168.50.191:6379
       - SECRETS_DIR=/run/secrets
     secrets:
       - access_token
       - refresh_token
     depends_on:
       - mongo
+      - redis
     ports:
       - 8000:8000
     networks:
@@ -39,6 +41,13 @@ services:
       - /Volumes/mongodata:/data/db
     ports:
       - 27017:27017
+    networks:
+      - database
+  redis:
+    container_name: redis
+    image: redis:6.2.1-alpine
+    ports:
+      - 6379:6379
     networks:
       - database
 secrets:

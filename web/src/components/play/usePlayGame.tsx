@@ -3,35 +3,31 @@ import { ApolloError, gql, useQuery, useSubscription } from "@apollo/client";
 import { GameModel } from "../../models/play";
 
 const QUERY = gql`
-	query PlayGame($id: String!) {
-		playGame(id: $id) {
+	query PlayGame($gameId: String!) {
+		playGame(gameId: $gameId) {
 			name
 			categories
 			rows {
 				cols
 				value
 			}
-			activeClue {
-				text
-				showingAnswer
-			}
+			state
+			currentText
 		}
 	}
 `;
 
 const SUBSCRIPTION = gql`
-	subscription PlayGame($id: String!) {
-		playGame(id: $id) {
+	subscription PlayGame($gameId: String!) {
+		playGame(gameId: $gameId) {
 			name
 			categories
 			rows {
 				cols
 				value
 			}
-			activeClue {
-				text
-				showingAnswer
-			}
+			state
+			currentText
 		}
 	}
 `;
@@ -41,27 +37,31 @@ interface Data {
 }
 
 interface Props {
-	id: string;
+	gameId: string;
 }
 
-export const usePlayGame = (
-	id: string
-): [loading: boolean, error: ApolloError | undefined, game: GameModel | undefined] => {
+interface Result {
+	loading: boolean;
+	error: ApolloError | undefined;
+	game: GameModel | undefined;
+}
+
+export const usePlayGame = (gameId: string): Result => {
 	const query = useQuery<Data, Props>(QUERY, {
 		fetchPolicy: "network-only",
-		variables: { id: id }
+		variables: { gameId: gameId }
 	});
 	const sub = useSubscription<Data, Props>(SUBSCRIPTION, {
-		variables: { id: id }
+		variables: { gameId: gameId }
 	});
 
 	if (query.error || sub.error) {
-		return [false, query.error || sub.error, undefined];
+		return { loading: false, error: query.error || sub.error, game: undefined };
 	}
 
 	if (query.loading && sub.loading) {
-		return [true, undefined, undefined];
+		return { loading: true, error: undefined, game: undefined };
 	}
 
-	return [false, undefined, sub.data?.playGame || query.data?.playGame];
+	return { loading: false, error: undefined, game: sub.data?.playGame || query.data?.playGame };
 };

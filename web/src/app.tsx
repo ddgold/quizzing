@@ -38,7 +38,7 @@ export const App = () => {
 				<Route exact path="/play">
 					<Play />
 				</Route>
-				<Route exact path="/play/:id">
+				<Route exact path="/play/:gameId">
 					<Game />
 				</Route>
 

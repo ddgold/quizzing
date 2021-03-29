@@ -4,23 +4,35 @@ import cors from "cors";
 import { ApolloServer } from "apollo-server-express";
 import { createServer } from "http";
 
-import { resolvers, typeDefs } from "./graphql";
-import Database from "./database/database";
 import { assertWsAuthorized, postRefreshToken } from "./auth";
+import Database from "./database";
+import Engine from "./engine";
 import { environmentConfig } from "./environment";
+import { resolvers, typeDefs } from "./graphql";
 
 // ------------------
 // Environment Config
 // ------------------
-environmentConfig(["SECRETS_DIR", "FRONTEND_URL", "MONGODB_URL"], ["access_token", "refresh_token"]);
+environmentConfig(
+	["SECRETS_DIR", "FRONTEND_URL", "DATABASE_URL", "ENGINE_CACHE_URL"],
+	["access_token", "refresh_token"]
+);
+
+// ------------------
+// Redis Engine Cache
+// ------------------
+Engine.connect(process.env.ENGINE_CACHE_URL)
+	.then((url) => {
+		console.info(`Engine cache connected at ${url}`);
+	})
+	.catch((error) => {
+		console.error("Error connecting to engine cache:", error);
+	});
 
 // ----------------
 // mongoDB Database
 // ----------------
-const database = new Database();
-
-database
-	.connect(process.env.MONGODB_URL)
+Database.connect(process.env.DATABASE_URL)
 	.then((url) => {
 		console.info(`Database connected at ${url}`);
 	})

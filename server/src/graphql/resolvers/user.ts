@@ -1,7 +1,7 @@
 import { IResolvers } from "graphql-tools";
 
-import { UserDocument, UserModel } from "../../database";
 import { Context, assertHttpAuthorized, sendRefreshToken, signAccessToken, signRefreshToken } from "../../auth";
+import { UserDocument, UserModel } from "../../database";
 
 interface AuthResult {
 	accessToken?: string;

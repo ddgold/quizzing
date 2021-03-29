@@ -1,41 +1,51 @@
-import mongoose from "mongoose";
+import mongoose, { Connection } from "mongoose";
 
 export default class Database {
-	connection: mongoose.Connection;
+	// --------
+	// Instance
+	// --------
+	private connection: Connection;
 
-	constructor() {}
-
-	connect(url: string): Promise<string> {
-		return new Promise<string>((resolve, reject) => {
-			if (this.connection) {
-				return;
-			}
-
-			mongoose.set("returnOriginal", false);
-
-			mongoose
-				.connect(url, {
-					useNewUrlParser: true,
-					useFindAndModify: false,
-					useUnifiedTopology: true,
-					useCreateIndex: true
-				})
-				.then((mongoose) => {
-					this.connection = mongoose.connection;
-					resolve(url);
-				})
-				.catch((error) => {
-					this.connection = undefined;
-					reject(error);
-				});
-		});
+	private constructor(connection: Connection) {
+		this.connection = connection;
 	}
 
-	disconnect(): void {
-		if (!this.connection) {
-			return;
+	// ---------
+	// Singleton
+	// ---------
+	private static singleton: Database;
+
+	static get connection(): Connection {
+		if (this.singleton === undefined) {
+			throw Error("Database not connected");
 		}
 
-		mongoose.disconnect();
+		return this.singleton.connection;
+	}
+
+	static async connect(url: string): Promise<string> {
+		if (this.singleton !== undefined) {
+			throw Error("Database already connected");
+		}
+
+		mongoose.set("returnOriginal", false);
+		await mongoose.connect(url, {
+			useNewUrlParser: true,
+			useFindAndModify: false,
+			useUnifiedTopology: true,
+			useCreateIndex: true
+		});
+
+		this.singleton = new Database(mongoose.connection);
+		return url;
+	}
+
+	static async disconnect(): Promise<void> {
+		if (this.singleton === undefined) {
+			throw Error("Database not connected");
+		}
+
+		await mongoose.disconnect();
+		this.singleton = undefined;
 	}
 }

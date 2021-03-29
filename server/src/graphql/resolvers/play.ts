@@ -1,48 +1,48 @@
-import { withFilter } from "apollo-server-express";
 import { IResolvers } from "graphql-tools";
 
 import { assertHttpAuthorized, Context } from "../../auth";
-import { dataTank, GameModel } from "../../engine";
+import Engine, { GameModel } from "../../engine";
 
 export const PlayResolvers: IResolvers<any, Context> = {
 	Query: {
 		currentGames: async (_, __, context): Promise<GameModel[]> => {
 			await assertHttpAuthorized(context);
-			return dataTank.games().map((game) => {
-				return game.model;
-			});
+			return Engine.usersGames(context.payload!.userId);
 		},
-		playGame: async (_, { id }: { id: string }, context): Promise<GameModel> => {
+		playGame: async (_, { gameId }: { gameId: string }, context): Promise<GameModel> => {
 			await assertHttpAuthorized(context);
-			return dataTank.game(id).model;
+			return Engine.game(gameId);
 		}
 	},
 	Mutation: {
 		hostGame: async (_, { boardId }: { boardId: string }, context): Promise<string> => {
 			await assertHttpAuthorized(context);
-			return dataTank.host(boardId);
+			return Engine.host(boardId, context.payload!.userId);
 		},
-		selectClue: async (_, { id, row, col }: { id: string; row: number; col: number }, context): Promise<void> => {
+		joinGame: async (_, { gameId }: { gameId: string }, context): Promise<void> => {
 			await assertHttpAuthorized(context);
-			dataTank.game(id).selectClue(row, col);
+			return Engine.join(gameId, context.payload!.userId);
 		},
-		answerClue: async (_, { id }: { id: string }, context): Promise<void> => {
+		selectClue: async (
+			_,
+			{ gameId, row, col }: { gameId: string; row: number; col: number },
+			context
+		): Promise<void> => {
 			await assertHttpAuthorized(context);
-			dataTank.game(id).answerClue();
+			return Engine.selectClue(gameId, row, col);
 		},
-		closeClue: async (_, { id }: { id: string }, context): Promise<void> => {
+		answerClue: async (_, { gameId }: { gameId: string }, context): Promise<void> => {
 			await assertHttpAuthorized(context);
-			dataTank.game(id).closeClue();
+			return Engine.answerClue(gameId);
+		},
+		closeClue: async (_, { gameId }: { gameId: string }, context): Promise<void> => {
+			await assertHttpAuthorized(context);
+			return Engine.closeClue(gameId);
 		}
 	},
 	Subscription: {
 		playGame: {
-			subscribe: withFilter(
-				() => dataTank.pubsub.asyncIterator("PLAY_GAME"),
-				(payload, variables) => {
-					return payload.playGame.id === variables.id;
-				}
-			)
+			subscribe: Engine.filterPlayGameSubs()
 		}
 	}
 };

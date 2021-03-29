@@ -1,2 +1,3 @@
-export { dataTank } from "./dataTank";
-export { ClueModel, Game, GameModel } from "./game";
+import Engine from "./engine";
+export default Engine;
+export { ClueModel, GameModel } from "./game";

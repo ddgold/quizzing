@@ -1,7 +1,7 @@
 import { IResolvers } from "graphql-tools";
 import { ForbiddenError, SyntaxError, ValidationError } from "apollo-server-express";
 
-import { FormResult, QueryResult, SearchResult } from "../types";
+import { Context, assertHttpAuthorized } from "../../auth";
 import {
 	BoardDocument,
 	BoardModel,
@@ -13,7 +13,7 @@ import {
 	RecordType,
 	UserModel
 } from "../../database";
-import { Context, assertHttpAuthorized } from "../../auth";
+import { FormResult, QueryResult, SearchResult } from "../types";
 
 export const BuildResolvers: IResolvers<any, Context> = {
 	RecordType: {

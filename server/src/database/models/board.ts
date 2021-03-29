@@ -3,7 +3,7 @@ import { v4 as uuid } from "uuid";
 
 import { CategoryDocument, CategoryFormat } from "./category";
 import { ClueDocument } from "./clue";
-import { ClueModel, GameModel } from "../../engine";
+import { ClueModel } from "../../engine";
 import { UserDocument } from "./user";
 import { RecordDocument, RecordModel } from "./record";
 
@@ -73,7 +73,7 @@ BoardSchema.methods.canEdit = async function (this: BoardDocument, userId: strin
 };
 
 interface BoardModel extends RecordModel<BoardDocument> {
-	generateGame: (boardId: string) => Promise<[GameModel, ClueModel[][]]>;
+	generateGame: (boardId: string) => Promise<[string, string, string[], string[], ClueModel[][]]>;
 }
 
 BoardSchema.statics.record = async function (id: string): Promise<BoardDocument> {
@@ -100,7 +100,7 @@ BoardSchema.statics.records = async function (ids: string[]): Promise<BoardDocum
 	);
 };
 
-BoardSchema.statics.generateGame = async (id: string): Promise<[GameModel, ClueModel[][]]> => {
+BoardSchema.statics.generateGame = async (id: string): Promise<[string, string, string[], string[], ClueModel[][]]> => {
 	try {
 		let board = await BoardModel.findById(id)
 			.populate({
@@ -143,22 +143,7 @@ BoardSchema.statics.generateGame = async (id: string): Promise<[GameModel, ClueM
 			}
 		}
 
-		return [
-			{
-				id: uuid(),
-				name: board.name,
-				categories: categories,
-				rows: [
-					{ cols: [false, false, false, false, false, false], value: 200 },
-					{ cols: [false, false, false, false, false, false], value: 400 },
-					{ cols: [false, false, false, false, false, false], value: 600 },
-					{ cols: [false, false, false, false, false, false], value: 800 },
-					{ cols: [false, false, false, false, false, false], value: 1000 }
-				],
-				started: new Date()
-			},
-			clues
-		];
+		return [uuid(), board.name, categories, ["200", "400", "600", "800", "1000"], clues];
 	} catch (error) {
 		throw error;
 	}
