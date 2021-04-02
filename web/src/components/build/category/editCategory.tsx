@@ -1,4 +1,3 @@
-import React from "react";
 import { Button, Col, Form, FormCheck, InputGroup, Row } from "react-bootstrap";
 import { useForm, useFieldArray } from "react-hook-form";
 import { gql, useMutation } from "@apollo/client";

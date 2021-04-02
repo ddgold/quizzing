@@ -66,35 +66,37 @@ export interface UserDocument extends User, Document {
 	recentRecord: (this: UserDocument, type: RecordType, id: string) => Promise<void>;
 }
 
-UserSchema.methods.comparePassword = async function (this: UserDocument, candidatePassword: string): Promise<boolean> {
-	let result = await bcrypt.compare(candidatePassword, this.password);
+UserSchema.methods.comparePassword = async function (this: Document, candidatePassword: string): Promise<boolean> {
+	const user = this as UserDocument;
+	let result = await bcrypt.compare(candidatePassword, user.password);
 	return result;
 };
 
-UserSchema.methods.recentRecord = async function (this: UserDocument, type: RecordType, id: string): Promise<void> {
+UserSchema.methods.recentRecord = async function (this: Document, type: RecordType, id: string): Promise<void> {
+	const user = this as UserDocument;
 	let found = false;
-	for (let i = 0; i < this.recent[type].length; i++) {
-		if (this.recent[type][i].toString() === id) {
-			this.recent[type].splice(i, 1);
+	for (let i = 0; i < user.recent[type].length; i++) {
+		if (user.recent[type][i]!.toString() === id) {
+			user.recent[type].splice(i, 1);
 			found = true;
 			break;
 		}
 	}
 
-	if (!found && this.recent[type].length > 4) {
-		this.recent[type].shift();
+	if (!found && user.recent[type].length > 4) {
+		user.recent[type].pop();
 	}
 
-	(this.recent[type] as string[]).push(id);
+	(user.recent[type] as string[]).unshift(id);
 
-	this.updateOne({ recent: this.recent }).exec();
+	user.updateOne({ recent: user.recent }).exec();
 };
 
 interface UserModel extends Model<UserDocument> {
 	currentUser: (context: Context) => Promise<UserDocument | null>;
 }
 
-UserSchema.statics.currentUser = async function (context: Context): Promise<UserDocument> {
+UserSchema.statics.currentUser = async (context: Context): Promise<UserDocument | null> => {
 	try {
 		if (context.req.headers["authorization"]) {
 			return UserModel.findById(context.payload!.userId).exec();

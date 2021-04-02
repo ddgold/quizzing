@@ -1,3 +1,4 @@
+import { ValidationError } from "apollo-server-errors";
 import { Document, Model } from "mongoose";
 
 import { BoardModel } from "./board";
@@ -15,7 +16,7 @@ export const getRecordTypeModel = (type: RecordType): RecordModel<any> => {
 		case RecordType.Category:
 			return CategoryModel;
 		default:
-			throw new SyntaxError(`Unknown record type '${type}'`);
+			throw new ValidationError(`Unknown record type '${type}'`);
 	}
 };
 

@@ -1,4 +1,3 @@
-import React from "react";
 import { Button } from "react-bootstrap";
 import { gql, useQuery, useMutation } from "@apollo/client";
 import { useHistory } from "react-router-dom";

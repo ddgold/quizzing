@@ -1,5 +1,5 @@
 import { IResolvers } from "graphql-tools";
-import { ForbiddenError, SyntaxError, ValidationError } from "apollo-server-express";
+import { ForbiddenError, ValidationError } from "apollo-server-express";
 
 import { Context, assertHttpAuthorized } from "../../auth";
 import {
@@ -65,7 +65,7 @@ export const BuildResolvers: IResolvers<any, Context> = {
 		recentRecords: async (_, { type }: { type: RecordType }, context): Promise<RecordDocument[]> => {
 			await assertHttpAuthorized(context);
 			try {
-				const user = await UserModel.currentUser(context);
+				const user = (await UserModel.currentUser(context))!;
 				const model = getRecordTypeModel(type);
 				return model.records(user.recent[type] as string[]);
 			} catch (error) {
@@ -81,15 +81,15 @@ export const BuildResolvers: IResolvers<any, Context> = {
 			await assertHttpAuthorized(context);
 			try {
 				const model = getRecordTypeModel(type);
-				const record = await model.record(id);
+				const record: RecordDocument | undefined = await model.record(id);
 
 				if (!record) {
 					return {};
 				}
 
-				(await UserModel.currentUser(context)).recentRecord(type, id);
+				(await UserModel.currentUser(context))!.recentRecord(type, id);
 
-				return { result: record, canEdit: record.canEdit(context.payload!.userId) };
+				return { result: record, canEdit: await record.canEdit(context.payload!.userId) };
 			} catch (error) {
 				switch (error.name) {
 					case "CastError": {
@@ -153,14 +153,13 @@ export const BuildResolvers: IResolvers<any, Context> = {
 						return { result: newCategory };
 					}
 					default: {
-						throw new SyntaxError(`Unknown record type '${type}'`);
+						throw new ValidationError(`Unknown record type '${type}'`);
 					}
 				}
 			} catch (error) {
 				switch (error.name) {
-					case "SyntaxError":
 					case "ValidationError": {
-						console.error(`Create record mutation error: ${error.message}`);
+						console.error(`Create record mutation validation error: ${error.message}`);
 						break;
 					}
 					default: {
@@ -173,7 +172,7 @@ export const BuildResolvers: IResolvers<any, Context> = {
 		updateBoard: async (_, { id, name, description, categoryIds }, context): Promise<FormResult<BoardDocument>> => {
 			await assertHttpAuthorized(context);
 
-			const canEdit = await (await BoardModel.findById(id)).canEdit(context.payload!.userId);
+			const canEdit = await (await BoardModel.findById(id))?.canEdit(context.payload!.userId);
 			if (!canEdit) {
 				throw new ForbiddenError("No edit permission");
 			}
@@ -213,7 +212,7 @@ export const BuildResolvers: IResolvers<any, Context> = {
 			} catch (error) {
 				switch (error.name) {
 					case "ValidationError": {
-						console.error(`Update board mutation error: ${error.message}`);
+						console.error(`Update board mutation validation error: ${error.message}`);
 						break;
 					}
 					default: {
@@ -230,16 +229,15 @@ export const BuildResolvers: IResolvers<any, Context> = {
 		): Promise<FormResult<CategoryDocument>> => {
 			await assertHttpAuthorized(context);
 
-			const canEdit = await (await CategoryModel.findById(id)).canEdit(context.payload!.userId);
+			const canEdit = await (await CategoryModel.findById(id))?.canEdit(context.payload!.userId);
 			if (!canEdit) {
 				throw new ForbiddenError("No edit permission");
 			}
 
 			try {
 				const clueIds: string[] = await Promise.all(
-					clues.map(async (clueObj: { answer: string; question: string }) => {
-						const clue = await ClueModel.findOneAndUpdate(clueObj, {}, { upsert: true }).exec();
-						return clue.id;
+					clues.map(async (clue: { answer: string; question: string }) => {
+						return (await ClueModel.getClueId(clue)).id;
 					})
 				);
 
@@ -262,7 +260,7 @@ export const BuildResolvers: IResolvers<any, Context> = {
 			} catch (error) {
 				switch (error.name) {
 					case "ValidationError": {
-						console.error(`Update category mutation error: ${error.message}`);
+						console.error(`Update category mutation validation error: ${error.message}`);
 						break;
 					}
 					default: {

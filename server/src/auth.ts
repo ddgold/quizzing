@@ -1,6 +1,6 @@
 import { sign, verify } from "jsonwebtoken";
 import { Request, Response } from "express";
-import { AuthenticationError } from "apollo-server-express";
+import { AuthenticationError, ValidationError } from "apollo-server-express";
 
 import { UserModel } from "./database";
 import { getDockerSecret } from "./environment";
@@ -8,7 +8,12 @@ import { getDockerSecret } from "./environment";
 export interface Context {
 	req: Request;
 	res: Response;
-	payload?: { userId: string };
+	payload?: TokenPayload;
+}
+
+interface ConnectionParams {
+	authorization?: string;
+	payload?: TokenPayload;
 }
 
 interface TokenPayload {
@@ -34,21 +39,25 @@ export const sendRefreshToken = (res: Response, refreshToken: string): void => {
 	});
 };
 
-export const assertWsAuthorized = (accessToken: string) => {
+const assertTokenAuthorized = (accessToken?: string): TokenPayload => {
 	try {
-		verify(accessToken, getDockerSecret("access_token"));
+		if (accessToken === undefined) {
+			throw new ValidationError("Access token not provided");
+		}
+		return verify(accessToken, getDockerSecret("access_token")) as TokenPayload;
 	} catch (error) {
 		throw new AuthenticationError("Not Authorized");
 	}
 };
 
+export const assertWsAuthorized = (connectionParams: ConnectionParams) => {
+	connectionParams.payload = assertTokenAuthorized(connectionParams.authorization);
+};
+
 export const assertHttpAuthorized = async (context: Context): Promise<void> => {
-	try {
-		const accessToken = context.req.headers["authorization"] && context.req.headers["authorization"].split(" ")[1];
-		context.payload = verify(accessToken, getDockerSecret("access_token")) as TokenPayload;
-	} catch (error) {
-		throw new AuthenticationError("Not Authorized");
-	}
+	context.payload = assertTokenAuthorized(
+		context.req.headers["authorization"] && context.req.headers["authorization"].split(" ")[1]
+	);
 };
 
 interface RefreshResult {

@@ -4,6 +4,7 @@
 		"FRONTEND_URL": "http://localhost:3000|http://192.168.50.191:3000",
 		"DATABASE_URL": "mongodb://localhost:27017",
 		"ENGINE_CACHE_URL": "redis://localhost:6379",
+		"GRAPHQL_PORT": 8000,
 		"SECRETS_DIR": "../../secrets"
 	},
 	"exec": "ts-node",

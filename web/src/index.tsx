@@ -89,6 +89,7 @@ const httpLink = setContext((_, { headers }) => {
 			}
 		};
 	}
+	return;
 }).concat(
 	createHttpLink({
 		uri: serverURL("http", "graphql"),

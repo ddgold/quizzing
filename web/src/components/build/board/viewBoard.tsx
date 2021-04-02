@@ -1,4 +1,3 @@
-import React from "react";
 import { Table } from "react-bootstrap";
 
 import { BoardModel, CategoryModel } from "../../../models/build";

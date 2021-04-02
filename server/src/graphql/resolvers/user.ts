@@ -11,11 +11,11 @@ interface AuthResult {
 
 export const UserResolvers: IResolvers<any, Context> = {
 	Query: {
-		currentUser: async (_, {}, context): Promise<UserDocument> => {
+		currentUser: async (_, {}, context): Promise<UserDocument | null> => {
 			await assertHttpAuthorized(context);
 			return UserModel.currentUser(context);
 		},
-		userByEmail: async (_, { email }, context): Promise<UserDocument> => {
+		userByEmail: async (_, { email }, context): Promise<UserDocument | null> => {
 			await assertHttpAuthorized(context);
 			return UserModel.findOne({ email: email }).exec();
 		}

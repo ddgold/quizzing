@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Alert as BSAlert, Container } from "react-bootstrap";
 
 interface Props {

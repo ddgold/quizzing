@@ -22,6 +22,12 @@ const ClueSchema = new Schema({
 
 export interface ClueDocument extends Clue, Document {}
 
-interface ClueModel extends Model<ClueDocument> {}
+interface ClueModel extends Model<ClueDocument> {
+	getClueId: (clue: { answer: string; question: string }) => Promise<ClueDocument>;
+}
+
+ClueSchema.statics.getClueId = async (clue: { answer: string; question: string }): Promise<ClueDocument> => {
+	return (await ClueModel.findOneAndUpdate(clue, {}, { upsert: true }).exec())!;
+};
 
 export const ClueModel = model<ClueDocument>("clue", ClueSchema) as ClueModel;

@@ -1,4 +1,3 @@
-import React from "react";
 import { Container } from "react-bootstrap";
 import { gql, useMutation } from "@apollo/client";
 import { RouteComponentProps, useHistory, withRouter } from "react-router-dom";

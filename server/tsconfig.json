@@ -1,14 +1,24 @@
 {
 	"compilerOptions": {
 		"module": "commonjs",
-		"esModuleInterop": true,
 		"target": "es6",
-		"noImplicitAny": true,
 		"moduleResolution": "node",
+		"esModuleInterop": true,
 		"skipLibCheck": true,
+
 		"baseUrl": ".",
-		"outDir": "./build"
+		"outDir": "./build",
+
+		"strict": true,
+		"forceConsistentCasingInFileNames": true,
+		"noFallthroughCasesInSwitch": true,
+		"noImplicitAny": true,
+		"noImplicitReturns": true,
+		"noImplicitThis": true,
+		"noUncheckedIndexedAccess": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true
 	},
 	"include": ["./src/**/*"],
-	"exclude": ["./node_modules", "./**/*.spec.ts", "./src/scripts"]
+	"exclude": ["./node_modules", "./**/*.spec.ts"]
 }

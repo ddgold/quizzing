@@ -1,4 +1,4 @@
-import { ResolverFn, withFilter } from "apollo-server-express";
+import { ResolverFn, ValidationError, withFilter } from "apollo-server-express";
 import { RedisPubSub } from "graphql-redis-subscriptions";
 import Redis, { Redis as RedisClient, RedisOptions } from "ioredis";
 
@@ -23,11 +23,11 @@ export default class Engine {
 	// ---------
 	// Singleton
 	// ---------
-	private static singleton: Engine;
+	private static singleton: Engine | undefined;
 
 	private static get client(): RedisClient {
 		if (this.singleton === undefined) {
-			throw Error("Engine cache not connected");
+			throw new Error("Engine cache not connected");
 		}
 
 		return this.singleton.client;
@@ -35,7 +35,7 @@ export default class Engine {
 
 	private static get pubsub(): RedisPubSub {
 		if (this.singleton === undefined) {
-			throw Error("Engine cache not connected");
+			throw new Error("Engine cache not connected");
 		}
 
 		return this.singleton.pubsub;
@@ -43,7 +43,7 @@ export default class Engine {
 
 	static async connect(url: string): Promise<string> {
 		if (this.singleton !== undefined) {
-			throw Error("Engine cache already connected");
+			throw new Error("Engine cache already connected");
 		}
 
 		// TODO: actually use url param
@@ -53,7 +53,7 @@ export default class Engine {
 
 	static async disconnect(): Promise<void> {
 		if (this.singleton === undefined) {
-			throw Error("Engine cache not connected");
+			throw new Error("Engine cache not connected");
 		}
 
 		await Promise.all([this.client.quit(), this.pubsub.close()]);
@@ -66,29 +66,29 @@ export default class Engine {
 	private static async assertState(gameId: string, requiredState: State | "Any" | null): Promise<void> {
 		const currentState = await this.client.hget(Keys.ActiveGame(gameId), Fields.State());
 		if (currentState === null && requiredState !== null) {
-			throw Error(`Game with id '${gameId}' does not exist`);
+			throw new ValidationError(`Game with id '${gameId}' does not exist`);
 		} else if (currentState !== null && requiredState === null) {
-			throw Error(`Game with id '${gameId}' already exists`);
+			throw new ValidationError(`Game with id '${gameId}' already exists`);
 		} else if (currentState !== requiredState && requiredState !== "Any") {
-			throw Error(`Game with id '${gameId}' found state '${currentState}' expecting '${requiredState}'`);
+			throw new ValidationError(`Game with id '${gameId}' found state '${currentState}' expecting '${requiredState}'`);
 		}
 	}
 
-	private static async getModel(gameId: string): Promise<GameModel | undefined> {
+	private static async getModel(gameId: string): Promise<GameModel> {
 		const hash = await this.client.hgetall(Keys.ActiveGame(gameId));
 
-		const [cols, rows] = hash[Fields.Size()].split("^").map((string) => {
+		const [cols, rows] = hash[Fields.Size()]!.split("^").map((string) => {
 			return Number.parseInt(string);
-		});
+		}) as [number, number];
 
 		let categories = Array<string>(cols).fill("");
 		let models: RowModel[] = [];
 		for (let row = 0; row < rows; row++) {
-			let model: RowModel = { value: hash[Fields.Value(row)], cols: [] };
+			let model: RowModel = { value: hash[Fields.Value(row)]!, cols: [] };
 			for (let col = 0; col < cols; col++) {
 				if (hash[Fields.Clue(row, col)] !== undefined) {
 					model.cols.push(false);
-					categories[col] = hash[Fields.Category(col)];
+					categories[col] = hash[Fields.Category(col)]!;
 				} else {
 					model.cols.push(true);
 				}
@@ -99,7 +99,7 @@ export default class Engine {
 		const state = hash[Fields.State()] as State;
 		let currentText: string | undefined;
 		if (state === "ShowingAnswer" || state === "ShowingQuestion") {
-			const clueObject: ClueModel = JSON.parse(hash[Fields.ActiveClue()]);
+			const clueObject: ClueModel = JSON.parse(hash[Fields.ActiveClue()]!);
 			if (state === "ShowingAnswer") {
 				currentText = clueObject.answer;
 			} else {
@@ -109,12 +109,12 @@ export default class Engine {
 
 		const model: GameModel = {
 			id: gameId,
-			name: hash[Fields.Name()],
+			name: hash[Fields.Name()]!,
 			categories: categories,
 			rows: models,
 			state: state,
 			currentText: currentText,
-			started: new Date(hash[Fields.Started()])
+			started: new Date(hash[Fields.Started()]!)
 		};
 
 		return model;
@@ -134,7 +134,7 @@ export default class Engine {
 		await this.assertState(gameId, null);
 
 		const cols = clues.length;
-		const rows = clues[0].length;
+		const rows = clues[0]!.length;
 
 		const map = new Map<string, string>();
 		map.set(Fields.Name(), name);
@@ -144,12 +144,12 @@ export default class Engine {
 		map.set(Fields.Size(), `${cols}^${rows}`);
 
 		for (let col = 0; col < cols; col++) {
-			map.set(Fields.Category(col), categories[col]);
+			map.set(Fields.Category(col), categories[col]!);
 			for (let row = 0; row < rows; row++) {
-				map.set(Fields.Clue(row, col), JSON.stringify(clues[col][row]));
+				map.set(Fields.Clue(row, col), JSON.stringify(clues[col]![row]!));
 
 				if (col === 0) {
-					map.set(Fields.Value(row), values[row]);
+					map.set(Fields.Value(row), values[row]!);
 				}
 			}
 		}
@@ -172,7 +172,7 @@ export default class Engine {
 		const clueString = await this.client.hget(Keys.ActiveGame(gameId), Fields.Clue(row, col));
 
 		if (!clueString) {
-			throw new Error("Clue already selected");
+			throw new ValidationError("Clue already selected");
 		}
 
 		await this.client

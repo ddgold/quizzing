@@ -26,7 +26,7 @@ const dropCollections = async (collections: string[], url: string): Promise<void
 const parseArgs = (args: string[]): string[] => {
 	let collections: string[] = [];
 	for (let i = 2; i < args.length; i++) {
-		collections.push(args[i]);
+		collections.push(args[i]!);
 	}
 
 	if (collections.length === 0) {

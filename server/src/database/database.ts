@@ -13,11 +13,11 @@ export default class Database {
 	// ---------
 	// Singleton
 	// ---------
-	private static singleton: Database;
+	private static singleton: Database | undefined;
 
 	static get connection(): Connection {
 		if (this.singleton === undefined) {
-			throw Error("Database not connected");
+			throw new Error("Database not connected");
 		}
 
 		return this.singleton.connection;
@@ -25,7 +25,7 @@ export default class Database {
 
 	static async connect(url: string): Promise<string> {
 		if (this.singleton !== undefined) {
-			throw Error("Database already connected");
+			throw new Error("Database already connected");
 		}
 
 		mongoose.set("returnOriginal", false);
@@ -42,7 +42,7 @@ export default class Database {
 
 	static async disconnect(): Promise<void> {
 		if (this.singleton === undefined) {
-			throw Error("Database not connected");
+			throw new SyntaxError("Database not connected");
 		}
 
 		await mongoose.disconnect();

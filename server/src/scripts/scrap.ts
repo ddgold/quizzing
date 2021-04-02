@@ -3,6 +3,7 @@ import Engine from "../engine";
 
 const testDatabase = async (url: string): Promise<void> => {
 	try {
+		console.info("database test");
 		await Database.connect(url);
 
 		try {
@@ -22,6 +23,7 @@ const testDatabase = async (url: string): Promise<void> => {
 
 const testEngine = async (url: string): Promise<void> => {
 	try {
+		console.info("engine test");
 		await Engine.connect(url);
 
 		try {
@@ -39,5 +41,7 @@ const testEngine = async (url: string): Promise<void> => {
 	}
 };
 
-// testEngine("redis://localhost:6379/");
-// testDatabase("mongodb://localhost:27017/");
+(async () => {
+	await testEngine("redis://localhost:6379/");
+	await testDatabase("mongodb://localhost:27017/");
+})();

@@ -1,8 +1,9 @@
-import { model, Schema } from "mongoose";
+import { Document, model, Schema } from "mongoose";
 
 import { ClueDocument } from "./clue";
 import { UserDocument } from "./user";
 import { RecordDocument, RecordModel } from "./record";
+import { ValidationError } from "apollo-server-errors";
 
 interface Category {
 	name: string;
@@ -70,26 +71,63 @@ CategorySchema.pre("save", async function (this: CategoryDocument, next) {
 	return next();
 });
 
-export interface CategoryDocument extends Category, RecordDocument {}
+export interface CategoryDocument extends Category, RecordDocument {
+	generateColumn: (this: RecordDocument) => Promise<ClueDocument[]>;
+}
 
-CategorySchema.methods.canEdit = async function (this: CategoryDocument, userId: string): Promise<boolean> {
-	if (typeof this.creator === "string") {
-		return userId === this.creator;
+CategorySchema.methods.canEdit = async function (this: Document, userId: string): Promise<boolean> {
+	const category = this as CategoryDocument;
+	if (typeof category.creator === "string") {
+		return userId === category.creator;
 	} else {
-		return userId === this.creator._id.toString();
+		return userId === category.creator._id.toString();
+	}
+};
+
+CategorySchema.methods.generateColumn = async function (this: Document): Promise<ClueDocument[]> {
+	const category = this as CategoryDocument;
+	switch (category.format) {
+		case CategoryFormat.Fixed: {
+			if (category.clues.length !== 5) {
+				throw new ValidationError("Fixed category does not have 5 clues");
+			}
+
+			return category.clues as ClueDocument[];
+		}
+		case CategoryFormat.Random: {
+			const clues: ClueDocument[] = [];
+
+			for (let row = 0; row < 5; row++) {
+				const randomIndex = Math.floor(Math.random() * category.clues.length);
+				clues.push(category.clues.splice(randomIndex, 1)[0] as ClueDocument);
+			}
+
+			return clues;
+		}
+		case CategoryFormat.Sorted: {
+			// TODO
+
+			return [];
+		}
 	}
 };
 
 interface CategoryModel extends RecordModel<CategoryDocument> {}
 
-CategorySchema.statics.record = async function (id: string): Promise<CategoryDocument> {
-	return CategoryModel.findById(id).populate("clues").populate("creator").exec();
+const categoryById = async (id: string) => {
+	const category = await CategoryModel.findById(id).populate("clues").populate("creator").exec();
+	if (category === null) {
+		throw new ValidationError(`Category with id '${id} does not exist`);
+	}
+	return category;
 };
+
+CategorySchema.statics.record = categoryById;
 
 CategorySchema.statics.records = async function (ids: string[]): Promise<CategoryDocument[]> {
 	return Promise.all(
 		ids.map((id: string) => {
-			return CategoryModel.findById(id).populate("clues").populate("creator").exec();
+			return categoryById(id);
 		})
 	);
 };

@@ -1,10 +1,28 @@
 import path from "path";
 import fs from "fs";
 
-let secrets: { [name: string]: string } = {};
+// ---------------------
+// Environment Variables
+// ---------------------
+type EnvironmentVariable =
+	| "NODE_ENV"
+	| "FRONTEND_URL"
+	| "DATABASE_URL"
+	| "ENGINE_CACHE_URL"
+	| "GRAPHQL_PORT"
+	| "SECRETS_DIR";
 
-const checkEnvironmentVariables = (environmentVariables: string[]): void => {
-	for (const variableName of environmentVariables) {
+const allEnvironmentVariable: EnvironmentVariable[] = [
+	"NODE_ENV",
+	"FRONTEND_URL",
+	"DATABASE_URL",
+	"ENGINE_CACHE_URL",
+	"GRAPHQL_PORT",
+	"SECRETS_DIR"
+];
+
+const checkEnvironmentVariables = (): void => {
+	for (const variableName of allEnvironmentVariable) {
 		if (!process.env[variableName]) {
 			console.error(`Required environment variable '${variableName}' not provided.`);
 			process.exit();
@@ -12,9 +30,22 @@ const checkEnvironmentVariables = (environmentVariables: string[]): void => {
 	}
 };
 
-const checkDockerSecrets = (dockerSecrets: string[]): void => {
-	let directory = path.resolve(__dirname, process.env.SECRETS_DIR!);
-	for (const secretName of dockerSecrets) {
+export const getEnvironmentVariable = (variableName: EnvironmentVariable): string => {
+	return process.env[variableName]!;
+};
+
+// --------------
+// Docker Secrets
+// --------------
+type DockerSecret = "access_token" | "refresh_token";
+
+const allDockerSecrets: DockerSecret[] = ["access_token", "refresh_token"];
+
+let secrets: { [name: string]: string } = {};
+
+const checkDockerSecrets = (): void => {
+	let directory = path.resolve(__dirname, getEnvironmentVariable("SECRETS_DIR"));
+	for (const secretName of allDockerSecrets) {
 		try {
 			let secretValue = fs.readFileSync(path.join(directory, secretName), "utf8");
 			if (!secretValue) {
@@ -30,11 +61,11 @@ const checkDockerSecrets = (dockerSecrets: string[]): void => {
 	}
 };
 
-export const getDockerSecret = (secretName: string): string => {
-	return secrets[secretName];
+export const getDockerSecret = (secretName: DockerSecret): string => {
+	return secrets[secretName]!;
 };
 
-export const environmentConfig = (environmentVariables: string[], dockerSecrets: string[]): void => {
-	checkEnvironmentVariables(environmentVariables);
-	checkDockerSecrets(dockerSecrets);
+export const checkEnvironmentConfig = (): void => {
+	checkEnvironmentVariables();
+	checkDockerSecrets();
 };

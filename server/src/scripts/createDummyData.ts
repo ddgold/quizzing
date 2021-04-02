@@ -87,7 +87,7 @@ const createDummyBoards = async (): Promise<void> => {
 const processCategoryClues = async (clues: { answer: string; question: string }[]): Promise<string[]> => {
 	let clueIds: string[] = [];
 	for (const clue of clues) {
-		clueIds.push((await ClueModel.create(clue)).id);
+		clueIds.push((await ClueModel.getClueId(clue)).id);
 	}
 	return clueIds;
 };
@@ -349,7 +349,7 @@ const addScript = (scripts: string[], newScript: string): void => {
 const parseArgs = (args: string[]): string[] => {
 	let scripts: string[] = [];
 	for (let i = 2; i < args.length; i++) {
-		addScript(scripts, args[i]);
+		addScript(scripts, args[i]!);
 	}
 
 	if (scripts.length === 0) {

@@ -1,11 +1,11 @@
-import { model, Schema } from "mongoose";
+import { Document, model, Schema } from "mongoose";
 import { v4 as uuid } from "uuid";
 
-import { CategoryDocument, CategoryFormat } from "./category";
-import { ClueDocument } from "./clue";
+import { CategoryDocument } from "./category";
 import { ClueModel } from "../../engine";
 import { UserDocument } from "./user";
 import { RecordDocument, RecordModel } from "./record";
+import { ValidationError } from "apollo-server-express";
 
 interface Board {
 	name: string;
@@ -64,11 +64,12 @@ BoardSchema.pre("save", async function (this: BoardDocument, next) {
 
 export interface BoardDocument extends Board, RecordDocument {}
 
-BoardSchema.methods.canEdit = async function (this: BoardDocument, userId: string): Promise<boolean> {
-	if (typeof this.creator === "string") {
-		return userId === this.creator;
+BoardSchema.methods.canEdit = async function (this: Document, userId: string): Promise<boolean> {
+	const board = this as BoardDocument;
+	if (typeof board.creator === "string") {
+		return userId === board.creator;
 	} else {
-		return userId === this.creator._id.toString();
+		return userId === board.creator._id.toString();
 	}
 };
 
@@ -76,77 +77,62 @@ interface BoardModel extends RecordModel<BoardDocument> {
 	generateGame: (boardId: string) => Promise<[string, string, string[], string[], ClueModel[][]]>;
 }
 
-BoardSchema.statics.record = async function (id: string): Promise<BoardDocument> {
-	return BoardModel.findById(id)
+const boardById = async (id: string): Promise<BoardDocument> => {
+	const board = await BoardModel.findById(id)
 		.populate({
 			path: "categories",
 			populate: ["clues", "creator"]
 		})
 		.populate("creator")
 		.exec();
+
+	if (board === null) {
+		throw new ValidationError(`Board with id '${id}' not found`);
+	}
+
+	return board;
 };
+
+BoardSchema.statics.record = boardById;
 
 BoardSchema.statics.records = async function (ids: string[]): Promise<BoardDocument[]> {
 	return Promise.all(
 		ids.map((id: string) => {
-			return BoardModel.findById(id)
-				.populate({
-					path: "categories",
-					populate: ["clues", "creator"]
-				})
-				.populate("creator")
-				.exec();
+			return boardById(id);
 		})
 	);
 };
 
-BoardSchema.statics.generateGame = async (id: string): Promise<[string, string, string[], string[], ClueModel[][]]> => {
-	try {
-		let board = await BoardModel.findById(id)
-			.populate({
-				path: "categories",
-				populate: ["clues", "creator"]
-			})
-			.exec();
+BoardSchema.statics.generateGame = async function (
+	id: string
+): Promise<[string, string, string[], string[], ClueModel[][]]> {
+	let board = await BoardModel.findById(id)
+		.populate({
+			path: "categories",
+			populate: ["clues", "creator"]
+		})
+		.exec();
 
-		if (board.categories.length < 6) {
-			throw new Error("Board does not have enough categories");
-		}
-
-		const categories: string[] = [];
-		const clues: ClueModel[][] = [];
-
-		for (let col = 0; col < 6; col++) {
-			const randomIndex = Math.floor(Math.random() * board.categories.length);
-			const category = board.categories.splice(randomIndex, 1)[0] as CategoryDocument;
-
-			categories.push(category.name);
-			clues.push([]);
-
-			switch (category.format) {
-				case CategoryFormat.Fixed: {
-					if (category.clues.length !== 5) {
-						throw new Error("Fixed category does not have 5 clues");
-					}
-
-					clues[col] = category.clues as ClueDocument[];
-				}
-				case CategoryFormat.Random: {
-					for (let row = 0; row < 5; row++) {
-						const randomIndex = Math.floor(Math.random() * category.clues.length);
-						clues[col].push(category.clues.splice(randomIndex, 1)[0] as ClueDocument);
-					}
-				}
-				case CategoryFormat.Sorted: {
-					// TODO
-				}
-			}
-		}
-
-		return [uuid(), board.name, categories, ["200", "400", "600", "800", "1000"], clues];
-	} catch (error) {
-		throw error;
+	if (board === null) {
+		throw new ValidationError(`Board with id '${id}' not found`);
 	}
+
+	if (board.categories.length < 6) {
+		throw new ValidationError("Board does not have enough categories");
+	}
+
+	const categories: string[] = [];
+	const clues: ClueModel[][] = [];
+
+	for (let col = 0; col < 6; col++) {
+		const randomIndex = Math.floor(Math.random() * board.categories.length);
+		const category = board.categories.splice(randomIndex, 1)[0] as CategoryDocument;
+
+		categories.push(category.name);
+		clues.push(await category.generateColumn());
+	}
+
+	return [uuid(), board.name, categories, ["200", "400", "600", "800", "1000"], clues];
 };
 
 export const BoardModel = model<BoardDocument>("board", BoardSchema) as BoardModel;
