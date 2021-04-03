@@ -1,9 +1,9 @@
+import { ValidationError } from "apollo-server-errors";
 import { Document, model, Schema } from "mongoose";
 
 import { ClueDocument } from "./clue";
 import { UserDocument } from "./user";
 import { RecordDocument, RecordModel } from "./record";
-import { ValidationError } from "apollo-server-errors";
 
 interface Category {
 	name: string;
@@ -72,7 +72,7 @@ CategorySchema.pre("save", async function (this: CategoryDocument, next) {
 });
 
 export interface CategoryDocument extends Category, RecordDocument {
-	generateColumn: (this: RecordDocument) => Promise<ClueDocument[]>;
+	generateColumn: (this: RecordDocument, rows: number) => Promise<ClueDocument[]>;
 }
 
 CategorySchema.methods.canEdit = async function (this: Document, userId: string): Promise<boolean> {
@@ -84,20 +84,23 @@ CategorySchema.methods.canEdit = async function (this: Document, userId: string)
 	}
 };
 
-CategorySchema.methods.generateColumn = async function (this: Document): Promise<ClueDocument[]> {
+CategorySchema.methods.generateColumn = async function (this: Document, rows: number): Promise<ClueDocument[]> {
 	const category = this as CategoryDocument;
 	switch (category.format) {
 		case CategoryFormat.Fixed: {
-			if (category.clues.length !== 5) {
-				throw new ValidationError("Fixed category does not have 5 clues");
+			if (category.clues.length !== rows) {
+				throw new ValidationError(`Fixed category '${category.name}' does not have exactly ${rows} clues`);
 			}
 
 			return category.clues as ClueDocument[];
 		}
 		case CategoryFormat.Random: {
-			const clues: ClueDocument[] = [];
+			if (category.clues.length! < rows) {
+				throw new ValidationError(`Random category '${category.name}' does not have at least ${rows} clues`);
+			}
 
-			for (let row = 0; row < 5; row++) {
+			const clues: ClueDocument[] = [];
+			for (let row = 0; row < rows; row++) {
 				const randomIndex = Math.floor(Math.random() * category.clues.length);
 				clues.push(category.clues.splice(randomIndex, 1)[0] as ClueDocument);
 			}

@@ -1,8 +1,9 @@
 import { ResolverFn, ValidationError, withFilter } from "apollo-server-express";
 import { RedisPubSub } from "graphql-redis-subscriptions";
 import Redis, { Redis as RedisClient, RedisOptions } from "ioredis";
+import { v4 as uuid } from "uuid";
 
-import { BoardModel } from "../database";
+import { BoardModel, CategoryDocument } from "../database";
 import { ClueModel, Fields, GameModel, State, Keys, RowModel } from "./game";
 
 export default class Engine {
@@ -129,9 +130,38 @@ export default class Engine {
 	// --------------
 	// Public Methods
 	// --------------
-	static async host(boardId: string, userId: string): Promise<string> {
-		const [gameId, map] = await BoardModel.generateGame(boardId, userId);
+	static async host(boardId: string, userId: string, cols: number = 6, rows: number = 5): Promise<string> {
+		const gameId = uuid();
 		await this.assertState(gameId, null);
+
+		let board = await BoardModel.record(boardId);
+
+		if (board.categories.length < cols) {
+			throw new ValidationError(`Board '${board.name}' does not have at least ${cols} categories`);
+		}
+
+		const map = new Map<string, string>();
+		map.set(Fields.Name(), board.name);
+		map.set(Fields.Host(), userId);
+		map.set(Fields.State(), "AwaitingSelection");
+		map.set(Fields.Started(), new Date().toUTCString());
+		map.set(Fields.Size(), `${cols}^${rows}`);
+
+		for (let col = 0; col < cols; col++) {
+			const randomIndex = Math.floor(Math.random() * board.categories.length);
+			const category = board.categories.splice(randomIndex, 1)[0] as CategoryDocument;
+
+			map.set(Fields.Category(col), category.name);
+
+			const clues = await category.generateColumn(rows);
+			for (let row = 0; row < clues.length; row++) {
+				map.set(Fields.Clue(row, col), JSON.stringify(clues[row]));
+			}
+		}
+
+		for (let row = 0; row < rows; row++) {
+			map.set(Fields.Value(row), `${(row + 1) * 200}`);
+		}
 
 		await this.client.hset(Keys.ActiveGame(gameId), map);
 		await this.join(gameId, userId);
