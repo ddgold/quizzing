@@ -130,29 +130,8 @@ export default class Engine {
 	// Public Methods
 	// --------------
 	static async host(boardId: string, userId: string): Promise<string> {
-		const [gameId, name, categories, values, clues] = await BoardModel.generateGame(boardId);
+		const [gameId, map] = await BoardModel.generateGame(boardId, userId);
 		await this.assertState(gameId, null);
-
-		const cols = clues.length;
-		const rows = clues[0]!.length;
-
-		const map = new Map<string, string>();
-		map.set(Fields.Name(), name);
-		map.set(Fields.Host(), userId);
-		map.set(Fields.State(), "AwaitingSelection");
-		map.set(Fields.Started(), new Date().toUTCString());
-		map.set(Fields.Size(), `${cols}^${rows}`);
-
-		for (let col = 0; col < cols; col++) {
-			map.set(Fields.Category(col), categories[col]!);
-			for (let row = 0; row < rows; row++) {
-				map.set(Fields.Clue(row, col), JSON.stringify(clues[col]![row]!));
-
-				if (col === 0) {
-					map.set(Fields.Value(row), values[row]!);
-				}
-			}
-		}
 
 		await this.client.hset(Keys.ActiveGame(gameId), map);
 		await this.join(gameId, userId);

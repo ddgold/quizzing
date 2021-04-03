@@ -124,7 +124,7 @@ const categoryById = async (id: string) => {
 
 CategorySchema.statics.record = categoryById;
 
-CategorySchema.statics.records = async function (ids: string[]): Promise<CategoryDocument[]> {
+CategorySchema.statics.records = async (ids: string[]): Promise<CategoryDocument[]> => {
 	return Promise.all(
 		ids.map((id: string) => {
 			return categoryById(id);

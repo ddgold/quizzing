@@ -1,11 +1,11 @@
+import { ValidationError } from "apollo-server-express";
 import { Document, model, Schema } from "mongoose";
 import { v4 as uuid } from "uuid";
 
 import { CategoryDocument } from "./category";
-import { ClueModel } from "../../engine";
+import { Fields } from "../../engine";
 import { UserDocument } from "./user";
 import { RecordDocument, RecordModel } from "./record";
-import { ValidationError } from "apollo-server-express";
 
 interface Board {
 	name: string;
@@ -74,7 +74,7 @@ BoardSchema.methods.canEdit = async function (this: Document, userId: string): P
 };
 
 interface BoardModel extends RecordModel<BoardDocument> {
-	generateGame: (boardId: string) => Promise<[string, string, string[], string[], ClueModel[][]]>;
+	generateGame: (boardId: string, hostId: string) => Promise<[string, Map<string, string>]>;
 }
 
 const boardById = async (id: string): Promise<BoardDocument> => {
@@ -95,7 +95,7 @@ const boardById = async (id: string): Promise<BoardDocument> => {
 
 BoardSchema.statics.record = boardById;
 
-BoardSchema.statics.records = async function (ids: string[]): Promise<BoardDocument[]> {
+BoardSchema.statics.records = async (ids: string[]): Promise<BoardDocument[]> => {
 	return Promise.all(
 		ids.map((id: string) => {
 			return boardById(id);
@@ -103,10 +103,8 @@ BoardSchema.statics.records = async function (ids: string[]): Promise<BoardDocum
 	);
 };
 
-BoardSchema.statics.generateGame = async function (
-	id: string
-): Promise<[string, string, string[], string[], ClueModel[][]]> {
-	let board = await BoardModel.findById(id)
+BoardSchema.statics.generateGame = async (boardId: string, hostId: string): Promise<[string, Map<string, string>]> => {
+	let board = await BoardModel.findById(boardId)
 		.populate({
 			path: "categories",
 			populate: ["clues", "creator"]
@@ -114,25 +112,40 @@ BoardSchema.statics.generateGame = async function (
 		.exec();
 
 	if (board === null) {
-		throw new ValidationError(`Board with id '${id}' not found`);
+		throw new ValidationError(`Board with id '${boardId}' not found`);
 	}
 
 	if (board.categories.length < 6) {
 		throw new ValidationError("Board does not have enough categories");
 	}
 
-	const categories: string[] = [];
-	const clues: ClueModel[][] = [];
+	const cols = 6;
+	const rows = 5;
+	const map = new Map<string, string>();
 
-	for (let col = 0; col < 6; col++) {
+	map.set(Fields.Name(), board.name);
+	map.set(Fields.Host(), hostId);
+	map.set(Fields.State(), "AwaitingSelection");
+	map.set(Fields.Started(), new Date().toUTCString());
+	map.set(Fields.Size(), `${cols}^${rows}`);
+
+	for (let col = 0; col < cols; col++) {
 		const randomIndex = Math.floor(Math.random() * board.categories.length);
 		const category = board.categories.splice(randomIndex, 1)[0] as CategoryDocument;
 
-		categories.push(category.name);
-		clues.push(await category.generateColumn());
+		map.set(Fields.Category(col), category.name);
+
+		const clues = await category.generateColumn();
+		for (let row = 0; row < rows; row++) {
+			map.set(Fields.Clue(row, col), JSON.stringify(clues[row]));
+		}
 	}
 
-	return [uuid(), board.name, categories, ["200", "400", "600", "800", "1000"], clues];
+	for (let row = 0; row < rows; row++) {
+		map.set(Fields.Value(row), `${(row + 1) * 200}`);
+	}
+
+	return [uuid(), map];
 };
 
 export const BoardModel = model<BoardDocument>("board", BoardSchema) as BoardModel;
