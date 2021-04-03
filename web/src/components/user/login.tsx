@@ -4,7 +4,8 @@ import { gql, useMutation } from "@apollo/client";
 import { useHistory } from "react-router-dom";
 
 import { AuthResult, FieldError } from "../../models/user";
-import { isLoggedIn, setAccessToken } from "../../auth";
+import { setAccessToken } from "../../auth";
+import { useCurrentUser } from "./currentUser";
 import { Error, Page } from "../shared";
 
 const LOGIN = gql`
@@ -38,6 +39,7 @@ interface State {
 export const Login = () => {
 	const { errors, handleSubmit, register, setError, setValue } = useForm<State>();
 	const [loginMutation, { client }] = useMutation<Data, State>(LOGIN);
+	const currentUser = useCurrentUser();
 	const history = useHistory();
 
 	const onSubmit = handleSubmit(async (state: State) => {
@@ -59,7 +61,7 @@ export const Login = () => {
 		}
 	});
 
-	if (isLoggedIn()) {
+	if (currentUser) {
 		return <Error message={"You are already logged in"} />;
 	}
 

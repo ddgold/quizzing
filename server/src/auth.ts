@@ -1,9 +1,14 @@
 import { sign, verify } from "jsonwebtoken";
 import { Request, Response } from "express";
-import { AuthenticationError, ValidationError } from "apollo-server-express";
+import { AuthenticationError, ForbiddenError, ValidationError } from "apollo-server-express";
 
 import { UserModel } from "./database";
 import { getDockerSecret } from "./environment";
+
+export enum AccessLevel {
+	User,
+	Admin
+}
 
 export interface Context {
 	req: Request;
@@ -16,18 +21,19 @@ interface ConnectionParams {
 	payload?: TokenPayload;
 }
 
-interface TokenPayload {
+export interface TokenPayload {
 	userId: string;
+	access: AccessLevel;
 }
 
 export const signAccessToken = (payload: TokenPayload): string => {
-	return sign({ userId: payload.userId }, getDockerSecret("access_token"), {
+	return sign(payload, getDockerSecret("access_token"), {
 		expiresIn: "15m"
 	});
 };
 
 export const signRefreshToken = (payload: TokenPayload): string => {
-	return sign({ userId: payload.userId }, getDockerSecret("refresh_token"), {
+	return sign(payload, getDockerSecret("refresh_token"), {
 		expiresIn: "7d"
 	});
 };
@@ -39,24 +45,33 @@ export const sendRefreshToken = (res: Response, refreshToken: string): void => {
 	});
 };
 
-const assertTokenAuthorized = (accessToken?: string): TokenPayload => {
+const assertToken = (accessToken: string | undefined, requiredAccess: AccessLevel): TokenPayload => {
+	if (accessToken === undefined) {
+		throw new ValidationError("Access token not provided");
+	}
+
+	let payload: TokenPayload;
 	try {
-		if (accessToken === undefined) {
-			throw new ValidationError("Access token not provided");
-		}
-		return verify(accessToken, getDockerSecret("access_token")) as TokenPayload;
+		payload = verify(accessToken, getDockerSecret("access_token")) as TokenPayload;
 	} catch (error) {
 		throw new AuthenticationError("Not Authorized");
 	}
+
+	if (payload.access < requiredAccess) {
+		throw new ForbiddenError("Access token does not have required access level");
+	}
+
+	return payload;
 };
 
-export const assertWsAuthorized = (connectionParams: ConnectionParams) => {
-	connectionParams.payload = assertTokenAuthorized(connectionParams.authorization);
+export const assertWsToken = (connectionParams: ConnectionParams, requiredAccess: AccessLevel) => {
+	connectionParams.payload = assertToken(connectionParams.authorization, requiredAccess);
 };
 
-export const assertHttpAuthorized = async (context: Context): Promise<void> => {
-	context.payload = assertTokenAuthorized(
-		context.req.headers["authorization"] && context.req.headers["authorization"].split(" ")[1]
+export const assertHttpToken = async (context: Context, requiredAccess: AccessLevel): Promise<void> => {
+	context.payload = assertToken(
+		context.req.headers["authorization"] && context.req.headers["authorization"].split(" ")[1],
+		requiredAccess
 	);
 };
 
@@ -82,8 +97,8 @@ export const postRefreshToken = async (
 			return res.send({ success: false, accessToken: "" });
 		}
 
-		sendRefreshToken(res, signRefreshToken({ userId: user.id }));
-		return res.send({ success: true, accessToken: signAccessToken({ userId: user.id }) });
+		sendRefreshToken(res, signRefreshToken(user.tokenPayload()));
+		return res.send({ success: true, accessToken: signAccessToken(user.tokenPayload()) });
 	} catch (error) {
 		console.error("Refresh token error:", error);
 		return res.send({ success: false, accessToken: "" });

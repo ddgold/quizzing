@@ -1,10 +1,11 @@
 import { Navbar, Nav, NavDropdown } from "react-bootstrap";
 import { Link, NavLink, useLocation } from "react-router-dom";
 
-import { useUserStatus, UserStatus } from "../user";
+import { useCurrentStatus, UserStatus } from "../user";
+import { Alert } from "./alert";
 
 export const Header = () => {
-	const [userStatus, nickname] = useUserStatus();
+	const [userStatus, currentUser, error] = useCurrentStatus();
 	const location = useLocation();
 
 	return (
@@ -41,7 +42,7 @@ export const Header = () => {
 					<Nav className="justify-content-end">
 						{userStatus === UserStatus.LoggedIn ? (
 							<Nav.Link as={NavLink} to="/user">
-								{nickname}
+								{currentUser!.nickname}
 							</Nav.Link>
 						) : userStatus === UserStatus.LoggedOut ? (
 							<>
@@ -57,6 +58,9 @@ export const Header = () => {
 				</Navbar.Collapse>
 				<Navbar.Toggle aria-controls="basic-navbar-nav" />
 			</Navbar>
+			<Alert variant={"error"} show={userStatus === UserStatus.Error}>
+				{error!}
+			</Alert>
 		</>
 	);
 };

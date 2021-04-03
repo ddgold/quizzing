@@ -4,7 +4,8 @@ import { gql, useMutation } from "@apollo/client";
 import { useHistory } from "react-router-dom";
 
 import { AuthResult, FieldError } from "../../models/user";
-import { isLoggedIn, setAccessToken } from "../../auth";
+import { setAccessToken } from "../../auth";
+import { useCurrentUser } from "./currentUser";
 import { Error, Page } from "../shared";
 
 const REGISTER = gql`
@@ -41,6 +42,7 @@ export const Register = () => {
 	const { errors, getValues, handleSubmit, register, setError, setValue } = useForm<State>();
 	const [registerMutation, { client }] = useMutation<Data, State>(REGISTER);
 	const history = useHistory();
+	const currentUser = useCurrentUser();
 
 	const onSubmit = handleSubmit(async (state: State) => {
 		const result = await registerMutation({
@@ -67,7 +69,7 @@ export const Register = () => {
 		return values.password === values.confirmPassword;
 	};
 
-	if (isLoggedIn()) {
+	if (currentUser) {
 		return <Error message={"You are already logged in"} />;
 	}
 

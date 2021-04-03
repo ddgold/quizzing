@@ -1,17 +1,10 @@
 import { Button } from "react-bootstrap";
-import { gql, useQuery, useMutation } from "@apollo/client";
+import { gql, useMutation } from "@apollo/client";
 import { useHistory } from "react-router-dom";
 
 import { setAccessToken } from "../../auth";
 import { Error, Loading, Page } from "../shared";
-
-const CURRENT_USER = gql`
-	query CurrentUser {
-		currentUser {
-			nickname
-		}
-	}
-`;
+import { useCurrentUser } from "./currentUser";
 
 const LOGOUT = gql`
 	mutation Logout {
@@ -19,14 +12,8 @@ const LOGOUT = gql`
 	}
 `;
 
-interface Data {
-	currentUser: {
-		nickname: string;
-	};
-}
-
 export const User = () => {
-	const { data, error, loading } = useQuery<Data, {}>(CURRENT_USER, { fetchPolicy: "network-only" });
+	const currentUser = useCurrentUser();
 	const [logoutMutation, { client }] = useMutation<{}, {}>(LOGOUT);
 	const history = useHistory();
 
@@ -38,21 +25,18 @@ export const User = () => {
 		await client!.cache.reset();
 	};
 
-	if (error) {
-		return <Error message={error.message} />;
-	}
-
-	if (loading) {
+	if (currentUser === undefined) {
 		return <Loading />;
 	}
 
-	if (!data?.currentUser) {
+	if (currentUser === null) {
 		return <Error message="Not logged in" />;
 	}
 
 	return (
 		<Page title="User" titleRight={<Button onClick={() => logout()}>Log Out</Button>}>
-			<p className="lead">{`Current user: ${data.currentUser.nickname}`}</p>
+			<p className="lead">{`Current user: ${currentUser.nickname}`}</p>
+			<p className="lead">{`Access level: ${currentUser.access === 1 ? "Admin" : "User"}`}</p>
 		</Page>
 	);
 };

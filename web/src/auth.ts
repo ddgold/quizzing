@@ -8,6 +8,7 @@ export const getAccessToken = () => {
 	return accessToken;
 };
 
-export const isLoggedIn = () => {
-	return !!accessToken;
-};
+export enum AccessLevel {
+	User,
+	Admin
+}

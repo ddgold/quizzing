@@ -4,8 +4,8 @@ import { Alert as BSAlert, Container } from "react-bootstrap";
 interface Props {
 	variant: "success" | "warning" | "error";
 	show: boolean;
-	onDismiss: () => void;
-	autoClose: number;
+	onDismiss?: () => void;
+	autoClose?: number;
 	header?: JSX.Element | JSX.Element[] | string;
 	children: JSX.Element | JSX.Element[] | string;
 }
@@ -37,7 +37,7 @@ export const Alert = ({ variant, show, onDismiss, autoClose, header, children }:
 		}
 	};
 
-	if (autoClose && show && !dismissing) {
+	if (autoClose && show && !dismissing && onDismiss) {
 		setTimeout(() => {
 			onDismiss();
 			setDismissing(false);
@@ -52,7 +52,7 @@ export const Alert = ({ variant, show, onDismiss, autoClose, header, children }:
 				style={{ marginLeft: -15, marginRight: -15 }}
 				show={show}
 				onClose={onDismiss}
-				dismissible
+				dismissible={onDismiss !== undefined}
 			>
 				<BSAlert.Heading>{header || defaultHeader()}</BSAlert.Heading>
 				{children}

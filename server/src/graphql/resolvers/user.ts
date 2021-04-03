@@ -1,6 +1,6 @@
 import { IResolvers } from "graphql-tools";
 
-import { Context, assertHttpAuthorized, sendRefreshToken, signAccessToken, signRefreshToken } from "../../auth";
+import { AccessLevel, Context, assertHttpToken, sendRefreshToken, signAccessToken, signRefreshToken } from "../../auth";
 import { UserDocument, UserModel } from "../../database";
 
 interface AuthResult {
@@ -15,7 +15,7 @@ export const UserResolvers: IResolvers<any, Context> = {
 			return UserModel.currentUser(context);
 		},
 		userByEmail: async (_, { email }, context): Promise<UserDocument | null> => {
-			await assertHttpAuthorized(context);
+			await assertHttpToken(context, AccessLevel.User);
 			return UserModel.findOne({ email: email }).exec();
 		}
 	},
@@ -38,8 +38,8 @@ export const UserResolvers: IResolvers<any, Context> = {
 			await user.save();
 
 			// Return user
-			sendRefreshToken(context.res, signRefreshToken({ userId: user.id }));
-			return { accessToken: signAccessToken({ userId: user.id }), user: user };
+			sendRefreshToken(context.res, signRefreshToken(user.tokenPayload()));
+			return { accessToken: signAccessToken(user.tokenPayload()), user: user };
 		},
 		logout: async (_, {}, context): Promise<boolean> => {
 			// Clear refresh token
@@ -69,13 +69,14 @@ export const UserResolvers: IResolvers<any, Context> = {
 					nickname: nickname,
 					email: email,
 					password: password,
+					access: AccessLevel.User,
 					created: new Date(),
 					lastLogin: new Date()
 				});
 
 				// Return new user
-				sendRefreshToken(context.res, signRefreshToken({ userId: newUser.id }));
-				return { accessToken: signAccessToken({ userId: newUser.id }), user: newUser };
+				sendRefreshToken(context.res, signRefreshToken(newUser.tokenPayload()));
+				return { accessToken: signAccessToken(newUser.tokenPayload()), user: newUser };
 			} catch (error) {
 				switch (error.name) {
 					case "ValidationError": {

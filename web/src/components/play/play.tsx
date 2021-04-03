@@ -1,16 +1,18 @@
 import { useState } from "react";
-import { Button, Table } from "react-bootstrap";
+import { Button, Form, Table } from "react-bootstrap";
 import { Link, useHistory } from "react-router-dom";
 import { gql, useMutation, useQuery } from "@apollo/client";
 
+import { AccessLevel } from "../../auth";
 import { BoardModel, RecordModel, RecordType } from "../../models/build";
 import { Alert, Error, Loading, Page } from "../shared";
 import { RecordSelectModal } from "../build/recordSelect";
 import { GameModel } from "../../models/play";
+import { useCurrentUser } from "../user";
 
-const CURRENT_GAMES = gql`
-	query CurrentGames {
-		currentGames {
+const GAMES = gql`
+	query Games($allGames: Boolean!) {
+		games(allGames: $allGames) {
 			id
 			name
 			started
@@ -24,22 +26,23 @@ const HOST_GAME = gql`
 	}
 `;
 interface Data {
-	currentGames: GameModel[];
+	games: GameModel[];
 	hostGame: string;
 }
 
-interface Variables {
-	boardId: string;
-}
-
 export const Play = () => {
+	const currentUser = useCurrentUser();
+	const [showAllGames, setShowAllGames] = useState(false);
 	const [creatingGame, setCreatingGame] = useState(false);
 	const [gameCreationError, setGameCreationError] = useState<string | undefined>(undefined);
 	const history = useHistory();
-	const { data, error, loading } = useQuery<Data>(CURRENT_GAMES, {
-		fetchPolicy: "network-only"
+	const { data, error, loading } = useQuery<Data, { allGames: boolean }>(GAMES, {
+		fetchPolicy: "network-only",
+		variables: {
+			allGames: showAllGames
+		}
 	});
-	const [hostMutation] = useMutation<Data, Variables>(HOST_GAME);
+	const [hostMutation] = useMutation<Data, { boardId: string }>(HOST_GAME);
 
 	const onSelect = async (record?: RecordModel) => {
 		setCreatingGame(false);
@@ -75,7 +78,24 @@ export const Play = () => {
 			</Alert>
 
 			<Page title="Play" titleRight={<Button onClick={() => setCreatingGame(true)}>Host Game</Button>}>
-				{data!.currentGames.length > 0 ? (
+				<>
+					{currentUser && currentUser?.access >= AccessLevel.Admin ? (
+						<Form>
+							<Form.Check
+								id="showAllGamesSwitch"
+								type="switch"
+								label="Show all games"
+								style={{ marginBottom: "0.5rem" }}
+								defaultChecked={showAllGames}
+								onChange={() => {
+									setShowAllGames(!showAllGames);
+								}}
+							/>
+						</Form>
+					) : null}
+				</>
+
+				{data!.games.length > 0 ? (
 					<Table striped bordered hover>
 						<thead>
 							<tr>
@@ -84,7 +104,7 @@ export const Play = () => {
 							</tr>
 						</thead>
 						<tbody>
-							{data!.currentGames.map((game: GameModel, index: number) => {
+							{data!.games.map((game: GameModel, index: number) => {
 								const started = new Date(game.started);
 								return (
 									<tr key={index}>

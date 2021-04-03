@@ -13,6 +13,7 @@ type User {
 	id: String!
 	nickname: String!
 	email: String!
+	access: Int!
 }
 
 type AuthResult {
@@ -116,7 +117,7 @@ type Query {
 	recordSearch(type: RecordType!, name: String!): SearchResult!
 
 	# Play
-	currentGames: [Game!]!
+	games(allGames: Boolean!): [Game!]!
 	playGame(gameId: String!): Game!
 }
 

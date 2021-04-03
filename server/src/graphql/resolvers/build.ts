@@ -1,7 +1,7 @@
 import { IResolvers } from "graphql-tools";
 import { ForbiddenError, ValidationError } from "apollo-server-express";
 
-import { Context, assertHttpAuthorized } from "../../auth";
+import { AccessLevel, Context, assertHttpToken } from "../../auth";
 import {
 	BoardDocument,
 	BoardModel,
@@ -35,7 +35,7 @@ export const BuildResolvers: IResolvers<any, Context> = {
 	},
 	Query: {
 		boards: async (_, { showAll }, context): Promise<BoardDocument[]> => {
-			await assertHttpAuthorized(context);
+			await assertHttpToken(context, AccessLevel.User);
 			if (showAll) {
 				return BoardModel.find()
 					.populate({
@@ -55,7 +55,7 @@ export const BuildResolvers: IResolvers<any, Context> = {
 			}
 		},
 		categories: async (_, { showAll }, context): Promise<CategoryDocument[]> => {
-			await assertHttpAuthorized(context);
+			await assertHttpToken(context, AccessLevel.User);
 			if (showAll) {
 				return CategoryModel.find().populate("clues").populate("creator").exec();
 			} else {
@@ -63,7 +63,7 @@ export const BuildResolvers: IResolvers<any, Context> = {
 			}
 		},
 		recentRecords: async (_, { type }: { type: RecordType }, context): Promise<RecordDocument[]> => {
-			await assertHttpAuthorized(context);
+			await assertHttpToken(context, AccessLevel.User);
 			try {
 				const user = (await UserModel.currentUser(context))!;
 				const model = getRecordTypeModel(type);
@@ -78,7 +78,7 @@ export const BuildResolvers: IResolvers<any, Context> = {
 			}
 		},
 		recordById: async (_, { type, id }, context): Promise<QueryResult<RecordDocument>> => {
-			await assertHttpAuthorized(context);
+			await assertHttpToken(context, AccessLevel.User);
 			try {
 				const model = getRecordTypeModel(type);
 				const record: RecordDocument | undefined = await model.record(id);
@@ -104,7 +104,7 @@ export const BuildResolvers: IResolvers<any, Context> = {
 			}
 		},
 		recordSearch: async (_, { type, name }, context): Promise<SearchResult<RecordDocument>> => {
-			await assertHttpAuthorized(context);
+			await assertHttpToken(context, AccessLevel.User);
 			try {
 				const model = getRecordTypeModel(type);
 				return {
@@ -125,7 +125,7 @@ export const BuildResolvers: IResolvers<any, Context> = {
 	},
 	Mutation: {
 		createRecord: async (_, { type, name }, context): Promise<FormResult<RecordDocument>> => {
-			await assertHttpAuthorized(context);
+			await assertHttpToken(context, AccessLevel.User);
 			try {
 				switch (type) {
 					case "Board": {
@@ -170,7 +170,7 @@ export const BuildResolvers: IResolvers<any, Context> = {
 			}
 		},
 		updateBoard: async (_, { id, name, description, categoryIds }, context): Promise<FormResult<BoardDocument>> => {
-			await assertHttpAuthorized(context);
+			await assertHttpToken(context, AccessLevel.User);
 
 			const canEdit = await (await BoardModel.findById(id))?.canEdit(context.payload!.userId);
 			if (!canEdit) {
@@ -227,7 +227,7 @@ export const BuildResolvers: IResolvers<any, Context> = {
 			{ id, name, description, format, clues },
 			context
 		): Promise<FormResult<CategoryDocument>> => {
-			await assertHttpAuthorized(context);
+			await assertHttpToken(context, AccessLevel.User);
 
 			const canEdit = await (await CategoryModel.findById(id))?.canEdit(context.payload!.userId);
 			if (!canEdit) {

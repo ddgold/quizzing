@@ -222,14 +222,24 @@ export default class Engine {
 		return game;
 	}
 
-	static async usersGames(userId: string): Promise<GameModel[]> {
-		const gameIds = await this.client.smembers(Keys.UsersGames(userId));
-
+	private static games(gameIds: string[]): Promise<GameModel[]> {
 		return Promise.all(
 			gameIds.map((gameId) => {
 				return this.game(gameId);
 			})
 		);
+	}
+
+	static async allGames(): Promise<GameModel[]> {
+		return this.games(
+			(await this.client.keys(Keys.ActiveGame("*"))).map((key) => {
+				return key.split(":")[1]!;
+			})
+		);
+	}
+
+	static async usersGames(userId: string): Promise<GameModel[]> {
+		return this.games(await this.client.smembers(Keys.UsersGames(userId)));
 	}
 
 	static filterPlayGameSubs(): ResolverFn {

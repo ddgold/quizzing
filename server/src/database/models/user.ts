@@ -1,7 +1,7 @@
 import { Document, Model, model, Schema } from "mongoose";
 import bcrypt from "bcryptjs";
 
-import { assertHttpAuthorized, Context } from "../../auth";
+import { AccessLevel, assertHttpToken, Context, TokenPayload } from "../../auth";
 import { RecordDocument, RecordType } from "./record";
 
 interface User {
@@ -9,6 +9,7 @@ interface User {
 	email: string;
 	password: string;
 	recent: { [type in RecordType]: string[] | RecordDocument[] };
+	access: AccessLevel;
 	created: Date;
 	lastLogin: Date;
 }
@@ -40,6 +41,10 @@ const UserSchema = new Schema({
 		Board: [{ type: Schema.Types.ObjectId, ref: "board", default: [] }],
 		Category: [{ type: Schema.Types.ObjectId, ref: "categories", default: [] }]
 	},
+	access: {
+		type: Schema.Types.Number,
+		required: true
+	},
 	created: {
 		type: Schema.Types.Date,
 		default: new Date()
@@ -63,6 +68,7 @@ UserSchema.pre("save", async function (this: UserDocument, next) {
 
 export interface UserDocument extends User, Document {
 	comparePassword: (this: UserDocument, candidatePassword: string) => Promise<boolean>;
+	tokenPayload: (this: UserDocument) => TokenPayload;
 	recentRecord: (this: UserDocument, type: RecordType, id: string) => Promise<void>;
 }
 
@@ -70,6 +76,11 @@ UserSchema.methods.comparePassword = async function (this: Document, candidatePa
 	const user = this as UserDocument;
 	let result = await bcrypt.compare(candidatePassword, user.password);
 	return result;
+};
+
+UserSchema.methods.tokenPayload = function (this: Document): TokenPayload {
+	const user = this as UserDocument;
+	return { userId: user.id, access: user.access };
 };
 
 UserSchema.methods.recentRecord = async function (this: Document, type: RecordType, id: string): Promise<void> {
@@ -98,7 +109,7 @@ interface UserModel extends Model<UserDocument> {
 
 UserSchema.statics.currentUser = async (context: Context): Promise<UserDocument | null> => {
 	try {
-		await assertHttpAuthorized(context);
+		await assertHttpToken(context, AccessLevel.User);
 		if (context.req.headers["authorization"]) {
 			return UserModel.findById(context.payload!.userId).exec();
 		} else {

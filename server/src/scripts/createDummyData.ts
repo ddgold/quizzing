@@ -1,3 +1,4 @@
+import { AccessLevel } from "../auth";
 import Database, {
 	BoardDocument,
 	BoardModel,
@@ -8,24 +9,64 @@ import Database, {
 	UserModel
 } from "../database";
 
-const createDummyUsers = async (): Promise<void> => {
-	const users = [
-		{ nickname: "king_kong", email: "king@test.com", password: "_PL<0okm", created: new Date(), lastLogin: new Date() },
-		{ nickname: "foobar", email: "foobar@test.com", password: "_PL<0okm", created: new Date(), lastLogin: new Date() }
-	];
+interface RawUser {
+	nickname: string;
+	email: string;
+	password: string;
+	created: Date;
+	lastLogin: Date;
+	access: AccessLevel;
+}
 
-	for (const user of users) {
-		try {
-			await UserModel.create(user);
-			console.info(`Created user '${user.nickname}'`);
-		} catch (error) {
-			if (error.name === "MongoError" && error.code === 11000) {
-				console.info(`User '${user.nickname}' already exists.`);
-			} else {
-				throw error;
-			}
+const createUser = async (user: RawUser): Promise<void> => {
+	try {
+		await UserModel.create(user);
+		console.info(`Created user '${user.nickname}'`);
+	} catch (error) {
+		if (error.name === "MongoError" && error.code === 11000) {
+			console.info(`User '${user.nickname}' already exists.`);
+		} else {
+			throw error;
 		}
 	}
+};
+
+const createAdminUser = async (): Promise<void> => {
+	return createUser({
+		nickname: "admin",
+		email: "admin@test.com",
+		password: "_PL<0okm",
+		created: new Date(),
+		lastLogin: new Date(),
+		access: AccessLevel.Admin
+	});
+};
+
+const createDummyUsers = async (): Promise<void[]> => {
+	const users: RawUser[] = [
+		{
+			nickname: "king_kong",
+			email: "king@test.com",
+			password: "_PL<0okm",
+			created: new Date(),
+			lastLogin: new Date(),
+			access: AccessLevel.User
+		},
+		{
+			nickname: "foobar",
+			email: "foobar@test.com",
+			password: "_PL<0okm",
+			created: new Date(),
+			lastLogin: new Date(),
+			access: AccessLevel.User
+		}
+	];
+
+	return Promise.all(
+		users.map((user: RawUser) => {
+			return createUser(user);
+		})
+	);
 };
 
 const getUser = async (nickName: string): Promise<UserDocument> => {
@@ -314,6 +355,10 @@ const createDummyData = async (scripts: string[], url: string): Promise<void> =>
 					}
 					case "users": {
 						await createDummyUsers();
+						break;
+					}
+					case "admin": {
+						await createAdminUser();
 						break;
 					}
 					default: {

@@ -1,4 +1,4 @@
-import { User } from "./user";
+import { UserModel } from "./user";
 
 export interface BoardModel extends RecordModel {
 	categories: CategoryModel[];
@@ -18,7 +18,7 @@ export interface RecordModel {
 	id: string;
 	name: string;
 	description: string;
-	creator: User;
+	creator: UserModel;
 	created: Date;
 	updated: Date;
 }

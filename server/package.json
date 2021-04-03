@@ -38,6 +38,7 @@
 		"dev": "nodemon ./src/server.ts",
 		"remove-build": "rm -rf ./build",
 		"build": "yarn run remove-build && tsc -p ./tsconfig.json && cp ./src/graphql/schema.graphql ./build/graphql/schema.graphql",
+		"reset-database": "yarn run drop-collections all && yarn run create-dummy-data boards",
 		"create-dummy-data": "ts-node ./src/scripts/createDummyData.ts",
 		"drop-collections": "ts-node ./src/scripts/dropCollections.ts",
 		"scrap": "ts-node ./src/scripts/scrap.ts",

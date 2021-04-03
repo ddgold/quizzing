@@ -4,7 +4,7 @@ import cors from "cors";
 import { ApolloServer } from "apollo-server-express";
 import { createServer } from "http";
 
-import { assertWsAuthorized, postRefreshToken } from "./auth";
+import { AccessLevel, assertWsToken, postRefreshToken } from "./auth";
 import Database from "./database";
 import Engine from "./engine";
 import { checkEnvironmentConfig, getEnvironmentVariable } from "./environment";
@@ -60,7 +60,7 @@ const apolloServer = new ApolloServer({
 	context: (Context) => Context,
 	subscriptions: {
 		onConnect: (connectionParams: Object) => {
-			assertWsAuthorized(connectionParams);
+			assertWsToken(connectionParams, AccessLevel.User);
 		}
 	}
 });
