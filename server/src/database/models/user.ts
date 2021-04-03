@@ -1,7 +1,7 @@
 import { Document, Model, model, Schema } from "mongoose";
 import bcrypt from "bcryptjs";
 
-import { Context } from "../../auth";
+import { assertHttpAuthorized, Context } from "../../auth";
 import { RecordDocument, RecordType } from "./record";
 
 interface User {
@@ -98,6 +98,7 @@ interface UserModel extends Model<UserDocument> {
 
 UserSchema.statics.currentUser = async (context: Context): Promise<UserDocument | null> => {
 	try {
+		await assertHttpAuthorized(context);
 		if (context.req.headers["authorization"]) {
 			return UserModel.findById(context.payload!.userId).exec();
 		} else {
