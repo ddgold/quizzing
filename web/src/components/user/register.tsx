@@ -59,8 +59,8 @@ export const Register = () => {
 			const accessToken = result.data!.register.accessToken;
 			setAccessToken(accessToken);
 
-			history.push("/");
 			await client!.resetStore();
+			history.push("/");
 		}
 	});
 

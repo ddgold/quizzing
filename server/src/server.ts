@@ -60,7 +60,7 @@ const apolloServer = new ApolloServer({
 	context: (Context) => Context,
 	subscriptions: {
 		onConnect: (connectionParams: Object) => {
-			assertWsToken(connectionParams, AccessLevel.User);
+			return assertWsToken(connectionParams, AccessLevel.User);
 		}
 	}
 });

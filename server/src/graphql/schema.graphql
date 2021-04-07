@@ -117,7 +117,7 @@ type Query {
 	recordSearch(type: RecordType!, name: String!): SearchResult!
 
 	# Play
-	games(allGames: Boolean!): [Game!]!
+	games(filter: Int!): [Game!]!
 	playGame(gameId: String!): Game!
 }
 
@@ -143,7 +143,7 @@ type Mutation {
 
 	# Play
 	hostGame(boardId: String!): String!
-	joinGame(gameId: String!): String!
+	joinGame(gameId: String!): Void
 	selectClue(gameId: String!, row: Int!, col: Int!): Void
 	answerClue(gameId: String!): Void
 	closeClue(gameId: String!): Void

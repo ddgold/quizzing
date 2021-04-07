@@ -1,6 +1,5 @@
 import { Button } from "react-bootstrap";
 import { gql, useMutation } from "@apollo/client";
-import { useHistory } from "react-router-dom";
 
 import { setAccessToken } from "../../auth";
 import { Error, Loading, Page } from "../shared";
@@ -14,15 +13,13 @@ const LOGOUT = gql`
 
 export const User = () => {
 	const currentUser = useCurrentUser();
-	const [logoutMutation, { client }] = useMutation<{}, {}>(LOGOUT);
-	const history = useHistory();
+	const [logoutMutation] = useMutation<{}, {}>(LOGOUT);
 
 	const logout = async () => {
 		await logoutMutation();
 		setAccessToken("");
 
-		history.push("/");
-		await client!.cache.reset();
+		window.location.pathname = "/";
 	};
 
 	if (currentUser === undefined) {

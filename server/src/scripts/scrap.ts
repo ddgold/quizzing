@@ -41,7 +41,11 @@ const testEngine = async (url: string): Promise<void> => {
 	}
 };
 
-(async () => {
-	await testEngine("redis://localhost:6379/");
-	await testDatabase("mongodb://localhost:27017/");
-})();
+(async (command: string) => {
+	if (["all", "engine", "redis"].includes(command)) {
+		await testEngine("redis://localhost:6379/");
+	}
+	if (["all", "database", "mongo"].includes(command)) {
+		await testDatabase("mongodb://localhost:27017/");
+	}
+})(process.argv[2] || "all");

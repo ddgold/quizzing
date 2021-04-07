@@ -18,3 +18,9 @@ export interface QueryResult<Result extends RecordDocument> {
 export interface SearchResult<Result extends RecordDocument> {
 	result?: Result[];
 }
+
+export enum GameFilter {
+	All,
+	User,
+	Public
+}

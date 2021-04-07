@@ -109,6 +109,7 @@ const wsLink = new (class extends ApolloLink {
 				options: {
 					reconnect: true,
 					connectionParams: { authorization: getAccessToken() }
+					// TODO: inactivityTimeout: 3000
 				}
 			});
 		}

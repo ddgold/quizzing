@@ -14,3 +14,9 @@ export interface RowModel {
 }
 
 export type State = "AwaitingSelection" | "ShowingAnswer" | "ShowingQuestion";
+
+export enum GameFilter {
+	All,
+	User,
+	Public
+}

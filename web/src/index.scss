@@ -8,6 +8,7 @@ $secondary: #005f86;
 	background: #ffffff;
 	box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
 	padding: 1rem;
+	margin-bottom: 1rem;
 
 	@include media-breakpoint-up(sm) {
 		border-radius: 0.25rem;

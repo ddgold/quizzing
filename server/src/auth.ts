@@ -1,6 +1,6 @@
 import { sign, verify } from "jsonwebtoken";
 import { Request, Response } from "express";
-import { AuthenticationError, ForbiddenError, ValidationError } from "apollo-server-express";
+import { AuthenticationError, ForbiddenError } from "apollo-server-express";
 
 import { UserModel } from "./database";
 import { getDockerSecret } from "./environment";
@@ -47,7 +47,7 @@ export const sendRefreshToken = (res: Response, refreshToken: string): void => {
 
 const assertToken = (accessToken: string | undefined, requiredAccess: AccessLevel): TokenPayload => {
 	if (accessToken === undefined) {
-		throw new ValidationError("Access token not provided");
+		throw new AuthenticationError("Access token not provided");
 	}
 
 	let payload: TokenPayload;
@@ -64,8 +64,8 @@ const assertToken = (accessToken: string | undefined, requiredAccess: AccessLeve
 	return payload;
 };
 
-export const assertWsToken = (connectionParams: ConnectionParams, requiredAccess: AccessLevel) => {
-	connectionParams.payload = assertToken(connectionParams.authorization, requiredAccess);
+export const assertWsToken = (connectionParams: ConnectionParams, requiredAccess: AccessLevel): TokenPayload => {
+	return assertToken(connectionParams.authorization, requiredAccess);
 };
 
 export const assertHttpToken = async (context: Context, requiredAccess: AccessLevel): Promise<void> => {

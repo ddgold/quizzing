@@ -6,6 +6,10 @@ export namespace Keys {
 	export const UsersGames = (userId: string): string => {
 		return `usersGames:${userId}`;
 	};
+
+	export const PublicGames = (): string => {
+		return `publicGames`;
+	};
 }
 
 export namespace Fields {
@@ -17,11 +21,7 @@ export namespace Fields {
 		return `category:${col}`;
 	};
 
-	export const Size = () => {
-		return "size";
-	};
-
-	export const Clue = (row: number, col: number): string => {
+	export const Clue = (row: number | "*", col: number | "*"): string => {
 		return `clue:${row}^${col}`;
 	};
 
@@ -31,6 +31,14 @@ export namespace Fields {
 
 	export const Name = () => {
 		return "name";
+	};
+
+	export const Players = () => {
+		return "players";
+	};
+
+	export const Size = () => {
+		return "size";
 	};
 
 	export const State = () => {
