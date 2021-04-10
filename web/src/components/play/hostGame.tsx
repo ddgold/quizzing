@@ -34,14 +34,10 @@ export const HostGame = () => {
 
 	return (
 		<>
-			<Alert
-				variant={"error"}
-				show={!!gameCreationError}
-				onDismiss={() => setGameCreationError(undefined)}
-				autoClose={5000}
-			>
+			<Alert variant={"error"} show={!!gameCreationError} onDismiss={() => setGameCreationError(undefined)} autoClose={5000}>
 				{gameCreationError!}
 			</Alert>
+
 			<Page title="Host Game" titleRight={<Button onClick={() => setCreatingGame(true)}>Host Game</Button>}>
 				<RecordSelectModal type={RecordType.Board} show={creatingGame} onSelect={onSelect} searchOnly />
 			</Page>

@@ -3,7 +3,7 @@ import { Button, Table } from "react-bootstrap";
 import { Link, useHistory } from "react-router-dom";
 import { gql, useQuery } from "@apollo/client";
 
-import { Error, Loading, Page } from "../../shared";
+import { ErrorPage, LoadingPage, Page } from "../../shared";
 import { RecordSelectModal } from "../recordSelect";
 import { BoardModel, RecordModel, RecordType } from "../../../models/build";
 
@@ -20,18 +20,10 @@ const BOARDS = gql`
 	}
 `;
 
-interface Data {
-	boards: BoardModel[];
-}
-
-interface Props {
-	showAll: boolean;
-}
-
-export const BoardList = ({ showAll }: Props) => {
+export const BoardList = ({ showAll }: { showAll: boolean }) => {
 	const [selectingBoard, setSelectingBoard] = useState(false);
 	const history = useHistory();
-	const { data, error, loading } = useQuery<Data, Props>(BOARDS, {
+	const { data, error, loading } = useQuery<{ boards: BoardModel[] }, { showAll: boolean }>(BOARDS, {
 		fetchPolicy: "network-only",
 		variables: { showAll }
 	});
@@ -44,17 +36,15 @@ export const BoardList = ({ showAll }: Props) => {
 		}
 	};
 
-	if (error) {
-		return <Error message={error.message} />;
-	}
+	const title = showAll ? "All Boards" : "My Boards";
 
-	if (loading) {
-		return <Loading />;
-	}
-
-	return (
+	return loading ? (
+		<LoadingPage title={title} />
+	) : error || !data ? (
+		<ErrorPage message={error?.message} />
+	) : (
 		<Page
-			title={showAll ? "All Boards" : "My Boards"}
+			title={title}
 			titleRight={
 				<Button variant="primary" onClick={() => setSelectingBoard(true)}>
 					Create New
@@ -69,16 +59,14 @@ export const BoardList = ({ showAll }: Props) => {
 					</tr>
 				</thead>
 				<tbody>
-					{data!.boards.map((board: BoardModel, index: number) => {
+					{data.boards.map((board: BoardModel, index: number) => {
 						const created = new Date(board.created);
 						return (
 							<tr key={index}>
 								<td>
 									<Link to={`/build/boards/${board.id}`}>{board.name}</Link>
 								</td>
-								<td>
-									{showAll ? `${created.toLocaleString()} by ${board.creator.nickname}` : created.toLocaleString()}
-								</td>
+								<td>{showAll ? `${created.toLocaleString()} by ${board.creator.nickname}` : created.toLocaleString()}</td>
 							</tr>
 						);
 					})}

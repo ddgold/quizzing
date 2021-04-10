@@ -3,7 +3,7 @@ import { Button, Table } from "react-bootstrap";
 import { Link, useHistory } from "react-router-dom";
 import { gql, useQuery } from "@apollo/client";
 
-import { Error, Loading, Page } from "../../shared";
+import { ErrorPage, LoadingPage, Page } from "../../shared";
 import { RecordSelectModal } from "../recordSelect";
 import { CategoryModel, RecordModel, RecordType } from "../../../models/build";
 
@@ -20,18 +20,10 @@ const CATEGORIES = gql`
 	}
 `;
 
-interface Data {
-	categories: CategoryModel[];
-}
-
-interface Props {
-	showAll: boolean;
-}
-
-export const CategoryList = ({ showAll }: Props) => {
+export const CategoryList = ({ showAll }: { showAll: boolean }) => {
 	const [selectingCategory, setSelectingCategory] = useState(false);
 	const history = useHistory();
-	const { data, error, loading } = useQuery<Data, Props>(CATEGORIES, {
+	const { data, error, loading } = useQuery<{ categories: CategoryModel[] }, { showAll: boolean }>(CATEGORIES, {
 		fetchPolicy: "network-only",
 		variables: { showAll }
 	});
@@ -44,17 +36,15 @@ export const CategoryList = ({ showAll }: Props) => {
 		}
 	};
 
-	if (error) {
-		return <Error message={error.message} />;
-	}
+	const title = showAll ? "All Categories" : "My Categories";
 
-	if (loading) {
-		return <Loading />;
-	}
-
-	return (
+	return loading ? (
+		<LoadingPage title={title} />
+	) : error || !data ? (
+		<ErrorPage message={error?.message} />
+	) : (
 		<Page
-			title={showAll ? "All Categories" : "My Categories"}
+			title={title}
 			titleRight={
 				<Button variant="primary" onClick={() => setSelectingCategory(true)}>
 					Create New
@@ -69,16 +59,14 @@ export const CategoryList = ({ showAll }: Props) => {
 					</tr>
 				</thead>
 				<tbody>
-					{data!.categories.map((category: CategoryModel, index: number) => {
+					{data.categories.map((category: CategoryModel, index: number) => {
 						const created = new Date(category.created);
 						return (
 							<tr key={index}>
 								<td>
 									<Link to={`/build/categories/${category.id}`}>{category.name}</Link>
 								</td>
-								<td>
-									{showAll ? `${created.toLocaleString()} by ${category.creator.nickname}` : created.toLocaleString()}
-								</td>
+								<td>{showAll ? `${created.toLocaleString()} by ${category.creator.nickname}` : created.toLocaleString()}</td>
 							</tr>
 						);
 					})}

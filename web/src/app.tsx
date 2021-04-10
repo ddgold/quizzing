@@ -1,15 +1,25 @@
 import { useEffect, useState } from "react";
-import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
+import { BrowserRouter as Router, Switch, Route, RouteProps } from "react-router-dom";
 
 import { setAccessToken } from "./auth";
-import { Error, Home, Header, Loading } from "./components/shared";
+import { ErrorPage, Home, Header, LoadingPage } from "./components/shared";
 import { BoardList, Board } from "./components/build/board";
 import { CategoryList, Category } from "./components/build/category";
 import { Game, Play } from "./components/play";
-import { CurrentUserProvider, Login, Register, User } from "./components/user";
+import { CurrentUserProvider, Login, Register, useCurrentUser, User } from "./components/user";
 
 export const serverURL = (protocol: "http" | "ws", path: "graphql" | "refreshToken"): string => {
 	return `${protocol}://${process.env.REACT_APP_SERVER_URI}/${path}`;
+};
+
+const LoggedInRoute = (routeProps: RouteProps) => {
+	const currentUser = useCurrentUser();
+	return <Route {...routeProps}>{!currentUser ? <ErrorPage message="Not logged in" /> : <>{routeProps.children}</>}</Route>;
+};
+
+const LoggedOutRoute = (routeProps: RouteProps) => {
+	const currentUser = useCurrentUser();
+	return <Route {...routeProps}>{currentUser ? <ErrorPage message="You are already logged in" /> : <>{routeProps.children}</>}</Route>;
 };
 
 export const App = () => {
@@ -23,10 +33,12 @@ export const App = () => {
 		});
 	}, []);
 
-	if (loading) {
-		return <Loading />;
-	}
-	return (
+	return loading ? (
+		<>
+			<Header loading />
+			<LoadingPage />
+		</>
+	) : (
 		<Router>
 			<CurrentUserProvider>
 				<Header />
@@ -36,44 +48,44 @@ export const App = () => {
 						<Home />
 					</Route>
 
-					<Route exact path="/play">
+					<LoggedInRoute exact path="/play">
 						<Play />
-					</Route>
-					<Route exact path="/play/:gameId">
+					</LoggedInRoute>
+					<LoggedInRoute exact path="/play/:gameId">
 						<Game />
-					</Route>
+					</LoggedInRoute>
 
-					<Route exact path="/build/boards/all">
+					<LoggedInRoute exact path="/build/boards/all">
 						<BoardList showAll={true} />
-					</Route>
-					<Route exact path="/build/boards/my">
+					</LoggedInRoute>
+					<LoggedInRoute exact path="/build/boards/my">
 						<BoardList showAll={false} />
-					</Route>
-					<Route exact path="/build/boards/:id">
+					</LoggedInRoute>
+					<LoggedInRoute exact path="/build/boards/:id">
 						<Board />
-					</Route>
-					<Route exact path="/build/categories/all">
+					</LoggedInRoute>
+					<LoggedInRoute exact path="/build/categories/all">
 						<CategoryList showAll={true} />
-					</Route>
-					<Route exact path="/build/categories/my">
+					</LoggedInRoute>
+					<LoggedInRoute exact path="/build/categories/my">
 						<CategoryList showAll={false} />
-					</Route>
-					<Route exact path="/build/categories/:id">
+					</LoggedInRoute>
+					<LoggedInRoute exact path="/build/categories/:id">
 						<Category />
-					</Route>
+					</LoggedInRoute>
 
-					<Route exact path="/user">
+					<LoggedInRoute exact path="/user">
 						<User />
-					</Route>
-					<Route exact path="/login">
+					</LoggedInRoute>
+					<LoggedOutRoute exact path="/login">
 						<Login />
-					</Route>
-					<Route exact path="/register">
+					</LoggedOutRoute>
+					<LoggedOutRoute exact path="/register">
 						<Register />
-					</Route>
+					</LoggedOutRoute>
 
 					<Route>
-						<Error message="404: Page not found" />
+						<ErrorPage message="Page not found" />
 					</Route>
 				</Switch>
 			</CurrentUserProvider>

@@ -34,14 +34,6 @@ export const JoinGame = () => {
 	const [joinGameMutation] = useMutation<{}, { gameId: string }>(JOIN_GAME);
 	const history = useHistory();
 
-	if (error) {
-		return <Error message={error.message} />;
-	}
-
-	if (loading) {
-		return <Loading />;
-	}
-
 	const onJoinGame = async (gameId: string) => {
 		try {
 			await joinGameMutation({ variables: { gameId: gameId } });
@@ -58,7 +50,11 @@ export const JoinGame = () => {
 			</Alert>
 
 			<Page title="Join Game">
-				{data!.games.length > 0 ? (
+				{loading ? (
+					<Loading />
+				) : error || !data ? (
+					<Error message={error?.message} />
+				) : data.games.length > 0 ? (
 					<Table striped bordered hover>
 						<thead>
 							<tr>
@@ -67,7 +63,7 @@ export const JoinGame = () => {
 							</tr>
 						</thead>
 						<tbody>
-							{data!.games.map((game: GameModel, index: number) => {
+							{data.games.map((game: GameModel, index: number) => {
 								const started = new Date(game.started);
 								return (
 									<tr key={index}>

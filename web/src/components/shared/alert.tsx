@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { Alert as BSAlert, Container } from "react-bootstrap";
 
+import { Children } from "../shared";
+
 interface Props {
 	variant: "success" | "warning" | "error";
 	show: boolean;
 	onDismiss?: () => void;
 	autoClose?: number;
-	header?: JSX.Element | JSX.Element[] | string;
-	children: JSX.Element | JSX.Element[] | string;
+	header?: Children;
+	children: Children;
 }
 
 export const Alert = ({ variant, show, onDismiss, autoClose, header, children }: Props) => {

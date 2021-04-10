@@ -2,9 +2,9 @@ import { Container } from "react-bootstrap";
 import { gql, useMutation } from "@apollo/client";
 import { RouteComponentProps, useHistory, withRouter } from "react-router-dom";
 
-import { Error, Loading } from "../shared";
+import { ErrorPage, LoadingPage } from "../shared";
 import { usePlayGame } from "./usePlayGame";
-import { RowModel } from "../../models/play";
+import { GameModel, RowModel } from "../../models/play";
 
 import "./game.scss";
 
@@ -26,20 +26,12 @@ const CLOSE_CLUE = gql`
 	}
 `;
 
-interface Variables {
-	gameId: string;
-	row?: number;
-	col?: number;
-}
-
-interface Props extends RouteComponentProps {}
-
-const GameWithoutRouter = (props: Props) => {
-	const gameId = (props.match.params as Variables).gameId;
+export const Game = withRouter((props: RouteComponentProps) => {
+	const gameId = (props.match.params as { gameId: string }).gameId;
 	const { loading, error, game } = usePlayGame(gameId);
-	const [selectClueMutation] = useMutation<{}, Variables>(SELECT_CLUE);
-	const [answerClueMutation] = useMutation<{}, Variables>(ANSWER_CLUE);
-	const [closeClueMutation] = useMutation<{}, Variables>(CLOSE_CLUE);
+	const [selectClueMutation] = useMutation<{}, { gameId: string; row?: number; col?: number }>(SELECT_CLUE);
+	const [answerClueMutation] = useMutation<{}, { gameId: string }>(ANSWER_CLUE);
+	const [closeClueMutation] = useMutation<{}, { gameId: string }>(CLOSE_CLUE);
 	const history = useHistory();
 
 	const selectClue = async (row: number, col: number): Promise<void> => {
@@ -72,8 +64,8 @@ const GameWithoutRouter = (props: Props) => {
 		}
 	};
 
-	const gameDone = (): boolean => {
-		for (const row of game!.rows) {
+	const gameDone = (game: GameModel): boolean => {
+		for (const row of game.rows) {
 			for (const selected of row.cols) {
 				if (!selected) {
 					return false;
@@ -91,19 +83,13 @@ const GameWithoutRouter = (props: Props) => {
 		</div>
 	);
 
-	if (error) {
-		return <Error message={error.message} />;
-	}
-
-	if (loading) {
-		return <Loading />;
-	}
-
-	if (!game) {
-		return <Error message={"Game not found"} />;
-	}
-
-	return (
+	return loading ? (
+		<LoadingPage />
+	) : error ? (
+		<ErrorPage message={error.message} />
+	) : !game ? (
+		<ErrorPage message={"Game not found"} />
+	) : (
 		<Container className="board" fluid>
 			<h1>{game.name}</h1>
 			<table>
@@ -138,13 +124,11 @@ const GameWithoutRouter = (props: Props) => {
 				? lightbox(game.currentText, () => {
 						game.state === "ShowingAnswer" ? answerClue() : closeClue();
 				  })
-				: gameDone()
+				: gameDone(game)
 				? lightbox("Game Over!", () => {
 						history.push("/play");
 				  })
 				: null}
 		</Container>
 	);
-};
-
-export const Game = withRouter(GameWithoutRouter);
+});

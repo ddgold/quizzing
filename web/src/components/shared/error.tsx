@@ -1,26 +1,13 @@
-import { Page } from ".";
+import { Page } from "../shared";
 
-interface Props {
-	message: string;
-	modelError?: boolean;
-}
+export const Error = ({ message }: { message?: string }) => (
+	<p className="lead" style={{ marginBottom: "0px" }}>
+		{message || "Something went wrong"}
+	</p>
+);
 
-export const Error = ({ message, modelError }: Props) => {
-	if (modelError) {
-		return (
-			<p>
-				Oops! Something went wrong...
-				<br />
-				{message}
-			</p>
-		);
-	} else {
-		return (
-			<Page title="Error">
-				<p className="lead" style={{ marginBottom: "0px" }}>
-					{message}
-				</p>
-			</Page>
-		);
-	}
-};
+export const ErrorPage = ({ title, message }: { title?: string; message?: string }) => (
+	<Page title={title || "Oops!"}>
+		<Error message={message} />
+	</Page>
+);

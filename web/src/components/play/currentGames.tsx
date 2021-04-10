@@ -27,14 +27,6 @@ export const CurrentGames = () => {
 		}
 	});
 
-	if (error) {
-		return <Error message={error.message} />;
-	}
-
-	if (loading) {
-		return <Loading />;
-	}
-
 	return (
 		<Page title="Current Games">
 			<>
@@ -54,7 +46,11 @@ export const CurrentGames = () => {
 				) : null}
 			</>
 
-			{data!.games.length > 0 ? (
+			{loading ? (
+				<Loading />
+			) : error || !data ? (
+				<Error message={error?.message} />
+			) : data.games.length > 0 ? (
 				<Table striped bordered hover>
 					<thead>
 						<tr>
@@ -63,7 +59,7 @@ export const CurrentGames = () => {
 						</tr>
 					</thead>
 					<tbody>
-						{data!.games.map((game: GameModel, index: number) => {
+						{data.games.map((game: GameModel, index: number) => {
 							const started = new Date(game.started);
 							return (
 								<tr key={index}>

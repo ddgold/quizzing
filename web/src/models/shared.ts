@@ -4,15 +4,15 @@ export interface FieldError<Fields> {
 }
 
 export interface FormResult<Result, Fields> {
-	result: Result;
-	errors: FieldError<Fields>[];
+	result?: Result;
+	errors?: FieldError<Fields>[];
 }
 
 export interface QueryError<Result> {
-	result: Result;
-	canEdit: Boolean;
+	result?: Result;
+	canEdit?: Boolean;
 }
 
 export interface SearchResult<Result> {
-	result: Result[];
+	result?: Result[];
 }

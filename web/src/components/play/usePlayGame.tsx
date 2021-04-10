@@ -32,26 +32,12 @@ const SUBSCRIPTION = gql`
 	}
 `;
 
-interface Data {
-	playGame: GameModel;
-}
-
-interface Props {
-	gameId: string;
-}
-
-interface Result {
-	loading: boolean;
-	error: ApolloError | undefined;
-	game: GameModel | undefined;
-}
-
-export const usePlayGame = (gameId: string): Result => {
-	const query = useQuery<Data, Props>(QUERY, {
+export const usePlayGame = (gameId: string): { loading: boolean; error?: ApolloError; game?: GameModel } => {
+	const query = useQuery<{ playGame: GameModel }, { gameId: string }>(QUERY, {
 		fetchPolicy: "network-only",
 		variables: { gameId: gameId }
 	});
-	const sub = useSubscription<Data, Props>(SUBSCRIPTION, {
+	const sub = useSubscription<{ playGame: GameModel }, { gameId: string }>(SUBSCRIPTION, {
 		variables: { gameId: gameId }
 	});
 

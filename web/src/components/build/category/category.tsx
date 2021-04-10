@@ -3,7 +3,7 @@ import { Button } from "react-bootstrap";
 import { RouteComponentProps, withRouter } from "react-router-dom";
 import { gql, useQuery } from "@apollo/client";
 
-import { Error, Loading, Page } from "../../shared";
+import { ErrorPage, LoadingPage, Page } from "../../shared";
 import { EditCategory } from "./editCategory";
 import { ViewCategory } from "./viewCategory";
 import { QueryError } from "../../../models/shared";
@@ -35,23 +35,12 @@ export const CATEGORY_BY_ID = gql`
 	}
 `;
 
-interface Data {
-	recordById: QueryError<CategoryModel>;
-}
-
-interface Variables {
-	id: string;
-	type: RecordType;
-}
-
-interface Props extends RouteComponentProps {}
-
-const CategoryWithoutRouter = (props: Props) => {
+export const Category = withRouter((props: RouteComponentProps) => {
 	const [editing, setEditing] = useState<boolean>(false);
-	const { data, error, loading } = useQuery<Data, Variables>(CATEGORY_BY_ID, {
+	const { data, error, loading } = useQuery<{ recordById: QueryError<CategoryModel> }, { id: string; type: RecordType }>(CATEGORY_BY_ID, {
 		fetchPolicy: "network-only",
 		variables: {
-			id: (props.match.params as Variables).id,
+			id: (props.match.params as { id: string }).id,
 			type: RecordType.Category
 		}
 	});
@@ -63,7 +52,7 @@ const CategoryWithoutRouter = (props: Props) => {
 					Cancel
 				</Button>
 			);
-		} else if (data!.recordById.canEdit) {
+		} else if (data?.recordById.canEdit) {
 			return (
 				<Button variant="primary" onClick={() => setEditing(true)}>
 					Edit
@@ -74,27 +63,19 @@ const CategoryWithoutRouter = (props: Props) => {
 		}
 	};
 
-	if (error) {
-		return <Error message={error.message} />;
-	}
-
-	if (loading) {
-		return <Loading />;
-	}
-
-	if (!data?.recordById.result) {
-		return <Error message={"Category not found"} />;
-	}
-
-	return (
-		<Page title={data!.recordById.result.name} titleRight={editButton()}>
+	return loading ? (
+		<LoadingPage />
+	) : error || !data ? (
+		<ErrorPage message={error?.message} />
+	) : !data.recordById.result ? (
+		<ErrorPage message={"Category not found"} />
+	) : (
+		<Page title={data.recordById.result.name} titleRight={editButton()}>
 			{editing ? (
-				<EditCategory category={data!.recordById.result} onSubmit={() => setEditing(false)} />
+				<EditCategory category={data.recordById.result} onSubmit={() => setEditing(false)} />
 			) : (
-				<ViewCategory category={data!.recordById.result} />
+				<ViewCategory category={data.recordById.result} />
 			)}
 		</Page>
 	);
-};
-
-export const Category = withRouter(CategoryWithoutRouter);
+});

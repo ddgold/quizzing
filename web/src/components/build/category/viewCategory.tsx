@@ -2,11 +2,7 @@ import { Table } from "react-bootstrap";
 
 import { CategoryModel, ClueModel } from "../../../models/build";
 
-interface Props {
-	category: CategoryModel;
-}
-
-export const ViewCategory = ({ category }: Props) => {
+export const ViewCategory = ({ category }: { category: CategoryModel }) => {
 	return (
 		<>
 			<p>{category.description}</p>

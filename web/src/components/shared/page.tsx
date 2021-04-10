@@ -1,9 +1,11 @@
 import { Col, Container, Row } from "react-bootstrap";
 
+import { Children } from "../shared";
+
 interface Props {
-	title: string;
-	titleRight?: JSX.Element | JSX.Element[] | string;
-	children?: JSX.Element | JSX.Element[] | string;
+	title?: string;
+	titleRight?: Children;
+	children?: Children;
 }
 
 export const Page = ({ title, titleRight, children }: Props) => {

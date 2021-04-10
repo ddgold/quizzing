@@ -1,22 +1,15 @@
-import { useEffect, useState } from "react";
 import { Spinner, Row } from "react-bootstrap";
 
-export const Loading = () => {
-	const [showSpinner, setShowSpinner] = useState(false);
+import { Page } from "../shared";
 
-	useEffect(() => {
-		setTimeout(() => {
-			setShowSpinner(true);
-		}, 100);
-	}, [setShowSpinner]);
+export const Loading = () => (
+	<Row className="justify-content-center" style={{ margin: "1rem" }}>
+		<Spinner animation="border" variant="primary" />
+	</Row>
+);
 
-	if (showSpinner) {
-		return (
-			<Row className="justify-content-center" style={{ margin: "1rem" }}>
-				<Spinner animation="border" variant="primary" />
-			</Row>
-		);
-	} else {
-		return null;
-	}
-};
+export const LoadingPage = ({ title }: { title?: string }) => (
+	<Page title={title}>
+		<Loading />
+	</Page>
+);

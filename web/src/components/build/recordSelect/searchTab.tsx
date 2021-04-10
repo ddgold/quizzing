@@ -8,8 +8,8 @@ import { getRecordTypeName, RecordModel, RecordType } from "../../../models/buil
 import { Error, Loading } from "../../shared";
 
 const RECORD_SEARCH = gql`
-	query RecordSearch($type: RecordType!, $name: String!) {
-		recordSearch(type: $type, name: $name) {
+	query RecordSearch($type: RecordType!, $search: String!) {
+		recordSearch(type: $type, name: $search) {
 			result {
 				... on Board {
 					id
@@ -59,103 +59,69 @@ const RECENT_RECORDS = gql`
 	}
 `;
 
-interface Data {
-	recordSearch: SearchResult<RecordModel>;
-	recentRecords: RecordModel[];
-}
-
-interface Variables {
-	name?: string;
-	type: RecordType;
-}
-
-interface ResultProps {
-	name?: string;
-	onSelect: (record: RecordModel) => void;
-	type: RecordType;
-}
-
-const SearchResults = ({ name, onSelect, type }: ResultProps) => {
-	const { data, error, loading } = useQuery<Data, Variables>(name ? RECORD_SEARCH : RECENT_RECORDS, {
+const SearchResults = ({ search, onSelect, type }: { search?: string; onSelect: (record: RecordModel) => void; type: RecordType }) => {
+	const { data, error, loading } = useQuery<
+		{ recordSearch: SearchResult<RecordModel>; recentRecords: RecordModel[] },
+		{ search?: string; type: RecordType }
+	>(search ? RECORD_SEARCH : RECENT_RECORDS, {
 		fetchPolicy: "network-only",
-		variables: { name: name, type: type }
+		variables: { search: search, type: type }
 	});
 
-	if (error) {
-		return <Error message={error.message} modelError />;
-	}
+	const result = (search ? data?.recordSearch.result : data?.recentRecords) || [];
 
-	if (loading) {
-		return <Loading />;
-	}
-
-	const result = name ? data!.recordSearch.result : data!.recentRecords;
-
-	const title = (
-		<p>{name ? `Results for '${name}':` : `Recent ${getRecordTypeName(type, { plural: true, lowerCase: true })}:`}</p>
-	);
-
-	if (result.length === 0) {
-		return (
-			<>
-				{title}
-				<p style={{ fontStyle: "italic" }}>None</p>
-			</>
-		);
-	}
-
-	return (
+	return loading ? (
+		<Loading />
+	) : error || !data ? (
+		<Error message={error?.message} />
+	) : (
 		<>
-			{title}
-			<Table striped bordered hover>
-				<thead>
-					<tr>
-						<th style={{ width: "50%" }}>Name</th>
-						<th style={{ width: "50%" }}>Created</th>
-					</tr>
-				</thead>
-				<tbody>
-					{result.map((record: RecordModel, index: number) => {
-						const created = new Date(record.created);
-						return (
-							<tr key={index}>
-								<td>
-									<Button
-										onClick={() => {
-											onSelect(record);
-										}}
-									>
-										{record.name}
-									</Button>
-								</td>
-								<td>{`${created.toLocaleString()} by ${record.creator.nickname}`}</td>
-							</tr>
-						);
-					})}
-				</tbody>
-			</Table>
+			<p>{search ? `Results for '${search}':` : `Recent ${getRecordTypeName(type, { plural: true, lowerCase: true })}:`}</p>
+
+			{result.length === 0 ? (
+				<p style={{ fontStyle: "italic" }}>None</p>
+			) : (
+				<Table striped bordered hover>
+					<thead>
+						<tr>
+							<th style={{ width: "50%" }}>Name</th>
+							<th style={{ width: "50%" }}>Created</th>
+						</tr>
+					</thead>
+					<tbody>
+						{result.map((record: RecordModel, index: number) => {
+							const created = new Date(record.created);
+							return (
+								<tr key={index}>
+									<td>
+										<Button
+											onClick={() => {
+												onSelect(record);
+											}}
+										>
+											{record.name}
+										</Button>
+									</td>
+									<td>{`${created.toLocaleString()} by ${record.creator.nickname}`}</td>
+								</tr>
+							);
+						})}
+					</tbody>
+				</Table>
+			)}
 		</>
 	);
 };
 
-interface State {
-	name: string;
-}
-
-interface TabProps {
-	onSelect: (record: RecordModel) => void;
-	type: RecordType;
-}
-
-export const SearchTab = ({ onSelect, type }: TabProps) => {
-	const { errors, handleSubmit, register, setError } = useForm<State>();
+export const SearchTab = ({ onSelect, type }: { onSelect: (record: RecordModel) => void; type: RecordType }) => {
+	const { errors, handleSubmit, register, setError } = useForm<{ name: string }>();
 	const [searchName, setSearchName] = useState<string | undefined>();
 
 	const sanitizeName = (name: string): string => {
 		return name.trim();
 	};
 
-	const onSubmit = handleSubmit(({ name }: State) => {
+	const onSubmit = handleSubmit(({ name }: { name: string }) => {
 		try {
 			name = sanitizeName(name);
 			setSearchName(name);
@@ -203,7 +169,7 @@ export const SearchTab = ({ onSelect, type }: TabProps) => {
 					</Form.Group>
 				</Modal.Body>
 				<Modal.Body style={{ paddingTop: 0 }}>
-					<SearchResults name={searchName} onSelect={onSelect} type={type} />
+					<SearchResults search={searchName} onSelect={onSelect} type={type} />
 				</Modal.Body>
 			</Form>
 		</Tab.Pane>

@@ -1,14 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import {
-	ApolloClient,
-	ApolloLink,
-	ApolloProvider,
-	createHttpLink,
-	InMemoryCache,
-	Operation,
-	split
-} from "@apollo/client";
+import { ApolloClient, ApolloLink, ApolloProvider, createHttpLink, InMemoryCache, Operation, split } from "@apollo/client";
 import { setContext } from "@apollo/client/link/context";
 import { onError } from "@apollo/client/link/error";
 import { WebSocketLink } from "@apollo/client/link/ws";

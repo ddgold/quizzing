@@ -2,7 +2,7 @@ import { Button } from "react-bootstrap";
 import { gql, useMutation } from "@apollo/client";
 
 import { setAccessToken } from "../../auth";
-import { Error, Loading, Page } from "../shared";
+import { Page } from "../shared";
 import { useCurrentUser } from "./currentUser";
 
 const LOGOUT = gql`
@@ -22,18 +22,15 @@ export const User = () => {
 		window.location.pathname = "/";
 	};
 
-	if (currentUser === undefined) {
-		return <Loading />;
-	}
-
-	if (currentUser === null) {
-		return <Error message="Not logged in" />;
-	}
-
 	return (
-		<Page title="User" titleRight={<Button onClick={() => logout()}>Log Out</Button>}>
-			<p className="lead">{`Current user: ${currentUser.nickname}`}</p>
-			<p className="lead">{`Access level: ${currentUser.access === 1 ? "Admin" : "User"}`}</p>
+		<Page title="User" titleRight={currentUser ? <Button onClick={() => logout()}>Log Out</Button> : undefined}>
+			{currentUser ? (
+				<p className="lead">
+					{`Current user: ${currentUser.nickname}`}
+					<br />
+					{`Access level: ${currentUser.access === 1 ? "Admin" : "User"}`}
+				</p>
+			) : undefined}
 		</Page>
 	);
 };

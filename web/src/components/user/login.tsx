@@ -5,8 +5,7 @@ import { useHistory } from "react-router-dom";
 
 import { AuthResult, FieldError } from "../../models/user";
 import { setAccessToken } from "../../auth";
-import { useCurrentUser } from "./currentUser";
-import { Error, Page } from "../shared";
+import { Page } from "../shared";
 
 const LOGIN = gql`
 	mutation Login($email: String!, $password: String!) {
@@ -27,10 +26,6 @@ const LOGIN = gql`
 
 type Fields = "email" | "password";
 
-interface Data {
-	login: AuthResult<Fields>;
-}
-
 interface State {
 	email: string;
 	password: string;
@@ -38,8 +33,7 @@ interface State {
 
 export const Login = () => {
 	const { errors, handleSubmit, register, setError, setValue } = useForm<State>();
-	const [loginMutation, { client }] = useMutation<Data, State>(LOGIN);
-	const currentUser = useCurrentUser();
+	const [loginMutation, { client }] = useMutation<{ login: AuthResult<Fields> }, State>(LOGIN);
 	const history = useHistory();
 
 	const onSubmit = handleSubmit(async (state: State) => {
@@ -47,23 +41,23 @@ export const Login = () => {
 			variables: state
 		});
 
-		if (result.data!.login.errors) {
-			result.data!.login.errors.forEach((error: FieldError<Fields>) => {
+		if (!result.data) {
+			throw new Error("No data");
+		}
+
+		if (result.data.login.errors) {
+			result.data.login.errors.forEach((error: FieldError<Fields>) => {
 				setError(error.field, { type: "manual", message: error.message });
 				setValue("password", "", { shouldValidate: false });
 			});
 		} else {
-			const accessToken = result.data!.login.accessToken;
+			const accessToken = result.data.login.accessToken;
 			setAccessToken(accessToken);
 
-			await client!.resetStore();
+			await client.resetStore();
 			history.push("/");
 		}
 	});
-
-	if (currentUser) {
-		return <Error message={"You are already logged in"} />;
-	}
 
 	return (
 		<Page title="Login">

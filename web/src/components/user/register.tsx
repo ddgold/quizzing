@@ -5,8 +5,7 @@ import { useHistory } from "react-router-dom";
 
 import { AuthResult, FieldError } from "../../models/user";
 import { setAccessToken } from "../../auth";
-import { useCurrentUser } from "./currentUser";
-import { Error, Page } from "../shared";
+import { Page } from "../shared";
 
 const REGISTER = gql`
 	mutation Register($nickname: String!, $email: String!, $password: String!) {
@@ -27,10 +26,6 @@ const REGISTER = gql`
 
 type Fields = "nickname" | "email" | "password" | "confirmPassword";
 
-interface Data {
-	register: AuthResult<Fields>;
-}
-
 interface State {
 	nickname: string;
 	email: string;
@@ -40,26 +35,29 @@ interface State {
 
 export const Register = () => {
 	const { errors, getValues, handleSubmit, register, setError, setValue } = useForm<State>();
-	const [registerMutation, { client }] = useMutation<Data, State>(REGISTER);
+	const [registerMutation, { client }] = useMutation<{ register: AuthResult<Fields> }, State>(REGISTER);
 	const history = useHistory();
-	const currentUser = useCurrentUser();
 
 	const onSubmit = handleSubmit(async (state: State) => {
 		const result = await registerMutation({
 			variables: state
 		});
 
-		if (result.data!.register.errors) {
-			result.data!.register.errors.forEach((error: FieldError<Fields>) => {
+		if (!result.data) {
+			throw new Error("No data");
+		}
+
+		if (result.data.register.errors) {
+			result.data.register.errors.forEach((error: FieldError<Fields>) => {
 				setError(error.field, { type: "manual", message: error.message });
 				setValue("password", "", { shouldValidate: false });
 				setValue("confirmPassword", "", { shouldValidate: false });
 			});
 		} else {
-			const accessToken = result.data!.register.accessToken;
+			const accessToken = result.data.register.accessToken;
 			setAccessToken(accessToken);
 
-			await client!.resetStore();
+			await client.resetStore();
 			history.push("/");
 		}
 	});
@@ -68,10 +66,6 @@ export const Register = () => {
 		const values = getValues(["password", "confirmPassword"]);
 		return values.password === values.confirmPassword;
 	};
-
-	if (currentUser) {
-		return <Error message={"You are already logged in"} />;
-	}
 
 	return (
 		<Page title="Register">

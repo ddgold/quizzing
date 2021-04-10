@@ -37,16 +37,7 @@ const UPDATE_BOARD = gql`
 	}
 `;
 
-interface Props {
-	board: BoardModel;
-	onSubmit: (update: BoardModel) => void;
-}
-
 type Fields = "name" | "description" | "categories";
-
-interface Data {
-	updateBoard: FormResult<BoardModel, Fields>;
-}
 
 interface State {
 	id: string;
@@ -56,7 +47,7 @@ interface State {
 	categoryIds: string[];
 }
 
-export const EditBoard = (props: Props) => {
+export const EditBoard = (props: { board: BoardModel; onSubmit: (update: BoardModel) => void }) => {
 	const { control, errors, handleSubmit, register, setError } = useForm<State>({
 		defaultValues: props.board
 	});
@@ -65,7 +56,7 @@ export const EditBoard = (props: Props) => {
 		name: "categories",
 		keyName: "key" as "id"
 	});
-	const [updateBoardMutation] = useMutation<Data, State>(UPDATE_BOARD);
+	const [updateBoardMutation] = useMutation<{ updateBoard: FormResult<BoardModel, Fields> }, State>(UPDATE_BOARD);
 	const [editingCategory, setEditingCategory] = useState<string | undefined>(undefined);
 	const [selectingCategory, setSelectingCategory] = useState(false);
 
@@ -84,12 +75,16 @@ export const EditBoard = (props: Props) => {
 				variables: variables
 			});
 
-			if (result.data!.updateBoard.errors) {
-				result.data!.updateBoard.errors.forEach((error: FieldError<Fields>) => {
+			if (!result.data) {
+				throw new Error("No data");
+			}
+
+			if (result.data.updateBoard.errors) {
+				result.data.updateBoard.errors.forEach((error: FieldError<Fields>) => {
 					setError(error.field, { type: "manual", message: error.message });
 				});
-			} else {
-				props.onSubmit(result.data!.updateBoard.result!);
+			} else if (result.data.updateBoard.result) {
+				props.onSubmit(result.data.updateBoard.result);
 			}
 		} catch (error) {
 			setError("name", { type: "manual", message: "Error updating board" });

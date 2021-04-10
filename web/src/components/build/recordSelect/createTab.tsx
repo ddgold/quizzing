@@ -28,46 +28,32 @@ const CREATE_RECORD = gql`
 	}
 `;
 
-type Fields = "name";
-
-interface Data {
-	createRecord: FormResult<RecordModel, Fields>;
-}
-
-interface Variables {
-	name: string;
-	type: RecordType;
-}
-
-interface State {
-	name: string;
-}
-
-interface Props {
-	onSelect: (record: RecordModel) => void;
-	type: RecordType;
-}
-
-export const CreateTab = ({ onSelect, type }: Props) => {
-	const { errors, handleSubmit, register, setError } = useForm<State>();
-	const [createMutation] = useMutation<Data, Variables>(CREATE_RECORD);
+export const CreateTab = ({ onSelect, type }: { onSelect: (record: RecordModel) => void; type: RecordType }) => {
+	const { errors, handleSubmit, register, setError } = useForm<{ name: string }>();
+	const [createMutation] = useMutation<{ createRecord: FormResult<RecordModel, "name"> }, { name: string; type: RecordType }>(
+		CREATE_RECORD
+	);
 
 	const sanitizeName = (name: string): string => {
 		return name.trim();
 	};
 
-	const onSubmit = handleSubmit(async ({ name }: State) => {
+	const onSubmit = handleSubmit(async ({ name }: { name: string }) => {
 		try {
 			name = sanitizeName(name);
 
 			const result = await createMutation({ variables: { name: name, type: type } });
 
-			if (result.data!.createRecord.errors) {
-				result.data!.createRecord.errors.forEach((error: FieldError<Fields>) => {
+			if (!result.data) {
+				throw new Error("No data");
+			}
+
+			if (result.data.createRecord.errors) {
+				result.data.createRecord.errors.forEach((error: FieldError<"name">) => {
 					setError(error.field, { type: "manual", message: error.message });
 				});
-			} else {
-				onSelect(result.data!.createRecord.result);
+			} else if (result.data.createRecord.result) {
+				onSelect(result.data.createRecord.result);
 			}
 		} catch (error) {
 			setError("name", {

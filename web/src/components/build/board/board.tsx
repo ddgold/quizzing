@@ -3,7 +3,7 @@ import { Button } from "react-bootstrap";
 import { RouteComponentProps, withRouter } from "react-router-dom";
 import { gql, useQuery } from "@apollo/client";
 
-import { Error, Loading, Page } from "../../shared";
+import { ErrorPage, LoadingPage, Page } from "../../shared";
 import { EditBoard } from "./editBoard";
 import { ViewBoard } from "./viewBoard";
 import { QueryError } from "../../../models/shared";
@@ -35,23 +35,12 @@ const RECORD_BY_ID = gql`
 	}
 `;
 
-interface Data {
-	recordById: QueryError<BoardModel>;
-}
-
-interface Variables {
-	id: string;
-	type: RecordType;
-}
-
-interface Props extends RouteComponentProps {}
-
-const BoardWithoutRouter = (props: Props) => {
+export const Board = withRouter((props: RouteComponentProps) => {
 	const [editing, setEditing] = useState<boolean>(false);
-	const { data, error, loading } = useQuery<Data, Variables>(RECORD_BY_ID, {
+	const { data, error, loading } = useQuery<{ recordById: QueryError<BoardModel> }, { id: string; type: RecordType }>(RECORD_BY_ID, {
 		fetchPolicy: "network-only",
 		variables: {
-			id: (props.match.params as Variables).id,
+			id: (props.match.params as { id: string }).id,
 			type: RecordType.Board
 		}
 	});
@@ -63,7 +52,7 @@ const BoardWithoutRouter = (props: Props) => {
 					Cancel
 				</Button>
 			);
-		} else if (data!.recordById.canEdit) {
+		} else if (data?.recordById.canEdit) {
 			return (
 				<Button variant="primary" onClick={() => setEditing(true)}>
 					Edit
@@ -74,27 +63,19 @@ const BoardWithoutRouter = (props: Props) => {
 		}
 	};
 
-	if (error) {
-		return <Error message={error.message} />;
-	}
-
-	if (loading) {
-		return <Loading />;
-	}
-
-	if (!data?.recordById.result) {
-		return <Error message={"Board not found"} />;
-	}
-
-	return (
-		<Page title={data!.recordById.result.name} titleRight={editButton()}>
+	return loading ? (
+		<LoadingPage />
+	) : error || !data ? (
+		<ErrorPage message={error?.message} />
+	) : !data.recordById.result ? (
+		<ErrorPage message={"Board not found"} />
+	) : (
+		<Page title={data.recordById.result.name} titleRight={editButton()}>
 			{editing ? (
-				<EditBoard board={data!.recordById.result} onSubmit={() => setEditing(false)} />
+				<EditBoard board={data.recordById.result} onSubmit={() => setEditing(false)} />
 			) : (
-				<ViewBoard board={data!.recordById.result} />
+				<ViewBoard board={data.recordById.result} />
 			)}
 		</Page>
 	);
-};
-
-export const Board = withRouter(BoardWithoutRouter);
+});

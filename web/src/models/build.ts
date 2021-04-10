@@ -28,10 +28,7 @@ export enum RecordType {
 	Category = "CATEGORY"
 }
 
-export const getRecordTypeName = (
-	type: RecordType,
-	options?: Partial<{ lowerCase: boolean; plural: boolean }>
-): string => {
+export const getRecordTypeName = (type: RecordType, options?: Partial<{ lowerCase: boolean; plural: boolean }>): string => {
 	let name: string;
 	switch (type) {
 		case RecordType.Board:

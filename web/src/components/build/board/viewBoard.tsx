@@ -2,11 +2,7 @@ import { Table } from "react-bootstrap";
 
 import { BoardModel, CategoryModel } from "../../../models/build";
 
-interface Props {
-	board: BoardModel;
-}
-
-export const ViewBoard = ({ board }: Props) => {
+export const ViewBoard = ({ board }: { board: BoardModel }) => {
 	return (
 		<>
 			<p>{board.description}</p>

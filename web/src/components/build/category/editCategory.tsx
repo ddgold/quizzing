@@ -6,13 +6,7 @@ import { FieldError, FormResult } from "../../../models/shared";
 import { CategoryModel, ClueModel } from "../../../models/build";
 
 const UPDATE_CATEGORY = gql`
-	mutation UpdateCategory(
-		$id: String!
-		$name: String!
-		$description: String!
-		$format: CategoryFormat!
-		$clues: [ClueInput!]!
-	) {
+	mutation UpdateCategory($id: String!, $name: String!, $description: String!, $format: CategoryFormat!, $clues: [ClueInput!]!) {
 		updateCategory(id: $id, name: $name, description: $description, format: $format, clues: $clues) {
 			result {
 				... on Category {
@@ -39,16 +33,7 @@ const UPDATE_CATEGORY = gql`
 	}
 `;
 
-interface Props {
-	category: CategoryModel;
-	onSubmit: (update: CategoryModel) => void;
-}
-
 type Fields = "name" | "description" | "clues";
-
-interface Data {
-	updateCategory: FormResult<CategoryModel, Fields>;
-}
 
 interface State {
 	id: string;
@@ -57,12 +42,12 @@ interface State {
 	clues: ClueModel[];
 }
 
-export const EditCategory = ({ category, onSubmit }: Props) => {
+export const EditCategory = ({ category, onSubmit }: { category: CategoryModel; onSubmit: (update: CategoryModel) => void }) => {
 	const { control, errors, handleSubmit, register, setError } = useForm<CategoryModel>({
 		defaultValues: category
 	});
 	const { fields, append, remove } = useFieldArray<ClueModel>({ control, name: "clues" });
-	const [updateCategoryMutation] = useMutation<Data, State>(UPDATE_CATEGORY);
+	const [updateCategoryMutation] = useMutation<{ updateCategory: FormResult<CategoryModel, Fields> }, State>(UPDATE_CATEGORY);
 
 	const onSubmitInternal = handleSubmit(async (state: CategoryModel) => {
 		try {
@@ -77,12 +62,16 @@ export const EditCategory = ({ category, onSubmit }: Props) => {
 				}
 			});
 
-			if (result.data!.updateCategory.errors) {
-				result.data!.updateCategory.errors.forEach((error: FieldError<Fields>) => {
+			if (!result.data) {
+				throw new Error("No data");
+			}
+
+			if (result.data.updateCategory.errors) {
+				result.data.updateCategory.errors.forEach((error: FieldError<Fields>) => {
 					setError(error.field, { type: "manual", message: error.message });
 				});
-			} else {
-				onSubmit(result.data!.updateCategory.result!);
+			} else if (result.data.updateCategory.result) {
+				onSubmit(result.data.updateCategory.result);
 			}
 		} catch (error) {
 			setError("name", { type: "manual", message: "Error updating category" });
@@ -156,11 +145,11 @@ export const EditCategory = ({ category, onSubmit }: Props) => {
 					let questionError = "";
 					let errorString = "";
 					if (errors.clues && errors.clues[index]) {
-						if (errors.clues![index]!.answer) {
-							answerError = errors.clues![index]!.answer!.message ?? "";
+						if (errors.clues[index]!.answer) {
+							answerError = errors.clues[index]!.answer!.message ?? "";
 						}
-						if (errors.clues![index]!.question) {
-							questionError = errors.clues![index]!.question!.message ?? "";
+						if (errors.clues[index]!.question) {
+							questionError = errors.clues[index]!.question!.message ?? "";
 						}
 
 						if (answerError && questionError) {
