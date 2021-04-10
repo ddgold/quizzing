@@ -1,13 +1,5 @@
 import { AccessLevel } from "../auth";
-import Database, {
-	BoardDocument,
-	BoardModel,
-	CategoryDocument,
-	CategoryModel,
-	ClueModel,
-	UserDocument,
-	UserModel
-} from "../database";
+import Database, { BoardDocument, BoardModel, CategoryDocument, CategoryModel, ClueModel, UserDocument, UserModel } from "../database";
 
 interface RawUser {
 	nickname: string;
@@ -150,8 +142,7 @@ const createDummyCategories = async (): Promise<void> => {
 					question: "What is 10?"
 				},
 				{
-					answer:
-						"In a comeback win over the Falcons, this running back scored the most points in any single Super Bowl.",
+					answer: "In a comeback win over the Falcons, this running back scored the most points in any single Super Bowl.",
 					question: "Who is James White?"
 				},
 				{

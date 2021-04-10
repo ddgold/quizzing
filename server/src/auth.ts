@@ -69,10 +69,7 @@ export const assertWsToken = (connectionParams: ConnectionParams, requiredAccess
 };
 
 export const assertHttpToken = async (context: Context, requiredAccess: AccessLevel): Promise<void> => {
-	context.payload = assertToken(
-		context.req.headers["authorization"] && context.req.headers["authorization"].split(" ")[1],
-		requiredAccess
-	);
+	context.payload = assertToken(context.req.headers["authorization"] && context.req.headers["authorization"].split(" ")[1], requiredAccess);
 };
 
 interface RefreshResult {
@@ -80,10 +77,7 @@ interface RefreshResult {
 	accessToken: string;
 }
 
-export const postRefreshToken = async (
-	req: Request,
-	res: Response<RefreshResult>
-): Promise<Response<RefreshResult>> => {
+export const postRefreshToken = async (req: Request, res: Response<RefreshResult>): Promise<Response<RefreshResult>> => {
 	const refreshToken = req.cookies.qid;
 	if (!refreshToken) {
 		return res.send({ success: false, accessToken: "" });

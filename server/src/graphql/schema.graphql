@@ -133,13 +133,7 @@ type Mutation {
 	# Build
 	createRecord(type: RecordType!, name: String!): FormResult!
 	updateBoard(id: String!, name: String!, description: String!, categoryIds: [String!]!): FormResult!
-	updateCategory(
-		id: String!
-		name: String!
-		description: String!
-		format: CategoryFormat!
-		clues: [ClueInput!]!
-	): FormResult!
+	updateCategory(id: String!, name: String!, description: String!, format: CategoryFormat!, clues: [ClueInput!]!): FormResult!
 
 	# Play
 	hostGame(boardId: String!): String!

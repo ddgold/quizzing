@@ -222,11 +222,7 @@ export const BuildResolvers: IResolvers<any, Context> = {
 				return { errors: [{ message: "Error updating board", field: "name" }] };
 			}
 		},
-		updateCategory: async (
-			_,
-			{ id, name, description, format, clues },
-			context
-		): Promise<FormResult<CategoryDocument>> => {
+		updateCategory: async (_, { id, name, description, format, clues }, context): Promise<FormResult<CategoryDocument>> => {
 			await assertHttpToken(context, AccessLevel.User);
 
 			const canEdit = await (await CategoryModel.findById(id))?.canEdit(context.payload!.userId);

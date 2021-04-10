@@ -151,15 +151,12 @@ export default class Engine {
 	private static async isGameOver(gameId: string): Promise<boolean> {
 		let cursor = "0";
 		do {
-			const [newCursor, result] = await this.client.hscan(
-				Keys.ActiveGame(gameId),
-				cursor,
-				"MATCH",
-				Fields.Clue("*", "*")
-			);
+			const [newCursor, result] = await this.client.hscan(Keys.ActiveGame(gameId), cursor, "MATCH", Fields.Clue("*", "*"));
+
 			if (result.length > 0) {
 				return false;
 			}
+
 			cursor = newCursor;
 		} while (cursor !== "0");
 
@@ -174,13 +171,7 @@ export default class Engine {
 		return players.includes(userId);
 	}
 
-	static async host(
-		boardId: string,
-		userId: string,
-		cols: number = 6,
-		rows: number = 5,
-		players: number = 3
-	): Promise<string> {
+	static async host(boardId: string, userId: string, cols: number = 6, rows: number = 5, players: number = 3): Promise<string> {
 		const gameId = uuid();
 		await this.assertState(gameId, null);
 

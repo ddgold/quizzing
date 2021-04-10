@@ -4,13 +4,7 @@ import fs from "fs";
 // ---------------------
 // Environment Variables
 // ---------------------
-type EnvironmentVariable =
-	| "NODE_ENV"
-	| "FRONTEND_URL"
-	| "DATABASE_URL"
-	| "ENGINE_CACHE_URL"
-	| "GRAPHQL_PORT"
-	| "SECRETS_DIR";
+type EnvironmentVariable = "NODE_ENV" | "FRONTEND_URL" | "DATABASE_URL" | "ENGINE_CACHE_URL" | "GRAPHQL_PORT" | "SECRETS_DIR";
 
 const allEnvironmentVariable: EnvironmentVariable[] = [
 	"NODE_ENV",

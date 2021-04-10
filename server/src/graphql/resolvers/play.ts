@@ -42,11 +42,7 @@ export const PlayResolvers: IResolvers<any, Context> = {
 			await assertHttpToken(context, AccessLevel.User);
 			return Engine.join(gameId, context.payload!.userId);
 		},
-		selectClue: async (
-			_,
-			{ gameId, row, col }: { gameId: string; row: number; col: number },
-			context
-		): Promise<void> => {
+		selectClue: async (_, { gameId, row, col }: { gameId: string; row: number; col: number }, context): Promise<void> => {
 			await assertHttpToken(context, AccessLevel.User);
 
 			if (!(await Engine.canPlayGame(gameId, context.payload!.userId))) {
