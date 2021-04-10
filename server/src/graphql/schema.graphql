@@ -114,7 +114,7 @@ type Query {
 	categories(showAll: Boolean!): [Category!]!
 	recentRecords(type: RecordType!): [ResultObject!]!
 	recordById(type: RecordType!, id: String!): QueryResult!
-	recordSearch(type: RecordType!, name: String!): SearchResult!
+	recordSearch(type: RecordType!, search: String!): SearchResult!
 
 	# Play
 	games(filter: Int!): [Game!]!

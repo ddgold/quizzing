@@ -9,7 +9,7 @@ import { Error, Loading } from "../../shared";
 
 const RECORD_SEARCH = gql`
 	query RecordSearch($type: RecordType!, $search: String!) {
-		recordSearch(type: $type, name: $search) {
+		recordSearch(type: $type, search: $search) {
 			result {
 				... on Board {
 					id

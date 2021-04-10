@@ -103,13 +103,13 @@ export const BuildResolvers: IResolvers<any, Context> = {
 				}
 			}
 		},
-		recordSearch: async (_, { type, name }, context): Promise<SearchResult<RecordDocument>> => {
+		recordSearch: async (_, { type, search }, context): Promise<SearchResult<RecordDocument>> => {
 			await assertHttpToken(context, AccessLevel.User);
 			try {
 				const model = getRecordTypeModel(type);
 				return {
 					result: await model
-						.find({ name: { $regex: new RegExp(name, "i") } })
+						.find({ name: { $regex: new RegExp(search, "i") } })
 						.populate("creator")
 						.exec()
 				};
