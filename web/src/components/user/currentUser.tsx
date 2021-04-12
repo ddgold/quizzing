@@ -7,6 +7,7 @@ import { Children, Header, ErrorPage, LoadingPage } from "../shared";
 const CURRENT_USER = gql`
 	query CurrentUser {
 		currentUser {
+			id
 			nickname
 			access
 		}

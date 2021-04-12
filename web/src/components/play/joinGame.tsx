@@ -73,7 +73,7 @@ export const JoinGame = () => {
 												onClick={() => {
 													onJoinGame(game.id);
 												}}
-												style={{ padding: 0 }}
+												style={{ padding: 0, textAlign: "left" }}
 											>
 												{game.id}
 											</Button>

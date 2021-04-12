@@ -1,16 +1,24 @@
-import { Container } from "react-bootstrap";
+import { Col, Container, Row } from "react-bootstrap";
 import { gql, useMutation } from "@apollo/client";
 import { RouteComponentProps, useHistory, withRouter } from "react-router-dom";
 
-import { ErrorPage, LoadingPage } from "../shared";
+import { Children, ErrorPage, LoadingPage } from "../shared";
 import { usePlayGame } from "./usePlayGame";
-import { GameModel, RowModel } from "../../models/play";
+import { GameModel, PlayerModel, RowModel } from "../../models/play";
+import { useCurrentUser } from "../user";
 
 import "./game.scss";
+import { UserModel } from "src/models/user";
 
 const SELECT_CLUE = gql`
 	mutation SelectClue($gameId: String!, $row: Int!, $col: Int!) {
 		selectClue(gameId: $gameId, row: $row, col: $col)
+	}
+`;
+
+const BUZZ_IN = gql`
+	mutation BuzzIn($gameId: String!) {
+		buzzIn(gameId: $gameId)
 	}
 `;
 
@@ -26,15 +34,47 @@ const CLOSE_CLUE = gql`
 	}
 `;
 
+const Lightbox = ({ onClick, children }: { onClick?: () => void; children: Children }) => {
+	return (
+		<div className="lightbox">
+			<div onClick={onClick}>{children}</div>
+		</div>
+	);
+};
+
+const PlayerCard = ({ active, player }: { active?: boolean; player: PlayerModel | null }) => (
+	<Col className={active ? "player active" : "player"}>
+		{player ? (
+			<div>
+				{player.nickname}
+				<br />
+				{player.score}
+			</div>
+		) : (
+			<div>{"null"}</div>
+		)}
+	</Col>
+);
+
 export const Game = withRouter((props: RouteComponentProps) => {
 	const gameId = (props.match.params as { gameId: string }).gameId;
+	const currentUser = useCurrentUser();
 	const { loading, error, game } = usePlayGame(gameId);
 	const [selectClueMutation] = useMutation<{}, { gameId: string; row?: number; col?: number }>(SELECT_CLUE);
+	const [buzzInMutation] = useMutation<{}, { gameId: string }>(BUZZ_IN);
 	const [answerClueMutation] = useMutation<{}, { gameId: string }>(ANSWER_CLUE);
 	const [closeClueMutation] = useMutation<{}, { gameId: string }>(CLOSE_CLUE);
 	const history = useHistory();
 
+	const isActiveUser = (player: UserModel | PlayerModel | null): boolean => {
+		return player?.id === game?.activePlayer;
+	};
+
 	const selectClue = async (row: number, col: number): Promise<void> => {
+		if (!isActiveUser(currentUser)) {
+			return;
+		}
+
 		try {
 			await selectClueMutation({
 				variables: { gameId: gameId, row: row, col: col }
@@ -44,7 +84,21 @@ export const Game = withRouter((props: RouteComponentProps) => {
 		}
 	};
 
+	const buzzIn = async (): Promise<void> => {
+		try {
+			await buzzInMutation({
+				variables: { gameId: gameId }
+			});
+		} catch (error) {
+			console.error("buzzIn", error);
+		}
+	};
+
 	const answerClue = async (): Promise<void> => {
+		if (!isActiveUser(currentUser)) {
+			return;
+		}
+
 		try {
 			await answerClueMutation({
 				variables: { gameId: gameId }
@@ -55,6 +109,10 @@ export const Game = withRouter((props: RouteComponentProps) => {
 	};
 
 	const closeClue = async (): Promise<void> => {
+		if (!isActiveUser(currentUser)) {
+			return;
+		}
+
 		try {
 			await closeClueMutation({
 				variables: { gameId: gameId }
@@ -75,14 +133,6 @@ export const Game = withRouter((props: RouteComponentProps) => {
 		return true;
 	};
 
-	const lightbox = (text: string, onClick: () => void) => (
-		<div className="lightbox">
-			<div onClick={onClick}>
-				<p>{text}</p>
-			</div>
-		</div>
-	);
-
 	return loading ? (
 		<LoadingPage />
 	) : error ? (
@@ -92,6 +142,7 @@ export const Game = withRouter((props: RouteComponentProps) => {
 	) : (
 		<Container className="board" fluid>
 			<h1>{game.name}</h1>
+
 			<table>
 				<thead>
 					<tr>
@@ -120,15 +171,37 @@ export const Game = withRouter((props: RouteComponentProps) => {
 					))}
 				</tbody>
 			</table>
-			{game.currentText
-				? lightbox(game.currentText, () => {
-						game.state === "ShowingAnswer" ? answerClue() : closeClue();
-				  })
-				: gameDone(game)
-				? lightbox("Game Over!", () => {
-						history.push("/play");
-				  })
-				: null}
+
+			<Row>
+				{game.players.map((player, index) => (
+					<PlayerCard active={isActiveUser(player)} key={index} player={player} />
+				))}
+			</Row>
+
+			{game.state === "AwaitingPlayers" ? (
+				<Lightbox>
+					<h1>Awaiting more players</h1>
+				</Lightbox>
+			) : game.state === "ShowingAnswer" ? (
+				<Lightbox onClick={buzzIn}>
+					<h1>{game.currentText!}</h1>
+					<h2>Click to buzz-in</h2>
+				</Lightbox>
+			) : game.state === "AwaitingResponse" ? (
+				<Lightbox onClick={answerClue}>
+					<h1>{game.currentText!}</h1>
+					<h2>{isActiveUser(currentUser) ? "Waiting for your response" : "Waiting for other player's response"}</h2>
+				</Lightbox>
+			) : game.state === "ShowingQuestion" ? (
+				<Lightbox onClick={closeClue}>
+					<h1>{game.currentText!}</h1>
+					<h2>{isActiveUser(currentUser) ? "Click to close clue" : "Waiting for other player to close clue"}</h2>
+				</Lightbox>
+			) : gameDone(game) ? (
+				<Lightbox onClick={() => history.push("/play")}>
+					<h1>Game Over!</h1>
+				</Lightbox>
+			) : null}
 		</Container>
 	);
 });

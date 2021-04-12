@@ -91,6 +91,12 @@ type Row {
 	value: Int!
 }
 
+type Player {
+	id: String!
+	nickname: String!
+	score: Int!
+}
+
 type Game {
 	id: String!
 	name: String!
@@ -98,6 +104,8 @@ type Game {
 	rows: [Row!]!
 	state: String!
 	currentText: String
+	activePlayer: String
+	players: [Player]!
 	started: Date!
 }
 
@@ -139,6 +147,7 @@ type Mutation {
 	hostGame(boardId: String!): String!
 	joinGame(gameId: String!): Void
 	selectClue(gameId: String!, row: Int!, col: Int!): Void
+	buzzIn(gameId: String!): Void
 	answerClue(gameId: String!): Void
 	closeClue(gameId: String!): Void
 }

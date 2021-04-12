@@ -14,7 +14,11 @@ export namespace Keys {
 
 export namespace Fields {
 	export const ActiveClue = () => {
-		return "clue:active";
+		return "activeClue";
+	};
+
+	export const ActivePlayer = () => {
+		return "activePlayer";
 	};
 
 	export const Category = (col: number) => {
@@ -54,24 +58,36 @@ export namespace Fields {
 	};
 }
 
-export interface ClueModel {
+export interface ClueObject {
 	answer: string;
 	question: string;
+	category: string;
+	value: number;
 }
 
-export interface GameModel {
+export type PlayerArray = (PlayerObject | null)[];
+
+export interface PlayerObject {
+	id: string;
+	nickname: string;
+	score: number;
+}
+
+export interface GameObject {
 	id: string;
 	name: string;
 	categories: string[];
-	rows: RowModel[];
+	rows: RowObject[];
 	state: State;
 	currentText?: string;
+	activePlayer?: string;
+	players: PlayerArray;
 	started: Date;
 }
 
-export interface RowModel {
+export interface RowObject {
 	value: string;
 	cols: boolean[];
 }
 
-export type State = "AwaitingSelection" | "ShowingAnswer" | "ShowingQuestion";
+export type State = "AwaitingPlayers" | "AwaitingSelection" | "ShowingAnswer" | "AwaitingResponse" | "ShowingQuestion";

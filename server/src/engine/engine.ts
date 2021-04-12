@@ -1,11 +1,11 @@
-import { ResolverFn, ValidationError, withFilter } from "apollo-server-express";
+import { ForbiddenError, ResolverFn, ValidationError, withFilter } from "apollo-server-express";
 import { RedisPubSub } from "graphql-redis-subscriptions";
 import Redis, { Redis as RedisClient, RedisOptions } from "ioredis";
 import { v4 as uuid } from "uuid";
 
 import { TokenPayload } from "../auth";
-import { BoardModel, CategoryDocument } from "../database";
-import { ClueModel, Fields, GameModel, State, Keys, RowModel } from "./game";
+import { BoardModel, CategoryDocument, UserModel } from "../database";
+import { ClueObject, Fields, GameObject, State, Keys, RowObject, PlayerArray } from "./game";
 
 export default class Engine {
 	// --------
@@ -76,7 +76,21 @@ export default class Engine {
 		}
 	}
 
-	private static async getModel(gameId: string): Promise<GameModel> {
+	private static async assertUser(gameId: string, userId: string, ignoreActive: boolean = false): Promise<void> {
+		if (!ignoreActive) {
+			const activePlayer = await this.client.hget(Keys.ActiveGame(gameId), Fields.ActivePlayer());
+			if (activePlayer && activePlayer !== userId) {
+				throw new ForbiddenError(`Can't access game with id '${gameId}'`);
+			}
+		}
+
+		const players = await this.getPlayers(gameId);
+		if (!this.playersInclude(players, userId)) {
+			throw new ForbiddenError(`Can't access game with id '${gameId}'`);
+		}
+	}
+
+	private static async getModel(gameId: string): Promise<GameObject> {
 		const hash = await this.client.hgetall(Keys.ActiveGame(gameId));
 
 		if (Object.keys(hash).length === 0) {
@@ -88,9 +102,9 @@ export default class Engine {
 		}) as [number, number];
 
 		let categories = Array<string>(cols).fill("");
-		let models: RowModel[] = [];
+		let models: RowObject[] = [];
 		for (let row = 0; row < rows; row++) {
-			let model: RowModel = { value: hash[Fields.Value(row)]!, cols: [] };
+			let model: RowObject = { value: hash[Fields.Value(row)]!, cols: [] };
 			for (let col = 0; col < cols; col++) {
 				if (hash[Fields.Clue(row, col)] !== undefined) {
 					model.cols.push(false);
@@ -104,48 +118,52 @@ export default class Engine {
 
 		const state = hash[Fields.State()] as State;
 		let currentText: string | undefined;
-		if (state === "ShowingAnswer" || state === "ShowingQuestion") {
-			const clueObject: ClueModel = JSON.parse(hash[Fields.ActiveClue()]!);
-			if (state === "ShowingAnswer") {
-				currentText = clueObject.answer;
-			} else {
+		if (state === "ShowingAnswer" || state === "AwaitingResponse" || state === "ShowingQuestion") {
+			const clueObject: ClueObject = JSON.parse(hash[Fields.ActiveClue()]!);
+			if (state === "ShowingQuestion") {
 				currentText = clueObject.question;
+			} else {
+				currentText = clueObject.answer;
 			}
 		}
 
-		const model: GameModel = {
+		const model: GameObject = {
 			id: gameId,
 			name: hash[Fields.Name()]!,
 			categories: categories,
 			rows: models,
 			state: state,
 			currentText: currentText,
+			activePlayer: hash[Fields.ActivePlayer()],
+			players: JSON.parse(hash[Fields.Players()]!),
 			started: new Date(hash[Fields.Started()]!)
 		};
 
 		return model;
 	}
 
-	private static async publishPlayGame(gameId: string): Promise<[GameModel, string[]]> {
-		const model = await this.getModel(gameId);
-		const [players] = await this.getPlayers(gameId);
-
-		await this.pubsub.publish("PLAY_GAME", {
-			playGame: model,
-			players: players
-		});
-
-		return [model, players];
+	private static async getModels(gameIds: string[]): Promise<GameObject[]> {
+		return Promise.all(
+			gameIds.map(async (gameId) => {
+				await this.assertState(gameId, "Any");
+				return await this.getModel(gameId);
+			})
+		);
 	}
 
-	private static async getPlayers(gameId: string): Promise<[string[], number]> {
+	private static async getPlayers(gameId: string): Promise<PlayerArray> {
 		const value = await this.client.hget(Keys.ActiveGame(gameId), Fields.Players());
 		if (value === null) {
 			throw new ValidationError(`Game with id '${gameId}' does not exist`);
 		}
 
-		const [count, ...players] = value.split("^");
-		return [players, Number.parseInt(count!)];
+		return JSON.parse(value);
+	}
+
+	private static playersInclude(players: PlayerArray, targetId: string): boolean {
+		return players.some((player) => {
+			return player && player.id === targetId;
+		});
 	}
 
 	private static async isGameOver(gameId: string): Promise<boolean> {
@@ -163,14 +181,19 @@ export default class Engine {
 		return true;
 	}
 
+	private static async publishPlayGame(gameId: string): Promise<GameObject> {
+		const model = await this.getModel(gameId);
+
+		await this.pubsub.publish("PLAY_GAME", {
+			playGame: model
+		});
+
+		return model;
+	}
+
 	// --------------
 	// Public Methods
 	// --------------
-	static async canPlayGame(gameId: string, userId: string): Promise<boolean> {
-		const [players] = await this.getPlayers(gameId);
-		return players.includes(userId);
-	}
-
 	static async host(boardId: string, userId: string, cols: number = 6, rows: number = 5, players: number = 3): Promise<string> {
 		const gameId = uuid();
 		await this.assertState(gameId, null);
@@ -184,8 +207,8 @@ export default class Engine {
 		const map = new Map<string, string>();
 		map.set(Fields.Name(), board.name);
 		map.set(Fields.Host(), userId);
-		map.set(Fields.Players(), `${players}`);
-		map.set(Fields.State(), "AwaitingSelection");
+		map.set(Fields.Players(), JSON.stringify(new Array(players).fill(null)));
+		map.set(Fields.State(), "AwaitingPlayers");
 		map.set(Fields.Started(), new Date().toUTCString());
 		map.set(Fields.Size(), `${cols}^${rows}`);
 
@@ -197,7 +220,7 @@ export default class Engine {
 
 			const clues = await category.generateColumn(rows);
 			for (let row = 0; row < clues.length; row++) {
-				map.set(Fields.Clue(row, col), JSON.stringify(clues[row]));
+				map.set(Fields.Clue(row, col), JSON.stringify(clues[row], ["answer", "question"]));
 			}
 		}
 
@@ -214,107 +237,151 @@ export default class Engine {
 	static async join(gameId: string, userId: string): Promise<void> {
 		await this.assertState(gameId, "Any");
 
-		const [players, count] = await this.getPlayers(gameId);
-		if (players.includes(userId)) {
+		const players = await this.getPlayers(gameId);
+		if (this.playersInclude(players, userId)) {
 			throw new ValidationError(`Already joined game with id '${gameId}'`);
 		}
 
-		if (players.length >= count) {
+		const freeSlot = players.indexOf(null);
+		if (freeSlot === -1) {
 			throw new ValidationError(`Game with id '${gameId}' is full`);
 		}
 
-		players.push(userId);
+		const user = await UserModel.findById(userId);
+		if (!user) {
+			throw new ValidationError(`User with id '${userId}' does not exist`);
+		}
+
+		players[freeSlot] = {
+			id: userId,
+			nickname: user.nickname,
+			score: 0
+		};
+
 		let pipe = this.client
 			.multi()
 			.sadd(Keys.UsersGames(userId), gameId)
-			.hset(Keys.ActiveGame(gameId), Fields.Players(), `${count}^${players.join("^")}`);
+			.hset(Keys.ActiveGame(gameId), Fields.Players(), JSON.stringify(players));
 
-		if (players.length >= count) {
-			pipe = pipe.srem(Keys.PublicGames(), gameId);
+		if (players.indexOf(null) === -1) {
+			pipe = pipe
+				.srem(Keys.PublicGames(), gameId)
+				.hset(Keys.ActiveGame(gameId), Fields.State(), "AwaitingSelection")
+				.hset(Keys.ActiveGame(gameId), Fields.ActivePlayer(), userId);
 		}
 
 		await pipe.exec();
+
+		await this.publishPlayGame(gameId);
 	}
 
-	static async selectClue(gameId: string, row: number, col: number): Promise<void> {
+	static async selectClue(gameId: string, userId: string, row: number, col: number): Promise<void> {
 		await this.assertState(gameId, "AwaitingSelection");
+		await this.assertUser(gameId, userId);
 
-		const clueString = await this.client.hget(Keys.ActiveGame(gameId), Fields.Clue(row, col));
+		const hash = await this.client.hmget(Keys.ActiveGame(gameId), Fields.Clue(row, col), Fields.Category(col), Fields.Value(row));
 
-		if (!clueString) {
+		if (!hash[0]) {
 			throw new ValidationError("Clue already selected");
 		}
+
+		const clueObject: ClueObject = JSON.parse(hash[0]);
+		clueObject.category = hash[1]!;
+		clueObject.value = Number.parseInt(hash[2]!);
 
 		await this.client
 			.multi()
 			.hset(Keys.ActiveGame(gameId), Fields.State(), "ShowingAnswer")
-			.hset(Keys.ActiveGame(gameId), Fields.ActiveClue(), clueString)
+			.hset(Keys.ActiveGame(gameId), Fields.ActiveClue(), JSON.stringify(clueObject))
 			.hdel(Keys.ActiveGame(gameId), Fields.Clue(row, col))
+			.hdel(Keys.ActiveGame(gameId), Fields.ActivePlayer())
 			.exec();
 
 		await this.publishPlayGame(gameId);
 	}
 
-	static async answerClue(gameId: string): Promise<void> {
+	static async buzzIn(gameId: string, userId: string): Promise<void> {
 		await this.assertState(gameId, "ShowingAnswer");
+		await this.assertUser(gameId, userId);
+
+		await this.client
+			.multi()
+			.hset(Keys.ActiveGame(gameId), Fields.State(), "AwaitingResponse")
+			.hset(Keys.ActiveGame(gameId), Fields.ActivePlayer(), userId)
+			.exec();
+
+		await this.publishPlayGame(gameId);
+	}
+
+	static async answerClue(gameId: string, userId: string): Promise<void> {
+		await this.assertState(gameId, "AwaitingResponse");
+		await this.assertUser(gameId, userId);
 
 		await this.client.hset(Keys.ActiveGame(gameId), Fields.State(), "ShowingQuestion");
 
 		await this.publishPlayGame(gameId);
 	}
 
-	static async closeClue(gameId: string): Promise<void> {
+	static async closeClue(gameId: string, userId: string): Promise<void> {
 		await this.assertState(gameId, "ShowingQuestion");
+		await this.assertUser(gameId, userId);
+
+		const clueObject: ClueObject = JSON.parse((await this.client.hget(Keys.ActiveGame(gameId), Fields.ActiveClue()))!);
+
+		const players = await this.getPlayers(gameId);
+		players.forEach((player) => {
+			if (player?.id === userId) {
+				player.score += clueObject.value;
+			}
+		});
 
 		await this.client
 			.multi()
 			.hset(Keys.ActiveGame(gameId), Fields.State(), "AwaitingSelection")
+			.hset(Keys.ActiveGame(gameId), Fields.Players(), JSON.stringify(players))
 			.hdel(Keys.ActiveGame(gameId), Fields.ActiveClue())
 			.exec();
 
-		const [, players] = await this.publishPlayGame(gameId);
+		const game = await this.publishPlayGame(gameId);
 
 		if (await this.isGameOver(gameId)) {
 			let pipe = this.client.multi().srem(Keys.PublicGames(), gameId);
-			for (const userId of players!) {
-				pipe = pipe.srem(Keys.UsersGames(userId), gameId);
-			}
+			game.players.forEach((player) => {
+				if (player) {
+					pipe = pipe.srem(Keys.UsersGames(player.id), gameId);
+				}
+			});
 			pipe.del(Keys.ActiveGame(gameId)).exec();
 		}
 	}
 
-	static async loadGameModel(gameId: string): Promise<GameModel> {
+	static async playGame(gameId: string, userId: string): Promise<GameObject> {
 		await this.assertState(gameId, "Any");
+		await this.assertUser(gameId, userId, true);
+
 		return await this.getModel(gameId);
 	}
 
-	static loadGameModels(gameIds: string[]): Promise<GameModel[]> {
-		return Promise.all(
-			gameIds.map((gameId) => {
-				return this.loadGameModel(gameId);
-			})
-		);
-	}
-
-	static async allGames(): Promise<GameModel[]> {
-		return this.loadGameModels(
+	static async allGames(): Promise<GameObject[]> {
+		return this.getModels(
 			(await this.client.keys(Keys.ActiveGame("*"))).map((key) => {
 				return key.split(":")[1]!;
 			})
 		);
 	}
 
-	static async usersGames(userId: string): Promise<GameModel[]> {
-		return this.loadGameModels(await this.client.smembers(Keys.UsersGames(userId)));
+	static async usersGames(userId: string): Promise<GameObject[]> {
+		return this.getModels(await this.client.smembers(Keys.UsersGames(userId)));
 	}
 
-	static async publicGames(userId: string): Promise<GameModel[]> {
+	static async publicGames(userId: string): Promise<GameObject[]> {
 		const publicGames = await this.client.smembers(Keys.PublicGames());
 
 		const results = await Promise.all(
 			publicGames.map(
 				async (gameId): Promise<boolean> => {
-					return !(await this.canPlayGame(gameId, userId));
+					const players = await this.getPlayers(gameId);
+					return !this.playersInclude(players, userId);
 				}
 			)
 		);
@@ -323,22 +390,22 @@ export default class Engine {
 			return results[index];
 		});
 
-		return this.loadGameModels(filteredGames);
+		return this.getModels(filteredGames);
 	}
 
 	static filterPlayGameSubs(): ResolverFn {
 		return withFilter(
 			() => Engine.pubsub.asyncIterator("PLAY_GAME"),
 			async (
-				{ playGame, players }: { playGame: GameModel; players: string[] },
+				{ playGame }: { playGame: GameObject },
 				{ gameId }: { gameId: string },
-				{ connection: { context } }: { connection: { context: TokenPayload } }
+				{ connection }: { connection: { context: TokenPayload } }
 			) => {
 				if (playGame.id !== gameId) {
 					return false;
 				}
 
-				return players.includes(context.userId);
+				return this.playersInclude(playGame.players, connection.context.userId);
 			}
 		);
 	}

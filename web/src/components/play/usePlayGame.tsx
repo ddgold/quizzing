@@ -13,6 +13,12 @@ const QUERY = gql`
 			}
 			state
 			currentText
+			activePlayer
+			players {
+				id
+				nickname
+				score
+			}
 		}
 	}
 `;
@@ -28,6 +34,12 @@ const SUBSCRIPTION = gql`
 			}
 			state
 			currentText
+			activePlayer
+			players {
+				id
+				nickname
+				score
+			}
 		}
 	}
 `;
@@ -35,6 +47,7 @@ const SUBSCRIPTION = gql`
 export const usePlayGame = (gameId: string): { loading: boolean; error?: ApolloError; game?: GameModel } => {
 	const query = useQuery<{ playGame: GameModel }, { gameId: string }>(QUERY, {
 		fetchPolicy: "network-only",
+		nextFetchPolicy: "standby",
 		variables: { gameId: gameId }
 	});
 	const sub = useSubscription<{ playGame: GameModel }, { gameId: string }>(SUBSCRIPTION, {

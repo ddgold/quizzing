@@ -1,13 +1,12 @@
-import { ForbiddenError } from "apollo-server-errors";
 import { IResolvers } from "graphql-tools";
 
 import { AccessLevel, assertHttpToken, Context } from "../../auth";
-import Engine, { GameModel } from "../../engine";
+import Engine, { GameObject } from "../../engine";
 import { GameFilter } from "../types";
 
 export const PlayResolvers: IResolvers<any, Context> = {
 	Query: {
-		games: async (_, { filter }: { filter: GameFilter }, context): Promise<GameModel[]> => {
+		games: async (_, { filter }: { filter: GameFilter }, context): Promise<GameObject[]> => {
 			switch (filter) {
 				case GameFilter.All: {
 					await assertHttpToken(context, AccessLevel.Admin);
@@ -23,14 +22,9 @@ export const PlayResolvers: IResolvers<any, Context> = {
 				}
 			}
 		},
-		playGame: async (_, { gameId }: { gameId: string }, context): Promise<GameModel> => {
+		playGame: async (_, { gameId }: { gameId: string }, context): Promise<GameObject> => {
 			await assertHttpToken(context, AccessLevel.User);
-
-			if (!(await Engine.canPlayGame(gameId, context.payload!.userId))) {
-				throw new ForbiddenError(`Can't access game with id '${gameId}'`);
-			}
-
-			return Engine.loadGameModel(gameId);
+			return Engine.playGame(gameId, context.payload!.userId);
 		}
 	},
 	Mutation: {
@@ -44,30 +38,19 @@ export const PlayResolvers: IResolvers<any, Context> = {
 		},
 		selectClue: async (_, { gameId, row, col }: { gameId: string; row: number; col: number }, context): Promise<void> => {
 			await assertHttpToken(context, AccessLevel.User);
-
-			if (!(await Engine.canPlayGame(gameId, context.payload!.userId))) {
-				throw new ForbiddenError(`Can't access game with id '${gameId}'`);
-			}
-
-			return Engine.selectClue(gameId, row, col);
+			return Engine.selectClue(gameId, context.payload!.userId, row, col);
+		},
+		buzzIn: async (_, { gameId }: { gameId: string }, context): Promise<void> => {
+			await assertHttpToken(context, AccessLevel.User);
+			return Engine.buzzIn(gameId, context.payload!.userId);
 		},
 		answerClue: async (_, { gameId }: { gameId: string }, context): Promise<void> => {
 			await assertHttpToken(context, AccessLevel.User);
-
-			if (!(await Engine.canPlayGame(gameId, context.payload!.userId))) {
-				throw new ForbiddenError(`Can't access game with id '${gameId}'`);
-			}
-
-			return Engine.answerClue(gameId);
+			return Engine.answerClue(gameId, context.payload!.userId);
 		},
 		closeClue: async (_, { gameId }: { gameId: string }, context): Promise<void> => {
 			await assertHttpToken(context, AccessLevel.User);
-
-			if (!(await Engine.canPlayGame(gameId, context.payload!.userId))) {
-				throw new ForbiddenError(`Can't access game with id '${gameId}'`);
-			}
-
-			return Engine.closeClue(gameId);
+			return Engine.closeClue(gameId, context.payload!.userId);
 		}
 	},
 	Subscription: {

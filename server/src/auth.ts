@@ -86,7 +86,7 @@ export const postRefreshToken = async (req: Request, res: Response<RefreshResult
 	try {
 		const payload = verify(refreshToken, getDockerSecret("refresh_token")) as TokenPayload;
 
-		const user = await UserModel.findOne({ _id: payload.userId });
+		const user = await UserModel.findById(payload.userId);
 		if (!user) {
 			return res.send({ success: false, accessToken: "" });
 		}
