@@ -2,8 +2,8 @@ import { Button, Col, Form, FormCheck, InputGroup, Row } from "react-bootstrap";
 import { useForm, useFieldArray } from "react-hook-form";
 import { gql, useMutation } from "@apollo/client";
 
-import { FieldError, FormResult } from "../../../models/shared";
-import { CategoryModel, ClueModel } from "../../../models/build";
+import { FieldError, FormResult } from "../../../objects/shared";
+import { CategoryObject, ClueObject } from "../../../objects/build";
 
 const UPDATE_CATEGORY = gql`
 	mutation UpdateCategory($id: String!, $name: String!, $description: String!, $format: CategoryFormat!, $clues: [ClueInput!]!) {
@@ -39,17 +39,17 @@ interface State {
 	id: string;
 	name: string;
 	description: string;
-	clues: ClueModel[];
+	clues: ClueObject[];
 }
 
-export const EditCategory = ({ category, onSubmit }: { category: CategoryModel; onSubmit: (update: CategoryModel) => void }) => {
-	const { control, errors, handleSubmit, register, setError } = useForm<CategoryModel>({
+export const EditCategory = ({ category, onSubmit }: { category: CategoryObject; onSubmit: (update: CategoryObject) => void }) => {
+	const { control, errors, handleSubmit, register, setError } = useForm<CategoryObject>({
 		defaultValues: category
 	});
-	const { fields, append, remove } = useFieldArray<ClueModel>({ control, name: "clues" });
-	const [updateCategoryMutation] = useMutation<{ updateCategory: FormResult<CategoryModel, Fields> }, State>(UPDATE_CATEGORY);
+	const { fields, append, remove } = useFieldArray<ClueObject>({ control, name: "clues" });
+	const [updateCategoryMutation] = useMutation<{ updateCategory: FormResult<CategoryObject, Fields> }, State>(UPDATE_CATEGORY);
 
-	const onSubmitInternal = handleSubmit(async (state: CategoryModel) => {
+	const onSubmitInternal = handleSubmit(async (state: CategoryObject) => {
 		try {
 			if (!state.clues) {
 				state.clues = [];

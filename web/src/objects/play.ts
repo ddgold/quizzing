@@ -1,24 +1,24 @@
-export type PlayerModels = (PlayerModel | null)[];
+export type PlayerArray = (PlayerObject | null)[];
 
-export interface PlayerModel {
+export interface PlayerObject {
 	id: string;
 	nickname: string;
 	score: number;
 }
 
-export interface GameModel {
+export interface GameObject {
 	id: string;
 	name: string;
 	categories: string[];
-	rows: RowModel[];
+	rows: RowObject[];
 	state: State;
 	currentText?: string;
 	activePlayer?: string;
-	players: (PlayerModel | null)[];
+	players: PlayerArray;
 	started: Date;
 }
 
-export interface RowModel {
+export interface RowObject {
 	value: string;
 	cols: boolean[];
 }

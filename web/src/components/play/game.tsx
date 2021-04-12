@@ -4,11 +4,11 @@ import { RouteComponentProps, useHistory, withRouter } from "react-router-dom";
 
 import { Children, ErrorPage, LoadingPage } from "../shared";
 import { usePlayGame } from "./usePlayGame";
-import { GameModel, PlayerModel, RowModel } from "../../models/play";
+import { GameObject, PlayerObject, RowObject } from "../../objects/play";
 import { useCurrentUser } from "../user";
 
 import "./game.scss";
-import { UserModel } from "src/models/user";
+import { UserObject } from "src/objects/user";
 
 const SELECT_CLUE = gql`
 	mutation SelectClue($gameId: String!, $row: Int!, $col: Int!) {
@@ -42,7 +42,7 @@ const Lightbox = ({ onClick, children }: { onClick?: () => void; children: Child
 	);
 };
 
-const PlayerCard = ({ active, player }: { active?: boolean; player: PlayerModel | null }) => (
+const PlayerCard = ({ active, player }: { active?: boolean; player: PlayerObject | null }) => (
 	<Col className={active ? "player active" : "player"}>
 		{player ? (
 			<div>
@@ -66,7 +66,7 @@ export const Game = withRouter((props: RouteComponentProps) => {
 	const [closeClueMutation] = useMutation<{}, { gameId: string }>(CLOSE_CLUE);
 	const history = useHistory();
 
-	const isActiveUser = (player: UserModel | PlayerModel | null): boolean => {
+	const isActiveUser = (player: UserObject | PlayerObject | null): boolean => {
 		return player?.id === game?.activePlayer;
 	};
 
@@ -122,7 +122,7 @@ export const Game = withRouter((props: RouteComponentProps) => {
 		}
 	};
 
-	const gameDone = (game: GameModel): boolean => {
+	const gameDone = (game: GameObject): boolean => {
 		for (const row of game.rows) {
 			for (const selected of row.cols) {
 				if (!selected) {
@@ -154,7 +154,7 @@ export const Game = withRouter((props: RouteComponentProps) => {
 					</tr>
 				</thead>
 				<tbody>
-					{game.rows.map((row: RowModel, rowIndex: number) => (
+					{game.rows.map((row: RowObject, rowIndex: number) => (
 						<tr key={rowIndex}>
 							{row.cols.map((selected: boolean, colIndex: number) => {
 								if (!selected) {

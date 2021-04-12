@@ -1,8 +1,8 @@
 import { Table } from "react-bootstrap";
 
-import { BoardModel, CategoryModel } from "../../../models/build";
+import { BoardObject, CategoryObject } from "../../../objects/build";
 
-export const ViewBoard = ({ board }: { board: BoardModel }) => {
+export const ViewBoard = ({ board }: { board: BoardObject }) => {
 	return (
 		<>
 			<p>{board.description}</p>
@@ -14,7 +14,7 @@ export const ViewBoard = ({ board }: { board: BoardModel }) => {
 						</tr>
 					</thead>
 					<tbody>
-						{board.categories.map((category: CategoryModel, index: number) => {
+						{board.categories.map((category: CategoryObject, index: number) => {
 							return (
 								<tr key={index}>
 									<td>

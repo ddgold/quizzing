@@ -2,12 +2,12 @@ import { Modal, Nav, Tab } from "react-bootstrap";
 
 import { CreateTab } from "./createTab";
 import { SearchTab } from "./searchTab";
-import { RecordModel, RecordType } from "../../../models/build";
+import { RecordObject, RecordType } from "../../../objects/build";
 
 interface Props {
 	type: RecordType;
 	show: boolean;
-	onSelect: (record?: RecordModel) => void;
+	onSelect: (record?: RecordObject) => void;
 	createOnly?: boolean;
 	searchOnly?: boolean;
 }

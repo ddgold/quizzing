@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Button } from "react-bootstrap";
 import { useHistory } from "react-router-dom";
 
-import { BoardModel, RecordModel, RecordType } from "../../models/build";
+import { BoardObject, RecordObject, RecordType } from "../../objects/build";
 import { RecordSelectModal } from "../build/recordSelect";
 import { Alert, Page } from "../shared";
 
@@ -19,11 +19,11 @@ export const HostGame = () => {
 	const [hostMutation] = useMutation<{ hostGame: string }, { boardId: string }>(HOST_GAME);
 	const history = useHistory();
 
-	const onSelect = async (record?: RecordModel) => {
+	const onSelect = async (record?: RecordObject) => {
 		setCreatingGame(false);
 		if (record) {
 			try {
-				const board = record as BoardModel;
+				const board = record as BoardObject;
 				const result = await hostMutation({ variables: { boardId: board.id } });
 				history.push(`/play/${result.data?.hostGame}`);
 			} catch (error) {

@@ -3,8 +3,8 @@ import { Button, Col, Form, InputGroup, Row } from "react-bootstrap";
 import { useForm, useFieldArray } from "react-hook-form";
 import { gql, useMutation } from "@apollo/client";
 
-import { FieldError, FormResult } from "../../../models/shared";
-import { BoardModel, CategoryModel, RecordModel, RecordType } from "../../../models/build";
+import { FieldError, FormResult } from "../../../objects/shared";
+import { BoardObject, CategoryObject, RecordObject, RecordType } from "../../../objects/build";
 import { RecordSelectModal } from "../recordSelect";
 import { EditCategoryControl } from "../category";
 
@@ -43,20 +43,20 @@ interface State {
 	id: string;
 	name: string;
 	description: string;
-	categories: CategoryModel[];
+	categories: CategoryObject[];
 	categoryIds: string[];
 }
 
-export const EditBoard = (props: { board: BoardModel; onSubmit: (update: BoardModel) => void }) => {
+export const EditBoard = (props: { board: BoardObject; onSubmit: (update: BoardObject) => void }) => {
 	const { control, errors, handleSubmit, register, setError } = useForm<State>({
 		defaultValues: props.board
 	});
-	const { append, fields, remove } = useFieldArray<CategoryModel>({
+	const { append, fields, remove } = useFieldArray<CategoryObject>({
 		control,
 		name: "categories",
 		keyName: "key" as "id"
 	});
-	const [updateBoardMutation] = useMutation<{ updateBoard: FormResult<BoardModel, Fields> }, State>(UPDATE_BOARD);
+	const [updateBoardMutation] = useMutation<{ updateBoard: FormResult<BoardObject, Fields> }, State>(UPDATE_BOARD);
 	const [editingCategory, setEditingCategory] = useState<string | undefined>(undefined);
 	const [selectingCategory, setSelectingCategory] = useState(false);
 
@@ -91,10 +91,10 @@ export const EditBoard = (props: { board: BoardModel; onSubmit: (update: BoardMo
 		}
 	});
 
-	const onSelect = (record?: RecordModel) => {
+	const onSelect = (record?: RecordObject) => {
 		setSelectingCategory(false);
 		if (record) {
-			append(record as CategoryModel);
+			append(record as CategoryObject);
 		}
 	};
 

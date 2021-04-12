@@ -5,7 +5,7 @@ import { gql, useQuery } from "@apollo/client";
 
 import { ErrorPage, LoadingPage, Page } from "../../shared";
 import { RecordSelectModal } from "../recordSelect";
-import { CategoryModel, RecordModel, RecordType } from "../../../models/build";
+import { CategoryObject, RecordObject, RecordType } from "../../../objects/build";
 
 const CATEGORIES = gql`
 	query Categories($showAll: Boolean!) {
@@ -23,15 +23,15 @@ const CATEGORIES = gql`
 export const CategoryList = ({ showAll }: { showAll: boolean }) => {
 	const [selectingCategory, setSelectingCategory] = useState(false);
 	const history = useHistory();
-	const { data, error, loading } = useQuery<{ categories: CategoryModel[] }, { showAll: boolean }>(CATEGORIES, {
+	const { data, error, loading } = useQuery<{ categories: CategoryObject[] }, { showAll: boolean }>(CATEGORIES, {
 		fetchPolicy: "network-only",
 		variables: { showAll }
 	});
 
-	const onSelect = (record?: RecordModel) => {
+	const onSelect = (record?: RecordObject) => {
 		setSelectingCategory(false);
 		if (record) {
-			const category = record as CategoryModel;
+			const category = record as CategoryObject;
 			history.push(`/build/categories/${category.id}`);
 		}
 	};
@@ -59,7 +59,7 @@ export const CategoryList = ({ showAll }: { showAll: boolean }) => {
 					</tr>
 				</thead>
 				<tbody>
-					{data.categories.map((category: CategoryModel, index: number) => {
+					{data.categories.map((category: CategoryObject, index: number) => {
 						const created = new Date(category.created);
 						return (
 							<tr key={index}>

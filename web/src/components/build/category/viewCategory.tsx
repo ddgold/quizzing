@@ -1,8 +1,8 @@
 import { Table } from "react-bootstrap";
 
-import { CategoryModel, ClueModel } from "../../../models/build";
+import { CategoryObject, ClueObject } from "../../../objects/build";
 
-export const ViewCategory = ({ category }: { category: CategoryModel }) => {
+export const ViewCategory = ({ category }: { category: CategoryObject }) => {
 	return (
 		<>
 			<p>{category.description}</p>
@@ -16,7 +16,7 @@ export const ViewCategory = ({ category }: { category: CategoryModel }) => {
 						</tr>
 					</thead>
 					<tbody>
-						{category.clues.map((clue: ClueModel, index: number) => {
+						{category.clues.map((clue: ClueObject, index: number) => {
 							return (
 								<tr key={index}>
 									<td>{clue.answer}</td>

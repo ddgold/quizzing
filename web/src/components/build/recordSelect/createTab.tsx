@@ -2,8 +2,8 @@ import { Button, Col, Form, Modal, Row, Tab } from "react-bootstrap";
 import { useForm } from "react-hook-form";
 import { gql, useMutation } from "@apollo/client";
 
-import { FieldError, FormResult } from "../../../models/shared";
-import { getRecordTypeName, RecordModel, RecordType } from "../../../models/build";
+import { FieldError, FormResult } from "../../../objects/shared";
+import { getRecordTypeName, RecordObject, RecordType } from "../../../objects/build";
 
 const CREATE_RECORD = gql`
 	mutation CreateRecord($type: RecordType!, $name: String!) {
@@ -28,9 +28,9 @@ const CREATE_RECORD = gql`
 	}
 `;
 
-export const CreateTab = ({ onSelect, type }: { onSelect: (record: RecordModel) => void; type: RecordType }) => {
+export const CreateTab = ({ onSelect, type }: { onSelect: (record: RecordObject) => void; type: RecordType }) => {
 	const { errors, handleSubmit, register, setError } = useForm<{ name: string }>();
-	const [createMutation] = useMutation<{ createRecord: FormResult<RecordModel, "name"> }, { name: string; type: RecordType }>(
+	const [createMutation] = useMutation<{ createRecord: FormResult<RecordObject, "name"> }, { name: string; type: RecordType }>(
 		CREATE_RECORD
 	);
 

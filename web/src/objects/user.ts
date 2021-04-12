@@ -1,6 +1,6 @@
 import { AccessLevel } from "../auth";
 
-export interface UserModel {
+export interface UserObject {
 	id: string;
 	nickname: string;
 	email: string;
@@ -14,6 +14,6 @@ export interface FieldError<Fields> {
 
 export interface AuthResult<Fields> {
 	accessToken: string;
-	user: UserModel;
+	user: UserObject;
 	errors: FieldError<Fields>[];
 }

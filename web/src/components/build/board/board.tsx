@@ -6,8 +6,8 @@ import { gql, useQuery } from "@apollo/client";
 import { ErrorPage, LoadingPage, Page } from "../../shared";
 import { EditBoard } from "./editBoard";
 import { ViewBoard } from "./viewBoard";
-import { QueryError } from "../../../models/shared";
-import { BoardModel, RecordType } from "../../../models/build";
+import { QueryError } from "../../../objects/shared";
+import { BoardObject, RecordType } from "../../../objects/build";
 
 const RECORD_BY_ID = gql`
 	query RecordById($type: RecordType!, $id: String!) {
@@ -37,7 +37,7 @@ const RECORD_BY_ID = gql`
 
 export const Board = withRouter((props: RouteComponentProps) => {
 	const [editing, setEditing] = useState<boolean>(false);
-	const { data, error, loading } = useQuery<{ recordById: QueryError<BoardModel> }, { id: string; type: RecordType }>(RECORD_BY_ID, {
+	const { data, error, loading } = useQuery<{ recordById: QueryError<BoardObject> }, { id: string; type: RecordType }>(RECORD_BY_ID, {
 		fetchPolicy: "network-only",
 		variables: {
 			id: (props.match.params as { id: string }).id,

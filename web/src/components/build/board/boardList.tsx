@@ -5,7 +5,7 @@ import { gql, useQuery } from "@apollo/client";
 
 import { ErrorPage, LoadingPage, Page } from "../../shared";
 import { RecordSelectModal } from "../recordSelect";
-import { BoardModel, RecordModel, RecordType } from "../../../models/build";
+import { BoardObject, RecordObject, RecordType } from "../../../objects/build";
 
 const BOARDS = gql`
 	query Boards($showAll: Boolean!) {
@@ -23,15 +23,15 @@ const BOARDS = gql`
 export const BoardList = ({ showAll }: { showAll: boolean }) => {
 	const [selectingBoard, setSelectingBoard] = useState(false);
 	const history = useHistory();
-	const { data, error, loading } = useQuery<{ boards: BoardModel[] }, { showAll: boolean }>(BOARDS, {
+	const { data, error, loading } = useQuery<{ boards: BoardObject[] }, { showAll: boolean }>(BOARDS, {
 		fetchPolicy: "network-only",
 		variables: { showAll }
 	});
 
-	const onSelect = (record?: RecordModel) => {
+	const onSelect = (record?: RecordObject) => {
 		setSelectingBoard(false);
 		if (record) {
-			const board = record as BoardModel;
+			const board = record as BoardObject;
 			history.push(`/build/boards/${board.id}`);
 		}
 	};
@@ -59,7 +59,7 @@ export const BoardList = ({ showAll }: { showAll: boolean }) => {
 					</tr>
 				</thead>
 				<tbody>
-					{data.boards.map((board: BoardModel, index: number) => {
+					{data.boards.map((board: BoardObject, index: number) => {
 						const created = new Date(board.created);
 						return (
 							<tr key={index}>

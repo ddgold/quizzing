@@ -3,8 +3,8 @@ import { Button, Col, Form, Modal, Row, Tab, Table } from "react-bootstrap";
 import { useForm } from "react-hook-form";
 import { gql, useQuery } from "@apollo/client";
 
-import { SearchResult } from "../../../models/shared";
-import { getRecordTypeName, RecordModel, RecordType } from "../../../models/build";
+import { SearchResult } from "../../../objects/shared";
+import { getRecordTypeName, RecordObject, RecordType } from "../../../objects/build";
 import { Error, Loading } from "../../shared";
 
 const RECORD_SEARCH = gql`
@@ -59,9 +59,9 @@ const RECENT_RECORDS = gql`
 	}
 `;
 
-const SearchResults = ({ search, onSelect, type }: { search?: string; onSelect: (record: RecordModel) => void; type: RecordType }) => {
+const SearchResults = ({ search, onSelect, type }: { search?: string; onSelect: (record: RecordObject) => void; type: RecordType }) => {
 	const { data, error, loading } = useQuery<
-		{ recordSearch: SearchResult<RecordModel>; recentRecords: RecordModel[] },
+		{ recordSearch: SearchResult<RecordObject>; recentRecords: RecordObject[] },
 		{ search?: string; type: RecordType }
 	>(search ? RECORD_SEARCH : RECENT_RECORDS, {
 		fetchPolicy: "network-only",
@@ -89,7 +89,7 @@ const SearchResults = ({ search, onSelect, type }: { search?: string; onSelect: 
 						</tr>
 					</thead>
 					<tbody>
-						{result.map((record: RecordModel, index: number) => {
+						{result.map((record: RecordObject, index: number) => {
 							const created = new Date(record.created);
 							return (
 								<tr key={index}>
@@ -113,7 +113,7 @@ const SearchResults = ({ search, onSelect, type }: { search?: string; onSelect: 
 	);
 };
 
-export const SearchTab = ({ onSelect, type }: { onSelect: (record: RecordModel) => void; type: RecordType }) => {
+export const SearchTab = ({ onSelect, type }: { onSelect: (record: RecordObject) => void; type: RecordType }) => {
 	const { errors, handleSubmit, register, setError } = useForm<{ name: string }>();
 	const [searchName, setSearchName] = useState<string | undefined>();
 

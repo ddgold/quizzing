@@ -1,6 +1,6 @@
 import { ApolloError, gql, useQuery, useSubscription } from "@apollo/client";
 
-import { GameModel } from "../../models/play";
+import { GameObject } from "../../objects/play";
 
 const QUERY = gql`
 	query PlayGame($gameId: String!) {
@@ -44,13 +44,13 @@ const SUBSCRIPTION = gql`
 	}
 `;
 
-export const usePlayGame = (gameId: string): { loading: boolean; error?: ApolloError; game?: GameModel } => {
-	const query = useQuery<{ playGame: GameModel }, { gameId: string }>(QUERY, {
+export const usePlayGame = (gameId: string): { loading: boolean; error?: ApolloError; game?: GameObject } => {
+	const query = useQuery<{ playGame: GameObject }, { gameId: string }>(QUERY, {
 		fetchPolicy: "network-only",
 		nextFetchPolicy: "standby",
 		variables: { gameId: gameId }
 	});
-	const sub = useSubscription<{ playGame: GameModel }, { gameId: string }>(SUBSCRIPTION, {
+	const sub = useSubscription<{ playGame: GameObject }, { gameId: string }>(SUBSCRIPTION, {
 		variables: { gameId: gameId }
 	});
 

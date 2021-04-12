@@ -1,7 +1,7 @@
 import { gql, useQuery } from "@apollo/client";
 import { createContext, useContext } from "react";
 
-import { UserModel } from "../../models/user";
+import { UserObject } from "../../objects/user";
 import { Children, Header, ErrorPage, LoadingPage } from "../shared";
 
 const CURRENT_USER = gql`
@@ -14,10 +14,10 @@ const CURRENT_USER = gql`
 	}
 `;
 
-const CurrentUserContext = createContext<UserModel | null>(null);
+const CurrentUserContext = createContext<UserObject | null>(null);
 
 export const CurrentUserProvider = ({ children }: { children?: Children }) => {
-	const { data, error, loading } = useQuery<{ currentUser: UserModel | null }, {}>(CURRENT_USER, {
+	const { data, error, loading } = useQuery<{ currentUser: UserObject | null }, {}>(CURRENT_USER, {
 		fetchPolicy: "network-only"
 	});
 
@@ -36,6 +36,6 @@ export const CurrentUserProvider = ({ children }: { children?: Children }) => {
 	);
 };
 
-export const useCurrentUser = (): UserModel | null => {
+export const useCurrentUser = (): UserObject | null => {
 	return useContext(CurrentUserContext);
 };

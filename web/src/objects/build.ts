@@ -1,24 +1,24 @@
-import { UserModel } from "./user";
+import { UserObject } from "./user";
 
-export interface BoardModel extends RecordModel {
-	categories: CategoryModel[];
+export interface BoardObject extends RecordObject {
+	categories: CategoryObject[];
 }
 
-export interface CategoryModel extends RecordModel {
+export interface CategoryObject extends RecordObject {
 	format: CategoryFormat;
-	clues: ClueModel[];
+	clues: ClueObject[];
 }
 
-export interface ClueModel {
+export interface ClueObject {
 	question: string;
 	answer: string;
 }
 
-export interface RecordModel {
+export interface RecordObject {
 	id: string;
 	name: string;
 	description: string;
-	creator: UserModel;
+	creator: UserObject;
 	created: Date;
 	updated: Date;
 }

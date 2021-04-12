@@ -4,7 +4,7 @@ import { Button, Table } from "react-bootstrap";
 import { useHistory } from "react-router-dom";
 
 import { Alert, Error, Loading } from "../shared";
-import { GameFilter, GameModel } from "../../models/play";
+import { GameFilter, GameObject } from "../../objects/play";
 import { Page } from "../shared";
 
 const GAMES = gql`
@@ -25,7 +25,7 @@ const JOIN_GAME = gql`
 
 export const JoinGame = () => {
 	const [joinGameError, setJoinGameError] = useState<string | undefined>(undefined);
-	const { data, error, loading } = useQuery<{ games: GameModel[] }, { filter: GameFilter }>(GAMES, {
+	const { data, error, loading } = useQuery<{ games: GameObject[] }, { filter: GameFilter }>(GAMES, {
 		fetchPolicy: "network-only",
 		variables: {
 			filter: GameFilter.Public
@@ -63,7 +63,7 @@ export const JoinGame = () => {
 							</tr>
 						</thead>
 						<tbody>
-							{data.games.map((game: GameModel, index: number) => {
+							{data.games.map((game: GameObject, index: number) => {
 								const started = new Date(game.started);
 								return (
 									<tr key={index}>

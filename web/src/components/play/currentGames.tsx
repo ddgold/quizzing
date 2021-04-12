@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 
 import { AccessLevel } from "../../auth";
 import { Error, Loading, Page } from "../shared";
-import { GameFilter, GameModel } from "../../models/play";
+import { GameFilter, GameObject } from "../../objects/play";
 import { useCurrentUser } from "../user";
 
 const GAMES = gql`
@@ -20,7 +20,7 @@ const GAMES = gql`
 export const CurrentGames = () => {
 	const currentUser = useCurrentUser();
 	const [showAllGames, setShowAllGames] = useState(false);
-	const { data, error, loading } = useQuery<{ games: GameModel[] }, { filter: GameFilter }>(GAMES, {
+	const { data, error, loading } = useQuery<{ games: GameObject[] }, { filter: GameFilter }>(GAMES, {
 		fetchPolicy: "network-only",
 		variables: {
 			filter: showAllGames ? GameFilter.All : GameFilter.User
@@ -59,7 +59,7 @@ export const CurrentGames = () => {
 						</tr>
 					</thead>
 					<tbody>
-						{data.games.map((game: GameModel, index: number) => {
+						{data.games.map((game: GameObject, index: number) => {
 							const started = new Date(game.started);
 							return (
 								<tr key={index}>
