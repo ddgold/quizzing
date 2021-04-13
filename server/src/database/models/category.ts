@@ -1,6 +1,7 @@
 import { ValidationError } from "apollo-server-errors";
-import { Document, model, Schema } from "mongoose";
+import { model, Schema } from "mongoose";
 
+import { CategoryFormat, CategoryObject } from "../../objects/build";
 import { ClueDocument } from "./clue";
 import { UserDocument } from "./user";
 import { RecordDocument, RecordModel } from "./record";
@@ -15,13 +16,7 @@ interface Category {
 	updated: Date;
 }
 
-export enum CategoryFormat {
-	Fixed = "FIXED",
-	Random = "RANDOM",
-	Sorted = "SORTED"
-}
-
-const CategorySchema = new Schema({
+const CategorySchema = new Schema<CategoryDocument, CategoryModel>({
 	name: {
 		type: Schema.Types.String,
 		required: true,
@@ -75,34 +70,36 @@ export interface CategoryDocument extends Category, RecordDocument {
 	generateColumn: (this: RecordDocument, rows: number) => Promise<ClueDocument[]>;
 }
 
-CategorySchema.methods.canEdit = async function (this: Document, userId: string): Promise<boolean> {
-	const category = this as CategoryDocument;
-	if (typeof category.creator === "string") {
-		return userId === category.creator;
+CategorySchema.methods.canEdit = async function (this: CategoryDocument, userId: string): Promise<boolean> {
+	if (typeof this.creator === "string") {
+		return userId === this.creator;
 	} else {
-		return userId === category.creator._id.toString();
+		return userId === this.creator._id.toString();
 	}
 };
 
-CategorySchema.methods.generateColumn = async function (this: Document, rows: number): Promise<ClueDocument[]> {
-	const category = this as CategoryDocument;
-	switch (category.format) {
+CategorySchema.methods.object = function (this: CategoryDocument): CategoryObject {
+	return this as CategoryObject;
+};
+
+CategorySchema.methods.generateColumn = async function (this: CategoryDocument, rows: number): Promise<ClueDocument[]> {
+	switch (this.format) {
 		case CategoryFormat.Fixed: {
-			if (category.clues.length !== rows) {
-				throw new ValidationError(`Fixed category '${category.name}' does not have exactly ${rows} clues`);
+			if (this.clues.length !== rows) {
+				throw new ValidationError(`Fixed category '${this.name}' does not have exactly ${rows} clues`);
 			}
 
-			return category.clues as ClueDocument[];
+			return this.clues as ClueDocument[];
 		}
 		case CategoryFormat.Random: {
-			if (category.clues.length! < rows) {
-				throw new ValidationError(`Random category '${category.name}' does not have at least ${rows} clues`);
+			if (this.clues.length! < rows) {
+				throw new ValidationError(`Random category '${this.name}' does not have at least ${rows} clues`);
 			}
 
 			const clues: ClueDocument[] = [];
 			for (let row = 0; row < rows; row++) {
-				const randomIndex = Math.floor(Math.random() * category.clues.length);
-				clues.push(category.clues.splice(randomIndex, 1)[0] as ClueDocument);
+				const randomIndex = Math.floor(Math.random() * this.clues.length);
+				clues.push(this.clues.splice(randomIndex, 1)[0] as ClueDocument);
 			}
 
 			return clues;
@@ -117,7 +114,7 @@ CategorySchema.methods.generateColumn = async function (this: Document, rows: nu
 
 interface CategoryModel extends RecordModel<CategoryDocument> {}
 
-const categoryById = async (id: string) => {
+CategorySchema.statics.record = async (id: string) => {
 	const category = await CategoryModel.findById(id).populate("clues").populate("creator").exec();
 	if (category === null) {
 		throw new ValidationError(`Category with id '${id} does not exist`);
@@ -125,14 +122,12 @@ const categoryById = async (id: string) => {
 	return category;
 };
 
-CategorySchema.statics.record = categoryById;
-
 CategorySchema.statics.records = async (ids: string[]): Promise<CategoryDocument[]> => {
 	return Promise.all(
 		ids.map((id: string) => {
-			return categoryById(id);
+			return (CategorySchema.statics.record as (id: string) => Promise<CategoryDocument>)(id);
 		})
 	);
 };
 
-export const CategoryModel = model<CategoryDocument>("category", CategorySchema) as CategoryModel;
+export const CategoryModel = model("category", CategorySchema) as CategoryModel;

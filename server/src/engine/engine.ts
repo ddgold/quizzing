@@ -5,7 +5,8 @@ import { v4 as uuid } from "uuid";
 
 import { TokenPayload } from "../auth";
 import { BoardModel, CategoryDocument, UserModel } from "../database";
-import { ClueObject, Fields, GameObject, State, Keys, RowObject, PlayerArray } from "./game";
+import { ClueObject, GameObject, State, RowObject, PlayerArray } from "../objects/play";
+import { Fields, Keys } from "./game";
 
 export default class Engine {
 	// --------

@@ -1,13 +1,9 @@
 import { ValidationError } from "apollo-server-errors";
 import { Document, Model } from "mongoose";
 
+import { RecordObject, RecordType } from "../../objects/build";
 import { BoardModel } from "./board";
 import { CategoryModel } from "./category";
-
-export enum RecordType {
-	"Board" = "Board",
-	"Category" = "Category"
-}
 
 export const getRecordTypeModel = (type: RecordType): RecordModel<any> => {
 	switch (type) {
@@ -20,11 +16,12 @@ export const getRecordTypeModel = (type: RecordType): RecordModel<any> => {
 	}
 };
 
-export interface RecordModel<DocumentType extends Document> extends Model<DocumentType> {
-	record: (id: string) => Promise<DocumentType>;
-	records: (ids: string[]) => Promise<DocumentType[]>;
-}
-
 export interface RecordDocument extends Document {
 	canEdit: (this: RecordDocument, userId: string) => Promise<boolean>;
+	object: (this: RecordDocument) => RecordObject;
+}
+
+export interface RecordModel<DocumentType extends RecordDocument> extends Model<DocumentType> {
+	record: (id: string) => Promise<DocumentType>;
+	records: (ids: string[]) => Promise<DocumentType[]>;
 }

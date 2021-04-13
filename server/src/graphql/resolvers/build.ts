@@ -10,16 +10,12 @@ import {
 	ClueModel,
 	getRecordTypeModel,
 	RecordDocument,
-	RecordType,
 	UserModel
 } from "../../database";
-import { FormResult, QueryResult, SearchResult } from "../types";
+import { BoardObject, CategoryObject, RecordObject, RecordType } from "../../objects/build";
+import { FormResult, QueryResult, SearchResult } from "../../objects/shared";
 
 export const BuildResolvers: IResolvers<any, Context> = {
-	RecordType: {
-		BOARD: "Board",
-		CATEGORY: "Category"
-	},
 	ResultObject: {
 		__resolveType(object: RecordDocument) {
 			if ((object as BoardDocument).categories) {
@@ -124,11 +120,11 @@ export const BuildResolvers: IResolvers<any, Context> = {
 		}
 	},
 	Mutation: {
-		createRecord: async (_, { type, name }, context): Promise<FormResult<RecordDocument>> => {
+		createRecord: async (_, { type, name }: { type: RecordType; name: string }, context): Promise<FormResult<RecordObject, "name">> => {
 			await assertHttpToken(context, AccessLevel.User);
 			try {
 				switch (type) {
-					case "Board": {
+					case RecordType.Board: {
 						const newBoard = await BoardModel.create({
 							name: name,
 							description: "",
@@ -138,9 +134,9 @@ export const BuildResolvers: IResolvers<any, Context> = {
 							updated: new Date()
 						});
 						await newBoard.populate("creator").execPopulate();
-						return { result: newBoard };
+						return { result: newBoard.object() as BoardObject };
 					}
-					case "Category": {
+					case RecordType.Category: {
 						const newCategory = await CategoryModel.create({
 							name: name,
 							description: "",
@@ -150,7 +146,7 @@ export const BuildResolvers: IResolvers<any, Context> = {
 							updated: new Date()
 						});
 						await newCategory.populate("creator").execPopulate();
-						return { result: newCategory };
+						return { result: newCategory.object() as CategoryObject };
 					}
 					default: {
 						throw new ValidationError(`Unknown record type '${type}'`);
@@ -169,7 +165,11 @@ export const BuildResolvers: IResolvers<any, Context> = {
 				return { errors: [{ message: `Error creating ${type.toLowerCase()}`, field: "name" }] };
 			}
 		},
-		updateBoard: async (_, { id, name, description, categoryIds }, context): Promise<FormResult<BoardDocument>> => {
+		updateBoard: async (
+			_,
+			{ id, name, description, categoryIds },
+			context
+		): Promise<FormResult<BoardObject, "name" | "description" | "categories">> => {
 			await assertHttpToken(context, AccessLevel.User);
 
 			const canEdit = await (await BoardModel.findById(id))?.canEdit(context.payload!.userId);
@@ -208,7 +208,7 @@ export const BuildResolvers: IResolvers<any, Context> = {
 					throw new ValidationError(`Board with id '${id}' not found`);
 				}
 
-				return { result: board };
+				return { result: board.object() as BoardObject };
 			} catch (error) {
 				switch (error.name) {
 					case "ValidationError": {
@@ -222,7 +222,11 @@ export const BuildResolvers: IResolvers<any, Context> = {
 				return { errors: [{ message: "Error updating board", field: "name" }] };
 			}
 		},
-		updateCategory: async (_, { id, name, description, format, clues }, context): Promise<FormResult<CategoryDocument>> => {
+		updateCategory: async (
+			_,
+			{ id, name, description, format, clues },
+			context
+		): Promise<FormResult<CategoryObject, "name" | "description" | "clues">> => {
 			await assertHttpToken(context, AccessLevel.User);
 
 			const canEdit = await (await CategoryModel.findById(id))?.canEdit(context.payload!.userId);
@@ -252,7 +256,7 @@ export const BuildResolvers: IResolvers<any, Context> = {
 					throw new ValidationError(`Category with id '${id}' not found`);
 				}
 
-				return { result: category };
+				return { result: category.object() as CategoryObject };
 			} catch (error) {
 				switch (error.name) {
 					case "ValidationError": {

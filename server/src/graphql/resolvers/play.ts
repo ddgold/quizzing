@@ -1,8 +1,8 @@
 import { IResolvers } from "graphql-tools";
 
 import { AccessLevel, assertHttpToken, Context } from "../../auth";
-import Engine, { GameObject } from "../../engine";
-import { GameFilter } from "../types";
+import { GameObject, GameFilter } from "../../objects/play";
+import Engine from "../../engine";
 
 export const PlayResolvers: IResolvers<any, Context> = {
 	Query: {

@@ -6,7 +6,7 @@ import { gql, useQuery } from "@apollo/client";
 import { ErrorPage, LoadingPage, Page } from "../../shared";
 import { EditCategory } from "./editCategory";
 import { ViewCategory } from "./viewCategory";
-import { QueryError } from "../../../objects/shared";
+import { QueryResult } from "../../../objects/shared";
 import { CategoryObject, RecordType } from "../../../objects/build";
 
 export const CATEGORY_BY_ID = gql`
@@ -37,7 +37,7 @@ export const CATEGORY_BY_ID = gql`
 
 export const Category = withRouter((props: RouteComponentProps) => {
 	const [editing, setEditing] = useState<boolean>(false);
-	const { data, error, loading } = useQuery<{ recordById: QueryError<CategoryObject> }, { id: string; type: RecordType }>(CATEGORY_BY_ID, {
+	const { data, error, loading } = useQuery<{ recordById: QueryResult<CategoryObject> }, { id: string; type: RecordType }>(CATEGORY_BY_ID, {
 		fetchPolicy: "network-only",
 		variables: {
 			id: (props.match.params as { id: string }).id,

@@ -2,7 +2,9 @@ import { Document, Model, model, Schema } from "mongoose";
 import bcrypt from "bcryptjs";
 
 import { AccessLevel, assertHttpToken, Context, TokenPayload } from "../../auth";
-import { RecordDocument, RecordType } from "./record";
+import { RecordType } from "../../objects/build";
+import { UserObject } from "../../objects/user";
+import { RecordDocument } from "./record";
 
 interface User {
 	nickname: string;
@@ -14,7 +16,7 @@ interface User {
 	lastLogin: Date;
 }
 
-const UserSchema = new Schema({
+const UserSchema = new Schema<UserDocument, UserModel>({
 	nickname: {
 		type: Schema.Types.String,
 		unique: true,
@@ -38,8 +40,8 @@ const UserSchema = new Schema({
 		match: /(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[~!@#$%^*-_=+])/
 	},
 	recent: {
-		Board: [{ type: Schema.Types.ObjectId, ref: "board", default: [] }],
-		Category: [{ type: Schema.Types.ObjectId, ref: "categories", default: [] }]
+		BOARD: [{ type: Schema.Types.ObjectId, ref: "board", default: [] }],
+		CATEGORY: [{ type: Schema.Types.ObjectId, ref: "categories", default: [] }]
 	},
 	access: {
 		type: Schema.Types.Number,
@@ -70,37 +72,39 @@ export interface UserDocument extends User, Document {
 	comparePassword: (this: UserDocument, candidatePassword: string) => Promise<boolean>;
 	tokenPayload: (this: UserDocument) => TokenPayload;
 	recentRecord: (this: UserDocument, type: RecordType, id: string) => Promise<void>;
+	object: (this: UserDocument) => UserObject;
 }
 
-UserSchema.methods.comparePassword = async function (this: Document, candidatePassword: string): Promise<boolean> {
-	const user = this as UserDocument;
-	let result = await bcrypt.compare(candidatePassword, user.password);
-	return result;
+UserSchema.methods.comparePassword = async function (this: UserDocument, candidatePassword: string): Promise<boolean> {
+	return await bcrypt.compare(candidatePassword, this.password);
 };
 
-UserSchema.methods.tokenPayload = function (this: Document): TokenPayload {
-	const user = this as UserDocument;
-	return { userId: user.id, access: user.access };
+UserSchema.methods.tokenPayload = function (this: UserDocument): TokenPayload {
+	return { userId: this.id, access: this.access };
 };
 
-UserSchema.methods.recentRecord = async function (this: Document, type: RecordType, id: string): Promise<void> {
-	const user = this as UserDocument;
+UserSchema.methods.recentRecord = async function (this: UserDocument, type: RecordType, id: string): Promise<void> {
 	let found = false;
-	for (let i = 0; i < user.recent[type].length; i++) {
-		if (user.recent[type][i]!.toString() === id) {
-			user.recent[type].splice(i, 1);
+	const recentRecords = this.recent[type];
+	for (let i = 0; i < recentRecords.length; i++) {
+		if (recentRecords[i]!.toString() === id) {
+			recentRecords.splice(i, 1);
 			found = true;
 			break;
 		}
 	}
 
-	if (!found && user.recent[type].length > 4) {
-		user.recent[type].pop();
+	if (!found && recentRecords.length > 4) {
+		recentRecords.pop();
 	}
 
-	(user.recent[type] as string[]).unshift(id);
+	(recentRecords as string[]).unshift(id);
 
-	user.updateOne({ recent: user.recent }).exec();
+	this.updateOne({ recent: this.recent }).exec();
+};
+
+UserSchema.methods.object = function (this: UserDocument): UserObject {
+	return this as UserObject;
 };
 
 interface UserModel extends Model<UserDocument> {
@@ -120,4 +124,4 @@ UserSchema.statics.currentUser = async (context: Context): Promise<UserDocument 
 	}
 };
 
-export const UserModel = model<UserDocument>("user", UserSchema) as UserModel;
+export const UserModel = model("user", UserSchema) as UserModel;

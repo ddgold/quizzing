@@ -1,14 +1,14 @@
 import { Modal } from "react-bootstrap";
 import { useQuery } from "@apollo/client";
 
-import { QueryError } from "../../../objects/shared";
+import { QueryResult } from "../../../objects/shared";
 import { CategoryObject, RecordType } from "../../../objects/build";
 import { Error, Loading } from "../../shared";
 import { EditCategory } from "./editCategory";
 import { CATEGORY_BY_ID } from "./category";
 
 const EditCategoryModal = ({ categoryId, onSubmit }: { categoryId: string; onSubmit: () => void }) => {
-	const { data, error, loading } = useQuery<{ recordById: QueryError<CategoryObject> }, { id: string; type: RecordType }>(CATEGORY_BY_ID, {
+	const { data, error, loading } = useQuery<{ recordById: QueryResult<CategoryObject> }, { id: string; type: RecordType }>(CATEGORY_BY_ID, {
 		fetchPolicy: "network-only",
 		variables: {
 			id: categoryId,

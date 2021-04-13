@@ -1,6 +1,7 @@
 import { ValidationError } from "apollo-server-express";
-import { Document, model, Schema } from "mongoose";
+import { model, Schema } from "mongoose";
 
+import { BoardObject } from "../../objects/build";
 import { CategoryDocument } from "./category";
 import { UserDocument } from "./user";
 import { RecordDocument, RecordModel } from "./record";
@@ -14,7 +15,7 @@ interface Board {
 	updated: Date;
 }
 
-const BoardSchema = new Schema({
+const BoardSchema = new Schema<BoardDocument, BoardModel>({
 	name: {
 		type: Schema.Types.String,
 		required: true,
@@ -62,18 +63,21 @@ BoardSchema.pre("save", async function (this: BoardDocument, next) {
 
 export interface BoardDocument extends Board, RecordDocument {}
 
-BoardSchema.methods.canEdit = async function (this: Document, userId: string): Promise<boolean> {
-	const board = this as BoardDocument;
-	if (typeof board.creator === "string") {
-		return userId === board.creator;
+BoardSchema.methods.canEdit = async function (this: BoardDocument, userId: string): Promise<boolean> {
+	if (typeof this.creator === "string") {
+		return userId === this.creator;
 	} else {
-		return userId === board.creator._id.toString();
+		return userId === this.creator._id.toString();
 	}
+};
+
+BoardSchema.methods.object = function (this: BoardDocument): BoardObject {
+	return this as BoardObject;
 };
 
 interface BoardModel extends RecordModel<BoardDocument> {}
 
-const boardById = async (id: string): Promise<BoardDocument> => {
+BoardSchema.statics.record = async (id: string): Promise<BoardDocument> => {
 	const board = await BoardModel.findById(id)
 		.populate({
 			path: "categories",
@@ -89,14 +93,12 @@ const boardById = async (id: string): Promise<BoardDocument> => {
 	return board;
 };
 
-BoardSchema.statics.record = boardById;
-
 BoardSchema.statics.records = async (ids: string[]): Promise<BoardDocument[]> => {
 	return Promise.all(
 		ids.map((id: string) => {
-			return boardById(id);
+			return (BoardSchema.statics.record as (id: string) => Promise<BoardDocument>)(id);
 		})
 	);
 };
 
-export const BoardModel = model<BoardDocument>("board", BoardSchema) as BoardModel;
+export const BoardModel = model("board", BoardSchema) as BoardModel;
