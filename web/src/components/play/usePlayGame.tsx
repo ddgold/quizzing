@@ -17,6 +17,7 @@ const QUERY = gql`
 			players {
 				id
 				nickname
+				alreadyGuessed
 				score
 			}
 		}
@@ -38,6 +39,7 @@ const SUBSCRIPTION = gql`
 			players {
 				id
 				nickname
+				alreadyGuessed
 				score
 			}
 		}

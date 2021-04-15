@@ -94,6 +94,7 @@ type Row {
 type Player {
 	id: String!
 	nickname: String!
+	alreadyGuessed: Boolean!
 	score: Int!
 }
 
@@ -148,7 +149,7 @@ type Mutation {
 	joinGame(gameId: String!): Void
 	selectClue(gameId: String!, row: Int!, col: Int!): Void
 	buzzIn(gameId: String!): Void
-	answerClue(gameId: String!): Void
+	answerClue(gameId: String!, response: String!): Void
 	closeClue(gameId: String!): Void
 }
 

@@ -29,6 +29,10 @@ export namespace Fields {
 		return `clue:${row}^${col}`;
 	};
 
+	export const ControllingPlayer = () => {
+		return "controllingPlayer";
+	};
+
 	export const Host = () => {
 		return "host";
 	};

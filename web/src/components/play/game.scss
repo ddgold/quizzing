@@ -93,7 +93,7 @@ $cell-width: calc(#{$cell-height} * #{$ratio});
 			user-select: none;
 
 			font-size: calc(16px + 3vw);
-			padding: 15px;
+			padding-bottom: 15px;
 		}
 
 		h2 {
@@ -105,6 +105,16 @@ $cell-width: calc(#{$cell-height} * #{$ratio});
 
 			font-size: calc(3vw);
 			font-style: italic;
+			padding-top: 15px;
+		}
+
+		.responseInput {
+			padding: 15px;
+			width: 100%;
+		}
+
+		.responseError {
+			color: #ff0000;
 		}
 	}
 }
@@ -119,5 +129,9 @@ $cell-width: calc(#{$cell-height} * #{$ratio});
 
 	&.active {
 		font-weight: bold;
+	}
+
+	&.alreadyGuessed {
+		font-style: italic;
 	}
 }

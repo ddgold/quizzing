@@ -5,7 +5,7 @@ import { v4 as uuid } from "uuid";
 
 import { TokenPayload } from "../auth";
 import { BoardModel, CategoryDocument, UserModel } from "../database";
-import { ClueObject, GameObject, State, RowObject, PlayerArray } from "../objects/play";
+import { ActiveClueObject, GameObject, State, RowObject, PlayerArray } from "../objects/play";
 import { Fields, Keys } from "./game";
 
 export default class Engine {
@@ -77,17 +77,24 @@ export default class Engine {
 		}
 	}
 
-	private static async assertUser(gameId: string, userId: string, ignoreActive: boolean = false): Promise<void> {
-		if (!ignoreActive) {
+	private static async assertUser(gameId: string, userId: string, limit: "Any" | "Active" | "HaventGuessed"): Promise<void> {
+		if (limit === "Active") {
 			const activePlayer = await this.client.hget(Keys.ActiveGame(gameId), Fields.ActivePlayer());
-			if (activePlayer && activePlayer !== userId) {
+			if (!activePlayer || activePlayer !== userId) {
 				throw new ForbiddenError(`Can't access game with id '${gameId}'`);
 			}
-		}
+		} else {
+			if (limit === "HaventGuessed") {
+				const activeClue = await this.getActiveClue(gameId);
+				if (activeClue.alreadyGuessed.includes(userId)) {
+					throw new ForbiddenError(`Can't access game with id '${gameId}'`);
+				}
+			}
 
-		const players = await this.getPlayers(gameId);
-		if (!this.playersInclude(players, userId)) {
-			throw new ForbiddenError(`Can't access game with id '${gameId}'`);
+			const players = await this.getPlayers(gameId);
+			if (!this.playersInclude(players, userId)) {
+				throw new ForbiddenError(`Can't access game with id '${gameId}'`);
+			}
 		}
 	}
 
@@ -120,11 +127,11 @@ export default class Engine {
 		const state = hash[Fields.State()] as State;
 		let currentText: string | undefined;
 		if (state === "ShowingAnswer" || state === "AwaitingResponse" || state === "ShowingQuestion") {
-			const clueObject: ClueObject = JSON.parse(hash[Fields.ActiveClue()]!);
+			const activeClue: ActiveClueObject = JSON.parse(hash[Fields.ActiveClue()]!);
 			if (state === "ShowingQuestion") {
-				currentText = clueObject.question;
+				currentText = activeClue.question;
 			} else {
-				currentText = clueObject.answer;
+				currentText = activeClue.answer;
 			}
 		}
 
@@ -152,6 +159,10 @@ export default class Engine {
 		);
 	}
 
+	private static async getActiveClue(gameId: string): Promise<ActiveClueObject> {
+		return JSON.parse((await this.client.hget(Keys.ActiveGame(gameId), Fields.ActiveClue()))!);
+	}
+
 	private static async getPlayers(gameId: string): Promise<PlayerArray> {
 		const value = await this.client.hget(Keys.ActiveGame(gameId), Fields.Players());
 		if (value === null) {
@@ -165,6 +176,18 @@ export default class Engine {
 		return players.some((player) => {
 			return player && player.id === targetId;
 		});
+	}
+
+	private static sanitizeString(string: string): string {
+		return string
+			.replace(/[\.,-\/#!$%\^&\*;:{}=\-_`~()@\+\?><\[\]\+']/g, " ")
+			.replace(/\s{2,}/g, " ")
+			.trim()
+			.toLocaleLowerCase();
+	}
+
+	private static responseCorrect(response: string, correct: string): boolean {
+		return this.sanitizeString(response) === this.sanitizeString(correct);
 	}
 
 	private static async isGameOver(gameId: string): Promise<boolean> {
@@ -236,7 +259,7 @@ export default class Engine {
 	}
 
 	static async join(gameId: string, userId: string): Promise<void> {
-		await this.assertState(gameId, "Any");
+		await this.assertState(gameId, "AwaitingPlayers");
 
 		const players = await this.getPlayers(gameId);
 		if (this.playersInclude(players, userId)) {
@@ -256,6 +279,7 @@ export default class Engine {
 		players[freeSlot] = {
 			id: userId,
 			nickname: user.nickname,
+			alreadyGuessed: false,
 			score: 0
 		};
 
@@ -268,7 +292,8 @@ export default class Engine {
 			pipe = pipe
 				.srem(Keys.PublicGames(), gameId)
 				.hset(Keys.ActiveGame(gameId), Fields.State(), "AwaitingSelection")
-				.hset(Keys.ActiveGame(gameId), Fields.ActivePlayer(), userId);
+				.hset(Keys.ActiveGame(gameId), Fields.ActivePlayer(), userId)
+				.hset(Keys.ActiveGame(gameId), Fields.ControllingPlayer(), userId);
 		}
 
 		await pipe.exec();
@@ -278,7 +303,7 @@ export default class Engine {
 
 	static async selectClue(gameId: string, userId: string, row: number, col: number): Promise<void> {
 		await this.assertState(gameId, "AwaitingSelection");
-		await this.assertUser(gameId, userId);
+		await this.assertUser(gameId, userId, "Active");
 
 		const hash = await this.client.hmget(Keys.ActiveGame(gameId), Fields.Clue(row, col), Fields.Category(col), Fields.Value(row));
 
@@ -286,14 +311,15 @@ export default class Engine {
 			throw new ValidationError("Clue already selected");
 		}
 
-		const clueObject: ClueObject = JSON.parse(hash[0]);
-		clueObject.category = hash[1]!;
-		clueObject.value = Number.parseInt(hash[2]!);
+		const activeClue: ActiveClueObject = JSON.parse(hash[0]);
+		activeClue.category = hash[1]!;
+		activeClue.value = Number.parseInt(hash[2]!);
+		activeClue.alreadyGuessed = [];
 
 		await this.client
 			.multi()
 			.hset(Keys.ActiveGame(gameId), Fields.State(), "ShowingAnswer")
-			.hset(Keys.ActiveGame(gameId), Fields.ActiveClue(), JSON.stringify(clueObject))
+			.hset(Keys.ActiveGame(gameId), Fields.ActiveClue(), JSON.stringify(activeClue))
 			.hdel(Keys.ActiveGame(gameId), Fields.Clue(row, col))
 			.hdel(Keys.ActiveGame(gameId), Fields.ActivePlayer())
 			.exec();
@@ -303,7 +329,7 @@ export default class Engine {
 
 	static async buzzIn(gameId: string, userId: string): Promise<void> {
 		await this.assertState(gameId, "ShowingAnswer");
-		await this.assertUser(gameId, userId);
+		await this.assertUser(gameId, userId, "HaventGuessed");
 
 		await this.client
 			.multi()
@@ -314,32 +340,85 @@ export default class Engine {
 		await this.publishPlayGame(gameId);
 	}
 
-	static async answerClue(gameId: string, userId: string): Promise<void> {
+	static async answerClue(gameId: string, userId: string, response: string): Promise<void> {
 		await this.assertState(gameId, "AwaitingResponse");
-		await this.assertUser(gameId, userId);
+		await this.assertUser(gameId, userId, "Active");
 
-		await this.client.hset(Keys.ActiveGame(gameId), Fields.State(), "ShowingQuestion");
+		const activeClue = await this.getActiveClue(gameId);
+		const players = await this.getPlayers(gameId);
+
+		activeClue.alreadyGuessed.push(userId);
+
+		// Correct response
+		if (this.responseCorrect(response, activeClue.question)) {
+			players.forEach((player) => {
+				if (player) {
+					player.alreadyGuessed = false;
+
+					if (player.id === userId) {
+						player.score += activeClue.value;
+					}
+				}
+			});
+
+			await this.client
+				.multi()
+				.hset(Keys.ActiveGame(gameId), Fields.State(), "ShowingQuestion")
+				.hset(Keys.ActiveGame(gameId), Fields.Players(), JSON.stringify(players))
+				.hset(Keys.ActiveGame(gameId), Fields.ControllingPlayer(), userId)
+				.exec();
+
+			// Everyone is wrong
+		} else if (players.every((player) => !player || activeClue.alreadyGuessed.includes(player.id))) {
+			players.forEach((player) => {
+				if (player) {
+					player.alreadyGuessed = false;
+
+					if (player.id === userId) {
+						player.score -= activeClue.value;
+					}
+				}
+			});
+
+			const controllingPlayer = (await this.client.hget(Keys.ActiveGame(gameId), Fields.ControllingPlayer()))!;
+			await this.client
+				.multi()
+				.hset(Keys.ActiveGame(gameId), Fields.State(), "ShowingQuestion")
+				.hset(Keys.ActiveGame(gameId), Fields.ActiveClue(), JSON.stringify(activeClue))
+				.hset(Keys.ActiveGame(gameId), Fields.Players(), JSON.stringify(players))
+				.hset(Keys.ActiveGame(gameId), Fields.ActivePlayer(), controllingPlayer)
+				.exec();
+
+			// Someone hasn't guessed
+		} else {
+			players.forEach((player) => {
+				if (player) {
+					if (player.id === userId) {
+						player.alreadyGuessed = true;
+						player.score -= activeClue.value;
+					}
+				}
+			});
+
+			await this.client
+				.multi()
+				.hset(Keys.ActiveGame(gameId), Fields.State(), "ShowingAnswer")
+				.hset(Keys.ActiveGame(gameId), Fields.ActiveClue(), JSON.stringify(activeClue))
+				.hset(Keys.ActiveGame(gameId), Fields.Players(), JSON.stringify(players))
+				.hdel(Keys.ActiveGame(gameId), Fields.ActivePlayer())
+				.exec();
+		}
 
 		await this.publishPlayGame(gameId);
 	}
 
 	static async closeClue(gameId: string, userId: string): Promise<void> {
 		await this.assertState(gameId, "ShowingQuestion");
-		await this.assertUser(gameId, userId);
-
-		const clueObject: ClueObject = JSON.parse((await this.client.hget(Keys.ActiveGame(gameId), Fields.ActiveClue()))!);
-
-		const players = await this.getPlayers(gameId);
-		players.forEach((player) => {
-			if (player?.id === userId) {
-				player.score += clueObject.value;
-			}
-		});
+		await this.assertUser(gameId, userId, "Active");
 
 		await this.client
 			.multi()
 			.hset(Keys.ActiveGame(gameId), Fields.State(), "AwaitingSelection")
-			.hset(Keys.ActiveGame(gameId), Fields.Players(), JSON.stringify(players))
 			.hdel(Keys.ActiveGame(gameId), Fields.ActiveClue())
 			.exec();
 
@@ -358,7 +437,7 @@ export default class Engine {
 
 	static async playGame(gameId: string, userId: string): Promise<GameObject> {
 		await this.assertState(gameId, "Any");
-		await this.assertUser(gameId, userId, true);
+		await this.assertUser(gameId, userId, "Any");
 
 		return await this.getModel(gameId);
 	}

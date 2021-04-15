@@ -1,8 +1,9 @@
-export interface ClueObject {
+export interface ActiveClueObject {
 	answer: string;
 	question: string;
 	category: string;
 	value: number;
+	alreadyGuessed: string[];
 }
 
 export type PlayerArray = (PlayerObject | null)[];
@@ -10,6 +11,7 @@ export type PlayerArray = (PlayerObject | null)[];
 export interface PlayerObject {
 	id: string;
 	nickname: string;
+	alreadyGuessed: boolean;
 	score: number;
 }
 

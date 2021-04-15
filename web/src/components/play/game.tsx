@@ -1,14 +1,15 @@
-import { Col, Container, Row } from "react-bootstrap";
 import { gql, useMutation } from "@apollo/client";
+import { Col, Container, Row } from "react-bootstrap";
+import { useForm } from "react-hook-form";
 import { RouteComponentProps, useHistory, withRouter } from "react-router-dom";
 
 import { Children, ErrorPage, LoadingPage } from "../shared";
 import { usePlayGame } from "./usePlayGame";
 import { GameObject, PlayerObject, RowObject } from "../../objects/play";
+import { UserObject } from "../../objects/user";
 import { useCurrentUser } from "../user";
 
 import "./game.scss";
-import { UserObject } from "src/objects/user";
 
 const SELECT_CLUE = gql`
 	mutation SelectClue($gameId: String!, $row: Int!, $col: Int!) {
@@ -23,8 +24,8 @@ const BUZZ_IN = gql`
 `;
 
 const ANSWER_CLUE = gql`
-	mutation AnswerClue($gameId: String!) {
-		answerClue(gameId: $gameId)
+	mutation AnswerClue($gameId: String!, $response: String!) {
+		answerClue(gameId: $gameId, response: $response)
 	}
 `;
 
@@ -42,19 +43,56 @@ const Lightbox = ({ onClick, children }: { onClick?: () => void; children: Child
 	);
 };
 
-const PlayerCard = ({ active, player }: { active?: boolean; player: PlayerObject | null }) => (
-	<Col className={active ? "player active" : "player"}>
-		{player ? (
-			<div>
-				{player.nickname}
-				<br />
-				{player.score}
-			</div>
-		) : (
-			<div>{"null"}</div>
-		)}
-	</Col>
-);
+const ResponseForm = ({ onSubmit }: { onSubmit: (response: string) => void }) => {
+	const { errors, handleSubmit, register } = useForm<{ response: string }>();
+	if (errors.response) console.log(errors.response);
+
+	return (
+		<form onSubmit={handleSubmit(({ response }) => onSubmit(response))}>
+			<input
+				name="response"
+				className="responseInput"
+				ref={register({
+					required: {
+						value: true,
+						message: `Response is required`
+					},
+					maxLength: {
+						value: 64,
+						message: `Response must be at most 64 characters`
+					}
+				})}
+				placeholder={`Enter response`}
+			/>
+			{errors.response ? <p className="responseError">{errors.response.message}</p> : null}
+			<input type="submit" style={{ display: "none" }} />
+		</form>
+	);
+};
+
+const PlayerCard = ({ active, alreadyGuessed, player }: { active?: boolean; alreadyGuessed?: boolean; player: PlayerObject | null }) => {
+	let className = "player";
+	if (active) {
+		className += " active";
+	}
+	if (alreadyGuessed) {
+		className += " alreadyGuessed";
+	}
+
+	return (
+		<Col className={className}>
+			{player ? (
+				<div>
+					{player.nickname}
+					<br />
+					{player.score}
+				</div>
+			) : (
+				<div>{"null"}</div>
+			)}
+		</Col>
+	);
+};
 
 export const Game = withRouter((props: RouteComponentProps) => {
 	const gameId = (props.match.params as { gameId: string }).gameId;
@@ -62,7 +100,7 @@ export const Game = withRouter((props: RouteComponentProps) => {
 	const { loading, error, game } = usePlayGame(gameId);
 	const [selectClueMutation] = useMutation<{}, { gameId: string; row?: number; col?: number }>(SELECT_CLUE);
 	const [buzzInMutation] = useMutation<{}, { gameId: string }>(BUZZ_IN);
-	const [answerClueMutation] = useMutation<{}, { gameId: string }>(ANSWER_CLUE);
+	const [answerClueMutation] = useMutation<{}, { gameId: string; response: string }>(ANSWER_CLUE);
 	const [closeClueMutation] = useMutation<{}, { gameId: string }>(CLOSE_CLUE);
 	const history = useHistory();
 
@@ -70,11 +108,19 @@ export const Game = withRouter((props: RouteComponentProps) => {
 		return player?.id === game?.activePlayer;
 	};
 
-	const selectClue = async (row: number, col: number): Promise<void> => {
-		if (!isActiveUser(currentUser)) {
-			return;
+	const alreadyGuessed = (game: GameObject): boolean => {
+		if (currentUser) {
+			for (const player of game.players) {
+				if (player && currentUser.id === player.id) {
+					return player.alreadyGuessed;
+				}
+			}
 		}
 
+		return false;
+	};
+
+	const selectClue = async (row: number, col: number): Promise<void> => {
 		try {
 			await selectClueMutation({
 				variables: { gameId: gameId, row: row, col: col }
@@ -94,14 +140,10 @@ export const Game = withRouter((props: RouteComponentProps) => {
 		}
 	};
 
-	const answerClue = async (): Promise<void> => {
-		if (!isActiveUser(currentUser)) {
-			return;
-		}
-
+	const answerClue = async (response: string): Promise<void> => {
 		try {
 			await answerClueMutation({
-				variables: { gameId: gameId }
+				variables: { gameId: gameId, response: response }
 			});
 		} catch (error) {
 			console.error("answerClue", error);
@@ -109,10 +151,6 @@ export const Game = withRouter((props: RouteComponentProps) => {
 	};
 
 	const closeClue = async (): Promise<void> => {
-		if (!isActiveUser(currentUser)) {
-			return;
-		}
-
 		try {
 			await closeClueMutation({
 				variables: { gameId: gameId }
@@ -159,7 +197,14 @@ export const Game = withRouter((props: RouteComponentProps) => {
 							{row.cols.map((selected: boolean, colIndex: number) => {
 								if (!selected) {
 									return (
-										<td key={colIndex} onClick={() => selectClue(rowIndex, colIndex)}>
+										<td
+											key={colIndex}
+											onClick={async () => {
+												if (isActiveUser(currentUser)) {
+													await selectClue(rowIndex, colIndex);
+												}
+											}}
+										>
 											{row.value}
 										</td>
 									);
@@ -174,7 +219,7 @@ export const Game = withRouter((props: RouteComponentProps) => {
 
 			<Row>
 				{game.players.map((player, index) => (
-					<PlayerCard active={isActiveUser(player)} key={index} player={player} />
+					<PlayerCard active={isActiveUser(player)} alreadyGuessed={player?.alreadyGuessed} key={index} player={player} />
 				))}
 			</Row>
 
@@ -183,20 +228,42 @@ export const Game = withRouter((props: RouteComponentProps) => {
 					<h1>Awaiting more players</h1>
 				</Lightbox>
 			) : game.state === "ShowingAnswer" ? (
-				<Lightbox onClick={buzzIn}>
-					<h1>{game.currentText!}</h1>
-					<h2>Click to buzz-in</h2>
-				</Lightbox>
+				alreadyGuessed(game) ? (
+					<Lightbox>
+						<h1>{game.currentText!}</h1>
+						<h2>Waiting for other player to buzz-in </h2>
+					</Lightbox>
+				) : (
+					<Lightbox onClick={buzzIn}>
+						<h1>{game.currentText!}</h1>
+						<h2>Click to buzz-in</h2>
+					</Lightbox>
+				)
 			) : game.state === "AwaitingResponse" ? (
-				<Lightbox onClick={answerClue}>
-					<h1>{game.currentText!}</h1>
-					<h2>{isActiveUser(currentUser) ? "Waiting for your response" : "Waiting for other player's response"}</h2>
-				</Lightbox>
+				isActiveUser(currentUser) ? (
+					<Lightbox>
+						<h1>{game.currentText!}</h1>
+						<ResponseForm onSubmit={answerClue} />
+						<h2>Waiting for your response</h2>
+					</Lightbox>
+				) : (
+					<Lightbox>
+						<h1>{game.currentText!}</h1>
+						<h2>Waiting for other player's response</h2>
+					</Lightbox>
+				)
 			) : game.state === "ShowingQuestion" ? (
-				<Lightbox onClick={closeClue}>
-					<h1>{game.currentText!}</h1>
-					<h2>{isActiveUser(currentUser) ? "Click to close clue" : "Waiting for other player to close clue"}</h2>
-				</Lightbox>
+				isActiveUser(currentUser) ? (
+					<Lightbox onClick={closeClue}>
+						<h1>{game.currentText!}</h1>
+						<h2>Click to close clue</h2>
+					</Lightbox>
+				) : (
+					<Lightbox>
+						<h1>{game.currentText!}</h1>
+						<h2>Waiting for other player to close clue</h2>
+					</Lightbox>
+				)
 			) : gameDone(game) ? (
 				<Lightbox onClick={() => history.push("/play")}>
 					<h1>Game Over!</h1>

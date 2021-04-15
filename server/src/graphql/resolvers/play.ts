@@ -44,9 +44,9 @@ export const PlayResolvers: IResolvers<any, Context> = {
 			await assertHttpToken(context, AccessLevel.User);
 			return Engine.buzzIn(gameId, context.payload!.userId);
 		},
-		answerClue: async (_, { gameId }: { gameId: string }, context): Promise<void> => {
+		answerClue: async (_, { gameId, response }: { gameId: string; response: string }, context): Promise<void> => {
 			await assertHttpToken(context, AccessLevel.User);
-			return Engine.answerClue(gameId, context.payload!.userId);
+			return Engine.answerClue(gameId, context.payload!.userId, response);
 		},
 		closeClue: async (_, { gameId }: { gameId: string }, context): Promise<void> => {
 			await assertHttpToken(context, AccessLevel.User);
