@@ -45,7 +45,6 @@ const Lightbox = ({ onClick, children }: { onClick?: () => void; children: Child
 
 const ResponseForm = ({ onSubmit }: { onSubmit: (response: string) => void }) => {
 	const { errors, handleSubmit, register } = useForm<{ response: string }>();
-	if (errors.response) console.log(errors.response);
 
 	return (
 		<form onSubmit={handleSubmit(({ response }) => onSubmit(response))}>
