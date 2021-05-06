@@ -1,5 +1,5 @@
 # Dependency directories
-*node_modules/
+node_modules/
 
 # Yarn
 .yarn/*
@@ -21,3 +21,7 @@ web/build/
 
 # Secrets
 secrets/
+
+# Python
+__pycache__/
+venv/

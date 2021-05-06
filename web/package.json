@@ -28,7 +28,7 @@
 		"subscriptions-transport-ws": "^0.9.18"
 	},
 	"scripts": {
-		"dev": "REACT_APP_SERVER_URI=localhost:8000 BROWSER=none react-scripts start",
+		"dev": "REACT_APP_SERVER_URI=${HOSTNAME:-localhost}:8000 BROWSER=none react-scripts start",
 		"remove-build": "rm -rf ./build",
 		"build": "yarn run remove-build && react-scripts build",
 		"kill-port": "lsof -ti:3000 | xargs kill"

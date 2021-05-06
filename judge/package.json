@@ -1,0 +1,14 @@
+{
+	"name": "@quizzing/judge",
+	"version": "0.1.0",
+	"description": "easy to build and share trivia boards",
+	"private": true,
+	"author": "Doug Goldstein <ddgold@me.com>",
+	"license": "GPL-3.0-only",
+	"scripts": {
+		"dev": "JUDGE_PORT=9000 SECRETS_DIR=../secrets ./scripts/dev.zsh",
+		"kill-port": "lsof -ti:9000 | xargs kill",
+		"init-venv": "./scripts/init-venv.zsh",
+		"remove-venv": "rm -rf ./venv"
+	}
+}

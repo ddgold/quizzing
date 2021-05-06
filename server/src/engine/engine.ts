@@ -1,12 +1,20 @@
 import { ForbiddenError, ResolverFn, ValidationError, withFilter } from "apollo-server-express";
+import axios from "axios";
 import { RedisPubSub } from "graphql-redis-subscriptions";
 import Redis, { Redis as RedisClient, RedisOptions } from "ioredis";
 import { v4 as uuid } from "uuid";
 
 import { TokenPayload } from "../auth";
 import { BoardModel, CategoryDocument, UserModel } from "../database";
-import { ActiveClueObject, GameObject, State, RowObject, PlayerArray } from "../objects/play";
+import { getDockerSecret, getEnvironmentVariable } from "../environment";
 import { Fields, Keys } from "./game";
+import { ActiveClueObject, GameObject, State, RowObject, PlayerArray } from "../objects/play";
+
+interface JudgeResponse {
+	answer: string;
+	guess: string;
+	result: boolean;
+}
 
 export default class Engine {
 	// --------
@@ -49,8 +57,12 @@ export default class Engine {
 			throw new Error("Engine cache already connected");
 		}
 
-		// TODO: actually use url param
-		this.singleton = new Engine({});
+		if (!/^redis:\/\/\S+:\d+$/.test(url)) {
+			throw new Error(`Invalid engine url '${url}'`);
+		}
+
+		let split = url.split("redis://")[1]!.split(":");
+		this.singleton = new Engine({ host: split[0]!, port: Number.parseInt(split[1]!) });
 		return url;
 	}
 
@@ -178,16 +190,24 @@ export default class Engine {
 		});
 	}
 
-	private static sanitizeString(string: string): string {
-		return string
-			.replace(/[\.,-\/#!$%\^&\*;:{}=\-_`~()@\+\?><\[\]\+']/g, " ")
-			.replace(/\s{2,}/g, " ")
-			.trim()
-			.toLocaleLowerCase();
-	}
+	private static async judgeResponse(answer: string, guess: string): Promise<boolean> {
+		try {
+			const response = await axios.post<JudgeResponse>(
+				`${getEnvironmentVariable("JUDGE_URL")}/judge`,
+				{
+					answer: answer,
+					guess: guess
+				},
+				{
+					headers: { Authorization: `Bearer ${getDockerSecret("judge_token")}` }
+				}
+			);
 
-	private static responseCorrect(response: string, correct: string): boolean {
-		return this.sanitizeString(response) === this.sanitizeString(correct);
+			return response.data.result;
+		} catch (error) {
+			console.error("Error judging response", error);
+			throw error;
+		}
 	}
 
 	private static async isGameOver(gameId: string): Promise<boolean> {
@@ -350,7 +370,7 @@ export default class Engine {
 		activeClue.alreadyGuessed.push(userId);
 
 		// Correct response
-		if (this.responseCorrect(response, activeClue.question)) {
+		if (await this.judgeResponse(activeClue.question, response)) {
 			players.forEach((player) => {
 				if (player) {
 					player.alreadyGuessed = false;

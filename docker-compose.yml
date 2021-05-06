@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: ./web/Dockerfile
       args:
-        REACT_APP_SERVER_URI: 192.168.50.191:8000
+        REACT_APP_SERVER_URI: ${HOSTNAME:-localhost}:8000
     depends_on:
       - server
     ports:
@@ -19,43 +19,60 @@ services:
       context: .
       dockerfile: ./server/Dockerfile
     environment:
-      - FRONTEND_URL=http://192.168.50.191:3000|http://localhost:3000
-      - DATABASE_URL=mongodb://192.168.50.191:27017
-      - ENGINE_CACHE_URL=redis://192.168.50.191:6379
-      - GRAPHQL_PORT=8000
+      - FRONTEND_URL=http://${HOSTNAME:-localhost}:3000
+      - DATABASE_URL=mongodb://database:27017
+      - ENGINE_CACHE_URL=redis://engineCache:6379
+      - JUDGE_URL=http://judge:9000
       - SECRETS_DIR=/run/secrets
+      - SERVER_PORT=8000
     secrets:
       - access_token
+      - judge_token
       - refresh_token
     depends_on:
-      - mongo
-      - redis
+      - database
+      - engineCache
+      - judge
     ports:
       - 8000:8000
     networks:
-      - database
+      - backend
       - graphql
-  mongo:
-    container_name: mongo
-    image: mongo:4.4.1
+  judge:
+    container_name: judge
+    build: ./judge
+    environment:
+      - JUDGE_PORT=9000
+      - SECRETS_DIR=/run/secrets
+    ports:
+      - 9000:9000
+    networks:
+      - backend
+    secrets:
+      - judge_token
+  database:
+    container_name: database
+    image: mongo:4.4.5
     volumes:
       - /Volumes/mongodata:/data/db
     ports:
       - 27017:27017
     networks:
-      - database
-  redis:
-    container_name: redis
-    image: redis:6.2.1-alpine
+      - backend
+  engineCache:
+    container_name: engineCache
+    image: redis:6.2.3-alpine
     ports:
       - 6379:6379
     networks:
-      - database
+      - backend
 secrets:
   access_token:
     file: ./secrets/access_token
+  judge_token:
+    file: ./secrets/judge_token
   refresh_token:
     file: ./secrets/refresh_token
 networks:
-  database:
+  backend:
   graphql:

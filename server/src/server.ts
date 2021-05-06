@@ -7,7 +7,7 @@ import { createServer } from "http";
 import { AccessLevel, assertWsToken, postRefreshToken } from "./auth";
 import Database from "./database";
 import Engine from "./engine";
-import { checkEnvironmentConfig, getEnvironmentVariable } from "./environment";
+import { checkEnvironmentConfig, debugModeOn, getEnvironmentVariable } from "./environment";
 import { resolvers, typeDefs } from "./graphql";
 
 // ------------------
@@ -46,7 +46,7 @@ expressApp.use(cookieParser());
 
 expressApp.use(
 	cors({
-		origin: getEnvironmentVariable("FRONTEND_URL").split("|"),
+		origin: getEnvironmentVariable("FRONTEND_URL"),
 		credentials: true
 	})
 );
@@ -54,7 +54,7 @@ expressApp.use(
 expressApp.post("/refreshToken", postRefreshToken);
 
 const apolloServer = new ApolloServer({
-	playground: getEnvironmentVariable("NODE_ENV") !== "production",
+	playground: debugModeOn(),
 	resolvers,
 	typeDefs,
 	context: (Context) => Context,
@@ -70,7 +70,7 @@ apolloServer.applyMiddleware({ app: expressApp, cors: false });
 const httpServer = createServer(expressApp);
 apolloServer.installSubscriptionHandlers(httpServer);
 
-const port = getEnvironmentVariable("GRAPHQL_PORT");
+const port = getEnvironmentVariable("SERVER_PORT");
 httpServer.listen({ port: port }, () => {
 	console.info(`Server running at http://localhost:${port}${apolloServer.graphqlPath}`);
 	console.info(`Websocket running at ws://localhost:${port}${apolloServer.subscriptionsPath}`);

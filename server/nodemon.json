@@ -1,13 +1,13 @@
 {
 	"env": {
 		"NODE_ENV": "development",
-		"FRONTEND_URL": "http://localhost:3000|http://192.168.50.191:3000",
 		"DATABASE_URL": "mongodb://localhost:27017",
 		"ENGINE_CACHE_URL": "redis://localhost:6379",
-		"GRAPHQL_PORT": 8000,
-		"SECRETS_DIR": "../../secrets"
+		"JUDGE_URL": "http://localhost:9000",
+		"SECRETS_DIR": "../../secrets",
+		"SERVER_PORT": 8000
 	},
-	"exec": "ts-node",
+	"exec": "FRONTEND_URL=\"http://${HOSTNAME:-localhost}:3000\" ts-node",
 	"ext": "ts,json,graphql",
 	"ignore": ["src/scripts"],
 	"watch": "src/",

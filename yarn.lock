@@ -3055,6 +3055,12 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@quizzing/judge@workspace:judge":
+  version: 0.0.0-use.local
+  resolution: "@quizzing/judge@workspace:judge"
+  languageName: unknown
+  linkType: soft
+
 "@quizzing/server@workspace:server":
   version: 0.0.0-use.local
   resolution: "@quizzing/server@workspace:server"
@@ -3070,6 +3076,7 @@ __metadata:
     "@types/node": ^14.14.34
     "@types/uuid": ^8.3.0
     apollo-server-express: ^2.21.1
+    axios: ^0.21.1
     bcryptjs: ^2.4.3
     cookie-parser: ^1.4.5
     cors: ^2.8.5
@@ -5281,6 +5288,15 @@ __metadata:
   version: 3.5.5
   resolution: "axe-core@npm:3.5.5"
   checksum: 3d42ed3f0a24ae08081f878a6e1c629a60e4556ab0be896463ff800274b78bf3f1ce62a20396b4e892dc17e682df631ee06fd0daaf2928a49e46e8c0c4dfdcd0
+  languageName: node
+  linkType: hard
+
+"axios@npm:^0.21.1":
+  version: 0.21.1
+  resolution: "axios@npm:0.21.1"
+  dependencies:
+    follow-redirects: ^1.10.0
+  checksum: 864fb7b5d077d236737f10adca53bf451a93f35a15271f56fba8da07265a02d26b7d881b935a6697dc6adb0549ea3e56d2eecb403edaa3bb78f6479901c10f69
   languageName: node
   linkType: hard
 
@@ -9003,6 +9019,16 @@ __metadata:
   version: 1.13.0
   resolution: "follow-redirects@npm:1.13.0"
   checksum: f220828d3f153da30ea616fdbe9f6676e74e4e68c51d336a751037c1d556e2de34aa5918f58951fa19bb6517c9c88b4403a0a8bdfc40d3e779d37def2ac0f2c4
+  languageName: node
+  linkType: hard
+
+"follow-redirects@npm:^1.10.0":
+  version: 1.14.0
+  resolution: "follow-redirects@npm:1.14.0"
+  peerDependenciesMeta:
+    debug:
+      optional: true
+  checksum: 70c86697f20d0220a26e3af54e9e2cbf3cc380086d945cc8d67a57c03c09ee222f727b31be1a82adafb897943e103f6b707fb91baaaffe218d758b260a4ac1a5
   languageName: node
   linkType: hard
 

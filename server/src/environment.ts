@@ -1,18 +1,27 @@
 import path from "path";
 import fs from "fs";
 
+export const debugModeOn = (): boolean => {
+	return process.argv.includes("--debug");
+};
+
+export const verboseModeOn = (): boolean => {
+	return process.argv.includes("--verbose");
+};
+
 // ---------------------
 // Environment Variables
 // ---------------------
-type EnvironmentVariable = "NODE_ENV" | "FRONTEND_URL" | "DATABASE_URL" | "ENGINE_CACHE_URL" | "GRAPHQL_PORT" | "SECRETS_DIR";
+type EnvironmentVariable = "NODE_ENV" | "FRONTEND_URL" | "DATABASE_URL" | "ENGINE_CACHE_URL" | "JUDGE_URL" | "SECRETS_DIR" | "SERVER_PORT";
 
 const allEnvironmentVariable: EnvironmentVariable[] = [
 	"NODE_ENV",
 	"FRONTEND_URL",
 	"DATABASE_URL",
 	"ENGINE_CACHE_URL",
-	"GRAPHQL_PORT",
-	"SECRETS_DIR"
+	"JUDGE_URL",
+	"SECRETS_DIR",
+	"SERVER_PORT"
 ];
 
 const checkEnvironmentVariables = (): void => {
@@ -20,6 +29,10 @@ const checkEnvironmentVariables = (): void => {
 		if (!process.env[variableName]) {
 			console.error(`Required environment variable '${variableName}' not provided.`);
 			process.exit();
+		}
+
+		if (verboseModeOn()) {
+			console.info(`Environment variable: ${variableName}=${process.env[variableName]}`);
 		}
 	}
 };
@@ -31,9 +44,9 @@ export const getEnvironmentVariable = (variableName: EnvironmentVariable): strin
 // --------------
 // Docker Secrets
 // --------------
-type DockerSecret = "access_token" | "refresh_token";
+type DockerSecret = "access_token" | "judge_token" | "refresh_token";
 
-const allDockerSecrets: DockerSecret[] = ["access_token", "refresh_token"];
+const allDockerSecrets: DockerSecret[] = ["access_token", "judge_token", "refresh_token"];
 
 let secrets: { [name: string]: string } = {};
 
@@ -51,6 +64,10 @@ const checkDockerSecrets = (): void => {
 		} catch (error) {
 			console.error(`Error reading secret '${secretName}': ${error}`);
 			process.exit();
+		}
+
+		if (verboseModeOn()) {
+			console.info(`Docker secret: ${secretName}=${secrets[secretName]}`);
 		}
 	}
 };
