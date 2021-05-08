@@ -48,10 +48,16 @@ interface State {
 }
 
 export const EditBoard = (props: { board: BoardObject; onSubmit: (update: BoardObject) => void }) => {
-	const { control, errors, handleSubmit, register, setError } = useForm<State>({
+	const {
+		control,
+		handleSubmit,
+		register,
+		setError,
+		formState: { errors }
+	} = useForm<State>({
 		defaultValues: props.board
 	});
-	const { append, fields, remove } = useFieldArray<CategoryObject>({
+	const { append, fields, remove } = useFieldArray<State>({
 		control,
 		name: "categories",
 		keyName: "key" as "id"
@@ -104,8 +110,7 @@ export const EditBoard = (props: { board: BoardObject; onSubmit: (update: BoardO
 				<Form.Group controlId="name">
 					<Form.Label>Name</Form.Label>
 					<Form.Control
-						name="name"
-						ref={register({
+						{...register("name", {
 							required: {
 								value: true,
 								message: "Name is required"
@@ -124,11 +129,10 @@ export const EditBoard = (props: { board: BoardObject; onSubmit: (update: BoardO
 				<Form.Group controlId="description">
 					<Form.Label>Description</Form.Label>
 					<Form.Control
-						name="description"
 						as="textarea"
 						style={{ resize: "none" }}
 						rows={2}
-						ref={register({
+						{...register("description", {
 							maxLength: {
 								value: 265,
 								message: "Description must be at most 265 characters"

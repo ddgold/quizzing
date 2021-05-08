@@ -43,10 +43,16 @@ interface State {
 }
 
 export const EditCategory = ({ category, onSubmit }: { category: CategoryObject; onSubmit: (update: CategoryObject) => void }) => {
-	const { control, errors, handleSubmit, register, setError } = useForm<CategoryObject>({
+	const {
+		control,
+		handleSubmit,
+		register,
+		setError,
+		formState: { errors }
+	} = useForm<CategoryObject>({
 		defaultValues: category
 	});
-	const { fields, append, remove } = useFieldArray<ClueObject>({ control, name: "clues" });
+	const { fields, append, remove } = useFieldArray<CategoryObject>({ control, name: "clues" });
 	const [updateCategoryMutation] = useMutation<{ updateCategory: FormResult<CategoryObject, Fields> }, State>(UPDATE_CATEGORY);
 
 	const onSubmitInternal = handleSubmit(async (state: CategoryObject) => {
@@ -83,8 +89,7 @@ export const EditCategory = ({ category, onSubmit }: { category: CategoryObject;
 			<Form.Group controlId="name">
 				<Form.Label>Name</Form.Label>
 				<Form.Control
-					name="name"
-					ref={register({
+					{...register("name", {
 						required: {
 							value: true,
 							message: "Name is required"
@@ -103,11 +108,10 @@ export const EditCategory = ({ category, onSubmit }: { category: CategoryObject;
 			<Form.Group controlId="description">
 				<Form.Label>Description</Form.Label>
 				<Form.Control
-					name="description"
 					as="textarea"
 					style={{ resize: "none" }}
 					rows={2}
-					ref={register({
+					{...register("description", {
 						maxLength: {
 							value: 265,
 							message: "Description must be at most 265 characters"
@@ -122,15 +126,15 @@ export const EditCategory = ({ category, onSubmit }: { category: CategoryObject;
 			<Form.Group controlId="format">
 				<Form.Label>Format</Form.Label>
 				<Form.Check>
-					<FormCheck.Input type="radio" name="format" value="FIXED" ref={register} />
+					<FormCheck.Input type="radio" value="FIXED" {...register("format")} />
 					<FormCheck.Label>Fixed</FormCheck.Label>
 				</Form.Check>
 				<Form.Check>
-					<FormCheck.Input type="radio" name="format" value="RANDOM" ref={register} />
+					<FormCheck.Input type="radio" value="RANDOM" {...register("format")} />
 					<FormCheck.Label>Random</FormCheck.Label>
 				</Form.Check>
 				<Form.Check>
-					<FormCheck.Input type="radio" name="format" value="SORTED" ref={register} />
+					<FormCheck.Input type="radio" value="SORTED" {...register("format")} />
 					<FormCheck.Label>Sorted</FormCheck.Label>
 				</Form.Check>
 				<Form.Control.Feedback type="invalid">{errors.format?.message}</Form.Control.Feedback>
@@ -164,12 +168,11 @@ export const EditCategory = ({ category, onSubmit }: { category: CategoryObject;
 					return (
 						<InputGroup key={clue.id} style={{ marginBottom: "0.5rem" }}>
 							<Form.Control
-								name={`clues[${index}].answer`}
 								id={`clues[${index}].answer`}
 								as="textarea"
 								style={{ resize: "none" }}
 								rows={3}
-								ref={register({
+								{...register(`clues.${index}.answer` as const, {
 									required: {
 										value: true,
 										message: "Answer is required"
@@ -185,12 +188,11 @@ export const EditCategory = ({ category, onSubmit }: { category: CategoryObject;
 							/>
 
 							<Form.Control
-								name={`clues[${index}].question`}
 								id={`clues[${index}].question`}
 								as="textarea"
 								style={{ resize: "none" }}
 								rows={3}
-								ref={register({
+								{...register(`clues.${index}.question` as const, {
 									required: {
 										value: true,
 										message: "Question is required"

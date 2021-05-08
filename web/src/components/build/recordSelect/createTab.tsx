@@ -29,7 +29,12 @@ const CREATE_RECORD = gql`
 `;
 
 export const CreateTab = ({ onSelect, type }: { onSelect: (record: RecordObject) => void; type: RecordType }) => {
-	const { errors, handleSubmit, register, setError } = useForm<{ name: string }>();
+	const {
+		handleSubmit,
+		register,
+		setError,
+		formState: { errors }
+	} = useForm<{ name: string }>();
 	const [createMutation] = useMutation<{ createRecord: FormResult<RecordObject, "name"> }, { name: string; type: RecordType }>(
 		CREATE_RECORD
 	);
@@ -73,9 +78,8 @@ export const CreateTab = ({ onSelect, type }: { onSelect: (record: RecordObject)
 						<Row>
 							<Col>
 								<Form.Control
-									name="name"
 									type="name"
-									ref={register({
+									{...register("name", {
 										required: {
 											value: true,
 											message: `${getRecordTypeName(type)} name is required`

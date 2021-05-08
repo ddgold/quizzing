@@ -12,7 +12,7 @@
 		"web"
 	],
 	"devDependencies": {
-		"concurrently": "^6.0.0"
+		"concurrently": "^6.0.2"
 	},
 	"scripts": {
 		"dev-all": "docker-compose up -d database engineCache && concurrently -n \"judge ,server, web  ,\" -c \"bgMagenta,bgGreen,bgBlue\" \"yarn workspace @quizzing/judge dev\"  \"yarn workspace @quizzing/server dev\" \"yarn workspace @quizzing/web dev\" && docker-compose stop database engineCache",

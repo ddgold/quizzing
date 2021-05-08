@@ -34,7 +34,14 @@ interface State {
 }
 
 export const Register = () => {
-	const { errors, getValues, handleSubmit, register, setError, setValue } = useForm<State>();
+	const {
+		getValues,
+		handleSubmit,
+		register,
+		setError,
+		setValue,
+		formState: { errors }
+	} = useForm<State>();
 	const [registerMutation, { client }] = useMutation<{ register: AuthResult<Fields> }, State>(REGISTER);
 	const history = useHistory();
 
@@ -63,8 +70,8 @@ export const Register = () => {
 	});
 
 	const passwordsMatch = () => {
-		const values = getValues(["password", "confirmPassword"]);
-		return values.password === values.confirmPassword;
+		const [password, confirmPassword] = getValues(["password", "confirmPassword"]);
+		return password === confirmPassword;
 	};
 
 	return (
@@ -73,9 +80,8 @@ export const Register = () => {
 				<Form.Group controlId="nickname">
 					<Form.Label>Nickname</Form.Label>
 					<Form.Control
-						name="nickname"
 						placeholder="Enter nickname"
-						ref={register({
+						{...register("nickname", {
 							required: {
 								value: true,
 								message: "Nickname is required"
@@ -101,10 +107,9 @@ export const Register = () => {
 				<Form.Group controlId="email">
 					<Form.Label>Email address</Form.Label>
 					<Form.Control
-						name="email"
 						type="email"
 						placeholder="Enter email"
-						ref={register({
+						{...register("email", {
 							required: {
 								value: true,
 								message: "Email address is required"
@@ -126,10 +131,9 @@ export const Register = () => {
 				<Form.Group controlId="password">
 					<Form.Label>Password</Form.Label>
 					<Form.Control
-						name="password"
 						type="password"
 						placeholder="Password"
-						ref={register({
+						{...register("password", {
 							required: {
 								value: true,
 								message: "Password is required"
@@ -155,10 +159,9 @@ export const Register = () => {
 				<Form.Group controlId="confirmPassword">
 					<Form.Label>Confirm Password</Form.Label>
 					<Form.Control
-						name="confirmPassword"
 						type="password"
 						placeholder="Password"
-						ref={register({
+						{...register("confirmPassword", {
 							required: {
 								value: true,
 								message: "Password must be confirmed"

@@ -114,7 +114,12 @@ const SearchResults = ({ search, onSelect, type }: { search?: string; onSelect: 
 };
 
 export const SearchTab = ({ onSelect, type }: { onSelect: (record: RecordObject) => void; type: RecordType }) => {
-	const { errors, handleSubmit, register, setError } = useForm<{ name: string }>();
+	const {
+		handleSubmit,
+		register,
+		setError,
+		formState: { errors }
+	} = useForm<{ name: string }>();
 	const [searchName, setSearchName] = useState<string | undefined>();
 
 	const sanitizeName = (name: string): string => {
@@ -143,9 +148,8 @@ export const SearchTab = ({ onSelect, type }: { onSelect: (record: RecordObject)
 						<Row>
 							<Col>
 								<Form.Control
-									name="name"
 									type="name"
-									ref={register({
+									{...register("name", {
 										required: {
 											value: true,
 											message: `${getRecordTypeName(type)} name is required`

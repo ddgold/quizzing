@@ -32,7 +32,13 @@ interface State {
 }
 
 export const Login = () => {
-	const { errors, handleSubmit, register, setError, setValue } = useForm<State>();
+	const {
+		handleSubmit,
+		register,
+		setError,
+		setValue,
+		formState: { errors }
+	} = useForm<State>();
 	const [loginMutation, { client }] = useMutation<{ login: AuthResult<Fields> }, State>(LOGIN);
 	const history = useHistory();
 
@@ -65,9 +71,8 @@ export const Login = () => {
 				<Form.Group controlId="email">
 					<Form.Label>Email address</Form.Label>
 					<Form.Control
-						name="email"
 						type="email"
-						ref={register({
+						{...register("email", {
 							required: {
 								value: true,
 								message: "An email address is required"
@@ -86,9 +91,8 @@ export const Login = () => {
 				<Form.Group controlId="password">
 					<Form.Label>Password</Form.Label>
 					<Form.Control
-						name="password"
 						type="password"
-						ref={register({
+						{...register("password", {
 							required: {
 								value: true,
 								message: "Your password is required"

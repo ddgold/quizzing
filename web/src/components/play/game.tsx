@@ -44,14 +44,17 @@ const Lightbox = ({ onClick, children }: { onClick?: () => void; children: Child
 };
 
 const ResponseForm = ({ onSubmit }: { onSubmit: (response: string) => void }) => {
-	const { errors, handleSubmit, register } = useForm<{ response: string }>();
+	const {
+		handleSubmit,
+		register,
+		formState: { errors }
+	} = useForm<{ response: string }>();
 
 	return (
 		<form onSubmit={handleSubmit(({ response }) => onSubmit(response))}>
 			<input
-				name="response"
 				className="responseInput"
-				ref={register({
+				{...register("response", {
 					required: {
 						value: true,
 						message: `Response is required`
