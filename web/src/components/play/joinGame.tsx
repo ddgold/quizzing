@@ -1,6 +1,7 @@
 import { gql, useMutation, useQuery } from "@apollo/client";
 import { useState } from "react";
-import { Button, Table } from "react-bootstrap";
+import Button from "react-bootstrap/Button";
+import Table from "react-bootstrap/Table";
 import { useHistory } from "react-router-dom";
 
 import { Alert, Error, Loading } from "../shared";

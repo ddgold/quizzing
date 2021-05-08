@@ -1,6 +1,7 @@
-import { Form, Button } from "react-bootstrap";
-import { useForm } from "react-hook-form";
 import { gql, useMutation } from "@apollo/client";
+import Button from "react-bootstrap/Button";
+import Form from "react-bootstrap/Form";
+import { useForm } from "react-hook-form";
 import { useHistory } from "react-router-dom";
 
 import { AuthResult, FieldError } from "../../objects/user";

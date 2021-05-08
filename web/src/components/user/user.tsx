@@ -1,5 +1,5 @@
-import { Button } from "react-bootstrap";
 import { gql, useMutation } from "@apollo/client";
+import Button from "react-bootstrap/Button";
 
 import { setAccessToken } from "../../auth";
 import { Page } from "../shared";

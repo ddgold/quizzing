@@ -1,4 +1,5 @@
-import { Spinner, Row } from "react-bootstrap";
+import Spinner from "react-bootstrap/Spinner";
+import Row from "react-bootstrap/Row";
 
 import { Page } from "../shared";
 

@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Alert as BSAlert, Container } from "react-bootstrap";
+import BSAlert from "react-bootstrap/Alert";
+import Container from "react-bootstrap/Container";
 
 import { Children } from "../shared";
 

@@ -1,4 +1,6 @@
-import { Navbar, Nav, NavDropdown } from "react-bootstrap";
+import Navbar from "react-bootstrap/Navbar";
+import Nav from "react-bootstrap/Nav";
+import NavDropdown from "react-bootstrap/NavDropdown";
 import { Link, NavLink, useLocation } from "react-router-dom";
 
 import { useCurrentUser } from "../user";

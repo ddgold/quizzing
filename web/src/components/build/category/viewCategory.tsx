@@ -1,4 +1,4 @@
-import { Table } from "react-bootstrap";
+import Table from "react-bootstrap/Table";
 
 import { CategoryObject, ClueObject } from "../../../objects/build";
 

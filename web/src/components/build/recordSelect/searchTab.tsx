@@ -1,7 +1,13 @@
-import { useState } from "react";
-import { Button, Col, Form, Modal, Row, Tab, Table } from "react-bootstrap";
-import { useForm } from "react-hook-form";
 import { gql, useQuery } from "@apollo/client";
+import { useState } from "react";
+import Button from "react-bootstrap/Button";
+import Col from "react-bootstrap/Col";
+import Form from "react-bootstrap/Form";
+import Modal from "react-bootstrap/Modal";
+import Row from "react-bootstrap/Row";
+import Tab from "react-bootstrap/Tab";
+import Table from "react-bootstrap/Table";
+import { useForm } from "react-hook-form";
 
 import { SearchResult } from "../../../objects/shared";
 import { getRecordTypeName, RecordObject, RecordType } from "../../../objects/build";

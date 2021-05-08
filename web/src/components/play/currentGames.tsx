@@ -1,6 +1,7 @@
 import { gql, useQuery } from "@apollo/client";
 import { useState } from "react";
-import { Form, Table } from "react-bootstrap";
+import Form from "react-bootstrap/Form";
+import Table from "react-bootstrap/Table";
 import { Link } from "react-router-dom";
 
 import { AccessLevel } from "../../auth";

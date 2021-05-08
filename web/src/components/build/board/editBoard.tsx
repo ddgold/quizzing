@@ -1,7 +1,11 @@
-import { useState } from "react";
-import { Button, Col, Form, InputGroup, Row } from "react-bootstrap";
-import { useForm, useFieldArray } from "react-hook-form";
 import { gql, useMutation } from "@apollo/client";
+import { useState } from "react";
+import Button from "react-bootstrap/Button";
+import Col from "react-bootstrap/Col";
+import Form from "react-bootstrap/Form";
+import InputGroup from "react-bootstrap/InputGroup";
+import Row from "react-bootstrap/Row";
+import { useForm, useFieldArray } from "react-hook-form";
 
 import { FieldError, FormResult } from "../../../objects/shared";
 import { BoardObject, CategoryObject, RecordObject, RecordType } from "../../../objects/build";

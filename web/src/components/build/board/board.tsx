@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { Button } from "react-bootstrap";
-import { RouteComponentProps, withRouter } from "react-router-dom";
 import { gql, useQuery } from "@apollo/client";
+import { useState } from "react";
+import Button from "react-bootstrap/Button";
+import { RouteComponentProps, withRouter } from "react-router-dom";
 
 import { ErrorPage, LoadingPage, Page } from "../../shared";
 import { EditBoard } from "./editBoard";

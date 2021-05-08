@@ -1,4 +1,6 @@
-import { Modal, Nav, Tab } from "react-bootstrap";
+import Modal from "react-bootstrap/Modal";
+import Nav from "react-bootstrap/Nav";
+import Tab from "react-bootstrap/Tab";
 
 import { CreateTab } from "./createTab";
 import { SearchTab } from "./searchTab";

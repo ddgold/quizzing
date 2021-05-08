@@ -1,6 +1,6 @@
 import { gql, useMutation } from "@apollo/client";
 import { useState } from "react";
-import { Button } from "react-bootstrap";
+import Button from "react-bootstrap/Button";
 import { useHistory } from "react-router-dom";
 
 import { BoardObject, RecordObject, RecordType } from "../../objects/build";

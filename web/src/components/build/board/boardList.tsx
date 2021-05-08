@@ -1,7 +1,8 @@
-import { useState } from "react";
-import { Button, Table } from "react-bootstrap";
-import { Link, useHistory } from "react-router-dom";
 import { gql, useQuery } from "@apollo/client";
+import { useState } from "react";
+import Button from "react-bootstrap/Button";
+import Table from "react-bootstrap/Table";
+import { Link, useHistory } from "react-router-dom";
 
 import { ErrorPage, LoadingPage, Page } from "../../shared";
 import { RecordSelectModal } from "../recordSelect";

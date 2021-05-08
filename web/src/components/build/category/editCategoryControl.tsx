@@ -1,5 +1,5 @@
-import { Modal } from "react-bootstrap";
 import { useQuery } from "@apollo/client";
+import Modal from "react-bootstrap/Modal";
 
 import { QueryResult } from "../../../objects/shared";
 import { CategoryObject, RecordType } from "../../../objects/build";
