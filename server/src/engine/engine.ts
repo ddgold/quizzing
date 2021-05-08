@@ -57,7 +57,7 @@ export default class Engine {
 			throw new Error("Engine cache already connected");
 		}
 
-		if (!/^redis:\/\/\S+:\d+$/.test(url)) {
+		if (!/^redis:\/\/\S+:\d+\/?$/.test(url)) {
 			throw new Error(`Invalid engine url '${url}'`);
 		}
 

@@ -39,6 +39,7 @@
 		"dev": "nodemon ./src/server.ts -- --debug",
 		"remove-build": "rm -rf ./build",
 		"build": "yarn run remove-build && tsc -p ./tsconfig.json && cp ./src/graphql/schema.graphql ./build/graphql/schema.graphql",
+		"reset-all": "yarn reset-engine && yarn run drop-collections all && yarn run create-dummy-data newGame",
 		"reset-database": "yarn run drop-collections all && yarn run create-dummy-data boards",
 		"reset-engine": "ts-node ./src/scripts/resetEngine.ts",
 		"create-dummy-data": "ts-node ./src/scripts/createDummyData.ts",

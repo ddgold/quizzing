@@ -2,6 +2,7 @@ import Engine from "../engine";
 
 const resetEngine = async (url: string): Promise<void> => {
 	try {
+		console.info("Resetting engine...");
 		await Engine.connect(url);
 
 		try {
@@ -11,7 +12,7 @@ const resetEngine = async (url: string): Promise<void> => {
 		}
 
 		await Engine.disconnect();
-		console.info("done");
+		console.info("Done");
 	} catch (error) {
 		console.error("Error connecting to engine cache:", error);
 	}

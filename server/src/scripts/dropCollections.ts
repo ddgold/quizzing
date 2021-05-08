@@ -17,7 +17,7 @@ const dropCollections = async (collections: string[], url: string): Promise<void
 		}
 
 		await Database.disconnect();
-		console.info("done");
+		console.info("Done");
 	} catch (error) {
 		console.error("Error connecting to database:", error);
 	}

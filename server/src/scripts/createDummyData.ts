@@ -1,5 +1,6 @@
 import { AccessLevel } from "../auth";
 import Database, { BoardDocument, BoardModel, CategoryDocument, CategoryModel, ClueModel, UserDocument, UserModel } from "../database";
+import Engine from "../engine";
 
 interface RawUser {
 	nickname: string;
@@ -45,8 +46,16 @@ const createDummyUsers = async (): Promise<void[]> => {
 			access: AccessLevel.User
 		},
 		{
-			nickname: "foobar",
-			email: "foobar@test.com",
+			nickname: "foo_bar",
+			email: "foo@test.com",
+			password: "_PL<0okm",
+			created: new Date(),
+			lastLogin: new Date(),
+			access: AccessLevel.User
+		},
+		{
+			nickname: "hello_world",
+			email: "hello@test.com",
 			password: "_PL<0okm",
 			created: new Date(),
 			lastLogin: new Date(),
@@ -326,16 +335,77 @@ const createDummyCategories = async (): Promise<void> => {
 	}
 };
 
-const createDummyData = async (scripts: string[], url: string): Promise<void> => {
+const createNewGame = async (): Promise<void> => {
+	const kingKongUser = await getUser("king_kong");
+	const fooBarUser = await getUser("foo_bar");
+	const helloWorldUser = await getUser("hello_world");
+
+	const board = await getBoard("Random Trivia");
+
+	const gameId = await Engine.host(board.id, kingKongUser.id);
+	await Engine.join(gameId, fooBarUser.id);
+	await Engine.join(gameId, helloWorldUser.id);
+};
+
+const connect = async (connections: string[], databaseUrl: string, engineUrl: string): Promise<void> => {
+	let connected: string[] = [];
+
+	for (const connection of connections) {
+		if (["database", "mongo"].includes(connection)) {
+			try {
+				await Database.connect(databaseUrl);
+			} catch (error) {
+				console.error(`Error connecting database at '${databaseUrl}':`, error);
+				disconnect(connected);
+				throw error;
+			}
+		} else if (["engine", "redis"].includes(connection)) {
+			try {
+				await Engine.connect(engineUrl);
+			} catch (error) {
+				console.error(`Error connecting engine at '${engineUrl}':`, error);
+				disconnect(connected);
+				throw error;
+			}
+		}
+
+		connected.push(connection);
+	}
+};
+
+const disconnect = async (connections: string[]): Promise<void> => {
+	for (const connection of connections) {
+		if (["database", "mongo"].includes(connection)) {
+			try {
+				await Database.disconnect();
+			} catch (error) {
+				console.error(`Error disconnecting from database:`, error);
+			}
+		} else if (["engine", "redis"].includes(connection)) {
+			try {
+				await Engine.disconnect();
+			} catch (error) {
+				console.error(`Error disconnecting from engine:`, error);
+			}
+		}
+	}
+};
+
+const createDummyData = async (scripts: string[], connections: string[], databaseUrl: string, engineUrl: string): Promise<void> => {
 	if (scripts.length === 0) {
 		return;
 	}
 
 	try {
-		await Database.connect(url);
+		await connect(connections, databaseUrl, engineUrl);
+
 		for (const script of scripts) {
 			try {
 				switch (script) {
+					case "newGame": {
+						await createNewGame();
+						break;
+					}
 					case "boards": {
 						await createDummyBoards();
 						break;
@@ -361,31 +431,49 @@ const createDummyData = async (scripts: string[], url: string): Promise<void> =>
 			}
 		}
 
-		await Database.disconnect();
-		console.info("done");
+		await disconnect(connections);
+		console.info("Done");
 	} catch (error) {
-		console.error("Error connecting to database:", error);
+		console.error("Errored out");
 	}
 };
 
-const addScript = (scripts: string[], newScript: string): void => {
+const addConnection = (connections: string[], newConnection: string): void => {
+	if (!connections.includes(newConnection)) {
+		connections.push(newConnection);
+	}
+};
+
+const addScript = (scripts: string[], connections: string[], newScript: string): void => {
 	if (!scripts.includes(newScript)) {
-		// Required prerequisite scripts
-		if (newScript === "boards") {
-			addScript(scripts, "users");
-			addScript(scripts, "categories");
+		// Required prerequisite scripts and connections
+		if (newScript === "newGame") {
+			addConnection(connections, "database");
+			addConnection(connections, "engine");
+			addScript(scripts, connections, "users");
+			addScript(scripts, connections, "boards");
+		} else if (newScript === "boards") {
+			addConnection(connections, "database");
+			addScript(scripts, connections, "users");
+			addScript(scripts, connections, "categories");
 		} else if (newScript === "categories") {
-			addScript(scripts, "users");
+			addConnection(connections, "database");
+			addScript(scripts, connections, "users");
+		} else if (newScript === "users") {
+			addConnection(connections, "database");
+		} else if (newScript === "admin") {
+			addConnection(connections, "database");
 		}
 
 		scripts.push(newScript);
 	}
 };
 
-const parseArgs = (args: string[]): string[] => {
+const parseArgs = (args: string[]): [string[], string[]] => {
 	let scripts: string[] = [];
+	let connections: string[] = [];
 	for (let i = 2; i < args.length; i++) {
-		addScript(scripts, args[i]!);
+		addScript(scripts, connections, args[i]!);
 	}
 
 	if (scripts.length === 0) {
@@ -394,7 +482,7 @@ const parseArgs = (args: string[]): string[] => {
 		console.info("Running scripts...", scripts);
 	}
 
-	return scripts;
+	return [scripts, connections];
 };
 
-createDummyData(parseArgs(process.argv), "mongodb://localhost:27017/");
+createDummyData(...parseArgs(process.argv), "mongodb://localhost:27017/", "redis://localhost:6379/");
