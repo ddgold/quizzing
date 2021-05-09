@@ -3,7 +3,7 @@ import Engine from "../engine";
 
 const testDatabase = async (url: string): Promise<void> => {
 	try {
-		console.info("database test");
+		console.info("Database test...");
 		await Database.connect(url);
 
 		try {
@@ -15,7 +15,7 @@ const testDatabase = async (url: string): Promise<void> => {
 		}
 
 		await Database.disconnect();
-		console.info("done");
+		console.info("Done");
 	} catch (error) {
 		console.error("Error connecting to database:", error);
 	}
@@ -23,7 +23,7 @@ const testDatabase = async (url: string): Promise<void> => {
 
 const testEngine = async (url: string): Promise<void> => {
 	try {
-		console.info("engine test");
+		console.info("Engine test...");
 		await Engine.connect(url);
 
 		try {
@@ -35,17 +35,19 @@ const testEngine = async (url: string): Promise<void> => {
 		}
 
 		await Engine.disconnect();
-		console.info("done");
+		console.info("Done");
 	} catch (error) {
 		console.error("Error connecting to engine cache:", error);
 	}
 };
 
-(async (command: string) => {
+const scrap = async (command: string) => {
 	if (["all", "engine", "redis"].includes(command)) {
 		await testEngine("redis://localhost:6379/");
 	}
 	if (["all", "database", "mongo"].includes(command)) {
 		await testDatabase("mongodb://localhost:27017/");
 	}
-})(process.argv[2] || "all");
+};
+
+scrap(process.argv[2] || "all");
