@@ -1,0 +1,28 @@
+@startuml stateDiagram
+hide empty description
+
+state AwaitingPlayers
+state AwaitingSelection
+state ShowingAnswer
+state AwaitingResponse 
+state ShowingQuestion
+
+state join <<choice>>
+state answerClue <<choice>>
+state closeClue <<choice>>
+
+[*] --> AwaitingPlayers : host()
+AwaitingPlayers --> join : join()
+join --> AwaitingPlayers : [more space]
+join --> AwaitingSelection : [game full]
+AwaitingSelection --> ShowingAnswer : selectClue()
+ShowingAnswer --> AwaitingResponse: buzzIn()
+AwaitingResponse --> answerClue : answerClue()
+answerClue --> ShowingQuestion : [correct]
+answerClue --> ShowingQuestion : [everyone wrong]
+answerClue --> ShowingAnswer : [incorrect]
+ShowingQuestion --> closeClue : closeClue()
+closeClue --> AwaitingSelection : [next clue]
+closeClue --> [*] : [game over]
+
+@enduml

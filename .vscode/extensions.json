@@ -6,6 +6,7 @@
 		"esbenp.prettier-vscode",
 		"redhat.vscode-yaml",
 		"gruntfuggly.todo-tree",
-		"ms-python.python"
+		"ms-python.python",
+		"jebbs.plantuml"
 	]
 }
