@@ -22,6 +22,7 @@ export default class Engine {
 	// --------
 	private client: RedisClient;
 	private pubsub: RedisPubSub;
+	private timeouts: { [gameId: string]: number };
 
 	private constructor(options: RedisOptions) {
 		this.pubsub = new RedisPubSub({
@@ -29,6 +30,7 @@ export default class Engine {
 			subscriber: new Redis(options)
 		});
 		this.client = new Redis(options);
+		this.timeouts = {};
 	}
 
 	// ---------
@@ -50,6 +52,14 @@ export default class Engine {
 		}
 
 		return this.singleton.pubsub;
+	}
+
+	private static timeouts(gameId: string): number | undefined {
+		if (this.singleton === undefined) {
+			throw new Error("Engine cache not connected");
+		}
+
+		return this.singleton.timeouts[gameId];
 	}
 
 	static async connect(url: string): Promise<string> {
@@ -78,36 +88,57 @@ export default class Engine {
 	// -------
 	// Helpers
 	// -------
-	private static async assertState(gameId: string, requiredState: State | "Any" | null): Promise<void> {
+	private static async assertState(gameId: string, requiredState: State | State[] | "Any" | null): Promise<void> {
 		const currentState = await this.client.hget(Keys.ActiveGame(gameId), Fields.State());
 		if (currentState === null && requiredState !== null) {
 			throw new ValidationError(`Game with id '${gameId}' does not exist`);
 		} else if (currentState !== null && requiredState === null) {
 			throw new ValidationError(`Game with id '${gameId}' already exists`);
-		} else if (currentState !== requiredState && requiredState !== "Any") {
+		} else if (requiredState !== "Any") {
+			if (requiredState === null || typeof requiredState === "string") {
+				if (currentState === requiredState) {
+					return;
+				}
+			} else {
+				for (const state of requiredState) {
+					if (currentState === state) {
+						return;
+					}
+				}
+			}
 			throw new ValidationError(`Game with id '${gameId}' found state '${currentState}' expecting '${requiredState}'`);
 		}
 	}
 
-	private static async assertUser(gameId: string, userId: string, limit: "Any" | "Active" | "HaventGuessed"): Promise<void> {
+	private static async assertUser(gameId: string, userId: string, limit: "Any" | "Active" | "HaventActed"): Promise<void> {
 		if (limit === "Active") {
 			const activePlayer = await this.client.hget(Keys.ActiveGame(gameId), Fields.ActivePlayer());
 			if (!activePlayer || activePlayer !== userId) {
 				throw new ForbiddenError(`Can't access game with id '${gameId}'`);
 			}
-		} else {
-			if (limit === "HaventGuessed") {
-				const activeClue = await this.getActiveClue(gameId);
-				if (activeClue.alreadyGuessed.includes(userId)) {
-					throw new ForbiddenError(`Can't access game with id '${gameId}'`);
-				}
-			}
-
+		} else if (limit === "Any") {
 			const players = await this.getPlayers(gameId);
 			if (!this.playersInclude(players, userId)) {
 				throw new ForbiddenError(`Can't access game with id '${gameId}'`);
 			}
+		} else if (limit === "HaventActed") {
+			const players = await this.getPlayers(gameId);
+			for (const player of players) {
+				if (player && player.id === userId) {
+					if (player.alreadyActed) {
+						break;
+					}
+					return;
+				}
+			}
+
+			throw new ForbiddenError(`Can't access game with id '${gameId}'`);
 		}
+	}
+
+	private static async checkTimeout(gameId: string, timeout: number): Promise<boolean> {
+		const cache = await this.client.hget(Keys.ActiveGame(gameId), Fields.Timeout());
+		return !!cache && timeout === Number.parseInt(cache);
 	}
 
 	private static async getModel(gameId: string): Promise<GameObject> {
@@ -136,15 +167,21 @@ export default class Engine {
 			models.push(model);
 		}
 
+		let timeout: number | undefined;
+		if (hash[Fields.Timeout()]) {
+			timeout = Number.parseInt(hash[Fields.Timeout()]!);
+		}
+
 		const state = hash[Fields.State()] as State;
 		let currentText: string | undefined;
-		if (state === "ShowingAnswer" || state === "AwaitingResponse" || state === "ShowingQuestion") {
+		if (state === "ShowingClue" || state === "AwaitingResponse") {
 			const activeClue: ActiveClueObject = JSON.parse(hash[Fields.ActiveClue()]!);
-			if (state === "ShowingQuestion") {
-				currentText = activeClue.question;
-			} else {
-				currentText = activeClue.answer;
-			}
+			currentText = activeClue.answer;
+		} else if (state === "ShowingResult" || state === "ShowingVerifiedResult") {
+			const activeClue: ActiveClueObject = JSON.parse(hash[Fields.ActiveClue()]!);
+			currentText = activeClue.question;
+		} else if (state === "VerifyingResult") {
+			currentText = "Verifying Result";
 		}
 
 		const model: GameObject = {
@@ -153,6 +190,7 @@ export default class Engine {
 			categories: categories,
 			rows: models,
 			state: state,
+			timeout: timeout,
 			currentText: currentText,
 			activePlayer: hash[Fields.ActivePlayer()],
 			players: JSON.parse(hash[Fields.Players()]!),
@@ -172,16 +210,21 @@ export default class Engine {
 	}
 
 	private static async getActiveClue(gameId: string): Promise<ActiveClueObject> {
-		return JSON.parse((await this.client.hget(Keys.ActiveGame(gameId), Fields.ActiveClue()))!);
-	}
-
-	private static async getPlayers(gameId: string): Promise<PlayerArray> {
-		const value = await this.client.hget(Keys.ActiveGame(gameId), Fields.Players());
-		if (value === null) {
+		const activeClue = await this.client.hget(Keys.ActiveGame(gameId), Fields.ActiveClue());
+		if (activeClue === null) {
 			throw new ValidationError(`Game with id '${gameId}' does not exist`);
 		}
 
-		return JSON.parse(value);
+		return JSON.parse(activeClue);
+	}
+
+	private static async getPlayers(gameId: string): Promise<PlayerArray> {
+		const players = await this.client.hget(Keys.ActiveGame(gameId), Fields.Players());
+		if (players === null) {
+			throw new ValidationError(`Game with id '${gameId}' does not exist`);
+		}
+
+		return JSON.parse(players);
 	}
 
 	private static playersInclude(players: PlayerArray, targetId: string): boolean {
@@ -233,6 +276,126 @@ export default class Engine {
 		});
 
 		return model;
+	}
+
+	// --------
+	// Timeouts
+	// --------
+	private static timeout(gameId: string, ms: number, callback: () => {}): number {
+		const oldTimeout = this.timeouts(gameId);
+		if (oldTimeout) {
+			clearTimeout(oldTimeout);
+		}
+
+		const newTimeout = Date.now() + ms;
+		setTimeout(
+			(async () => {
+				if (!(await this.checkTimeout(gameId, newTimeout))) {
+					return;
+				}
+
+				callback();
+			}).bind(this),
+			ms + 200
+		);
+
+		return newTimeout;
+	}
+
+	private static awaitingSelectionTimeout(gameId: string): number {
+		return this.timeout(gameId, 5000, async () => {
+			await this.assertState(gameId, "AwaitingSelection");
+
+			// TODO: for now just select a random user, need to refine this
+			const players = await this.getPlayers(gameId);
+			const activePlayer = (await this.client.hget(Keys.ActiveGame(gameId), Fields.ActivePlayer()))!;
+			let done = false;
+			do {
+				const newActive = players[Math.floor(Math.random() * players.length)];
+				if (!newActive || newActive.id === activePlayer) {
+					continue;
+				}
+
+				await this.client
+					.multi()
+					.hset(Keys.ActiveGame(gameId), Fields.Timeout(), this.awaitingSelectionTimeout(gameId))
+					.hset(Keys.ActiveGame(gameId), Fields.ActivePlayer(), newActive.id)
+					.exec();
+
+				await this.publishPlayGame(gameId);
+
+				done = true;
+			} while (!done);
+		});
+	}
+
+	private static showingClueTimeout(gameId: string): number {
+		return this.timeout(gameId, 10000, async () => {
+			await this.assertState(gameId, "ShowingClue");
+
+			const controllingPlayer = (await this.client.hget(Keys.ActiveGame(gameId), Fields.ControllingPlayer()))!;
+			await this.client
+				.multi()
+				.hset(Keys.ActiveGame(gameId), Fields.State(), "ShowingResult")
+				.hset(Keys.ActiveGame(gameId), Fields.Timeout(), this.showingResultTimeout(gameId))
+				.hset(Keys.ActiveGame(gameId), Fields.ActivePlayer(), controllingPlayer)
+				.exec();
+
+			await this.publishPlayGame(gameId);
+		});
+	}
+
+	private static awaitingResponseTimeout(gameId: string, userId: string): number {
+		return this.timeout(gameId, 10000, async () => {
+			await this.answerClue(gameId, userId, "");
+		});
+	}
+
+	private static showingResultTimeout(gameId: string): number {
+		return this.timeout(gameId, 5000, async () => {
+			await this.assertState(gameId, ["ShowingResult", "ShowingVerifiedResult"]);
+
+			const players = await this.getPlayers(gameId);
+			for (const player of players) {
+				if (player) {
+					player.alreadyActed = false;
+				}
+			}
+
+			await this.client
+				.multi()
+				.hset(Keys.ActiveGame(gameId), Fields.State(), "AwaitingSelection")
+				.hset(Keys.ActiveGame(gameId), Fields.Timeout(), this.awaitingSelectionTimeout(gameId))
+				.hset(Keys.ActiveGame(gameId), Fields.Players(), JSON.stringify(players))
+				.hdel(Keys.ActiveGame(gameId), Fields.ActiveClue())
+				.exec();
+
+			const game = await this.publishPlayGame(gameId);
+
+			if (await this.isGameOver(gameId)) {
+				let pipe = this.client.multi().srem(Keys.PublicGames(), gameId);
+				for (const player of game.players) {
+					if (player) {
+						pipe = pipe.srem(Keys.UsersGames(player.id), gameId);
+					}
+				}
+				pipe.del(Keys.ActiveGame(gameId)).exec();
+			}
+		});
+	}
+
+	private static verifyingResultTimeout(gameId: string): number {
+		return this.timeout(gameId, 5000, async () => {
+			await this.assertState(gameId, "VerifyingResult");
+
+			await this.client
+				.multi()
+				.hset(Keys.ActiveGame(gameId), Fields.State(), "ShowingVerifiedResult")
+				.hset(Keys.ActiveGame(gameId), Fields.Timeout(), this.showingResultTimeout(gameId))
+				.exec();
+
+			await this.publishPlayGame(gameId);
+		});
 	}
 
 	// --------------
@@ -299,7 +462,7 @@ export default class Engine {
 		players[freeSlot] = {
 			id: userId,
 			nickname: user.nickname,
-			alreadyGuessed: false,
+			alreadyActed: false,
 			score: 0
 		};
 
@@ -309,14 +472,16 @@ export default class Engine {
 			.hset(Keys.ActiveGame(gameId), Fields.Players(), JSON.stringify(players));
 
 		if (players.indexOf(null) === -1) {
-			pipe = pipe
+			await pipe
 				.srem(Keys.PublicGames(), gameId)
 				.hset(Keys.ActiveGame(gameId), Fields.State(), "AwaitingSelection")
+				.hset(Keys.ActiveGame(gameId), Fields.Timeout(), this.awaitingSelectionTimeout(gameId))
 				.hset(Keys.ActiveGame(gameId), Fields.ActivePlayer(), userId)
-				.hset(Keys.ActiveGame(gameId), Fields.ControllingPlayer(), userId);
+				.hset(Keys.ActiveGame(gameId), Fields.ControllingPlayer(), userId)
+				.exec();
+		} else {
+			await pipe.exec();
 		}
-
-		await pipe.exec();
 
 		await this.publishPlayGame(gameId);
 	}
@@ -334,11 +499,11 @@ export default class Engine {
 		const activeClue: ActiveClueObject = JSON.parse(hash[0]);
 		activeClue.category = hash[1]!;
 		activeClue.value = Number.parseInt(hash[2]!);
-		activeClue.alreadyGuessed = [];
 
 		await this.client
 			.multi()
-			.hset(Keys.ActiveGame(gameId), Fields.State(), "ShowingAnswer")
+			.hset(Keys.ActiveGame(gameId), Fields.State(), "ShowingClue")
+			.hset(Keys.ActiveGame(gameId), Fields.Timeout(), this.showingClueTimeout(gameId))
 			.hset(Keys.ActiveGame(gameId), Fields.ActiveClue(), JSON.stringify(activeClue))
 			.hdel(Keys.ActiveGame(gameId), Fields.Clue(row, col))
 			.hdel(Keys.ActiveGame(gameId), Fields.ActivePlayer())
@@ -348,12 +513,13 @@ export default class Engine {
 	}
 
 	static async buzzIn(gameId: string, userId: string): Promise<void> {
-		await this.assertState(gameId, "ShowingAnswer");
-		await this.assertUser(gameId, userId, "HaventGuessed");
+		await this.assertState(gameId, "ShowingClue");
+		await this.assertUser(gameId, userId, "HaventActed");
 
 		await this.client
 			.multi()
 			.hset(Keys.ActiveGame(gameId), Fields.State(), "AwaitingResponse")
+			.hset(Keys.ActiveGame(gameId), Fields.Timeout(), this.awaitingResponseTimeout(gameId, userId))
 			.hset(Keys.ActiveGame(gameId), Fields.ActivePlayer(), userId)
 			.exec();
 
@@ -365,94 +531,126 @@ export default class Engine {
 		await this.assertUser(gameId, userId, "Active");
 
 		const activeClue = await this.getActiveClue(gameId);
-		const players = await this.getPlayers(gameId);
-
-		activeClue.alreadyGuessed.push(userId);
 
 		// Correct response
-		if (await this.judgeResponse(activeClue.question, response)) {
-			players.forEach((player) => {
-				if (player) {
-					player.alreadyGuessed = false;
-
-					if (player.id === userId) {
-						player.score += activeClue.value;
-					}
+		if (response.length > 0 && (await this.judgeResponse(activeClue.question, response))) {
+			const players = await this.getPlayers(gameId);
+			for (const player of players) {
+				if (player && player.id === userId) {
+					player.alreadyActed = true;
+					player.score += activeClue.value;
+					break;
 				}
-			});
+			}
 
 			await this.client
 				.multi()
-				.hset(Keys.ActiveGame(gameId), Fields.State(), "ShowingQuestion")
-				.hset(Keys.ActiveGame(gameId), Fields.Players(), JSON.stringify(players))
+				.hset(Keys.ActiveGame(gameId), Fields.State(), "ShowingResult")
+				.hset(Keys.ActiveGame(gameId), Fields.Timeout(), this.showingResultTimeout(gameId))
+				.hset(Keys.ActiveGame(gameId), Fields.ActiveClue(), JSON.stringify(activeClue))
 				.hset(Keys.ActiveGame(gameId), Fields.ControllingPlayer(), userId)
+				.hset(Keys.ActiveGame(gameId), Fields.Players(), JSON.stringify(players))
 				.exec();
+		}
+		// Wrong response
+		else {
+			const players = await this.getPlayers(gameId);
+			for (const player of players) {
+				if (player && player.id === userId) {
+					player.alreadyActed = true;
+					player.score -= activeClue.value;
+					break;
+				}
+			}
 
 			// Everyone is wrong
-		} else if (players.every((player) => !player || activeClue.alreadyGuessed.includes(player.id))) {
-			players.forEach((player) => {
-				if (player) {
-					player.alreadyGuessed = false;
-
-					if (player.id === userId) {
-						player.score -= activeClue.value;
-					}
-				}
-			});
-
-			const controllingPlayer = (await this.client.hget(Keys.ActiveGame(gameId), Fields.ControllingPlayer()))!;
-			await this.client
-				.multi()
-				.hset(Keys.ActiveGame(gameId), Fields.State(), "ShowingQuestion")
-				.hset(Keys.ActiveGame(gameId), Fields.ActiveClue(), JSON.stringify(activeClue))
-				.hset(Keys.ActiveGame(gameId), Fields.Players(), JSON.stringify(players))
-				.hset(Keys.ActiveGame(gameId), Fields.ActivePlayer(), controllingPlayer)
-				.exec();
-
+			if (players.every((player) => !player || player.alreadyActed)) {
+				const controllingPlayer = (await this.client.hget(Keys.ActiveGame(gameId), Fields.ControllingPlayer()))!;
+				await this.client
+					.multi()
+					.hset(Keys.ActiveGame(gameId), Fields.State(), "ShowingResult")
+					.hset(Keys.ActiveGame(gameId), Fields.Timeout(), this.showingResultTimeout(gameId))
+					.hset(Keys.ActiveGame(gameId), Fields.ActiveClue(), JSON.stringify(activeClue))
+					.hset(Keys.ActiveGame(gameId), Fields.Players(), JSON.stringify(players))
+					.hset(Keys.ActiveGame(gameId), Fields.ActivePlayer(), controllingPlayer)
+					.exec();
+			}
 			// Someone hasn't guessed
-		} else {
-			players.forEach((player) => {
-				if (player) {
-					if (player.id === userId) {
-						player.alreadyGuessed = true;
-						player.score -= activeClue.value;
-					}
-				}
-			});
-
-			await this.client
-				.multi()
-				.hset(Keys.ActiveGame(gameId), Fields.State(), "ShowingAnswer")
-				.hset(Keys.ActiveGame(gameId), Fields.ActiveClue(), JSON.stringify(activeClue))
-				.hset(Keys.ActiveGame(gameId), Fields.Players(), JSON.stringify(players))
-				.hdel(Keys.ActiveGame(gameId), Fields.ActivePlayer())
-				.exec();
+			else {
+				await this.client
+					.multi()
+					.hset(Keys.ActiveGame(gameId), Fields.State(), "ShowingClue")
+					.hset(Keys.ActiveGame(gameId), Fields.Timeout(), this.showingClueTimeout(gameId))
+					.hset(Keys.ActiveGame(gameId), Fields.ActiveClue(), JSON.stringify(activeClue))
+					.hset(Keys.ActiveGame(gameId), Fields.Players(), JSON.stringify(players))
+					.hdel(Keys.ActiveGame(gameId), Fields.ActivePlayer())
+					.exec();
+			}
 		}
 
 		await this.publishPlayGame(gameId);
 	}
 
-	static async closeClue(gameId: string, userId: string): Promise<void> {
-		await this.assertState(gameId, "ShowingQuestion");
-		await this.assertUser(gameId, userId, "Active");
+	static async protestResult(gameId: string, userId: string): Promise<void> {
+		await this.assertState(gameId, "ShowingResult");
+		await this.assertUser(gameId, userId, "Any");
+
+		const activeClue = await this.getActiveClue(gameId);
+		activeClue.protestTally = 0;
+
+		const players = await this.getPlayers(gameId);
+		for (const player of players) {
+			if (player) {
+				player.alreadyActed = false;
+			}
+		}
 
 		await this.client
 			.multi()
-			.hset(Keys.ActiveGame(gameId), Fields.State(), "AwaitingSelection")
-			.hdel(Keys.ActiveGame(gameId), Fields.ActiveClue())
+			.hset(Keys.ActiveGame(gameId), Fields.State(), "VerifyingResult")
+			.hset(Keys.ActiveGame(gameId), Fields.Timeout(), this.verifyingResultTimeout(gameId))
+			.hset(Keys.ActiveGame(gameId), Fields.ActiveClue(), JSON.stringify(activeClue))
+			.hset(Keys.ActiveGame(gameId), Fields.Players(), JSON.stringify(players))
 			.exec();
 
-		const game = await this.publishPlayGame(gameId);
+		await this.publishPlayGame(gameId);
+	}
 
-		if (await this.isGameOver(gameId)) {
-			let pipe = this.client.multi().srem(Keys.PublicGames(), gameId);
-			game.players.forEach((player) => {
-				if (player) {
-					pipe = pipe.srem(Keys.UsersGames(player.id), gameId);
-				}
-			});
-			pipe.del(Keys.ActiveGame(gameId)).exec();
+	static async voteOnResult(gameId: string, userId: string, vote: boolean) {
+		await this.assertState(gameId, "VerifyingResult");
+		await this.assertUser(gameId, userId, "HaventActed");
+
+		const activeClue = await this.getActiveClue(gameId);
+		activeClue.protestTally! += vote ? 1 : -1;
+
+		const players = await this.getPlayers(gameId);
+		for (const player of players) {
+			if (player && player.id === userId) {
+				player.alreadyActed = true;
+				break;
+			}
 		}
+
+		// Done voting
+		if (players.every((player) => !player || player.alreadyActed)) {
+			await this.client
+				.multi()
+				.hset(Keys.ActiveGame(gameId), Fields.State(), "ShowingVerifiedResult")
+				.hset(Keys.ActiveGame(gameId), Fields.Timeout(), this.showingResultTimeout(gameId))
+				.hset(Keys.ActiveGame(gameId), Fields.ActiveClue(), JSON.stringify(activeClue))
+				.hset(Keys.ActiveGame(gameId), Fields.Players(), JSON.stringify(players))
+				.exec();
+		}
+		// Someone hasn't voted
+		else {
+			await this.client
+				.multi()
+				.hset(Keys.ActiveGame(gameId), Fields.ActiveClue(), JSON.stringify(activeClue))
+				.hset(Keys.ActiveGame(gameId), Fields.Players(), JSON.stringify(players))
+				.exec();
+		}
+
+		await this.publishPlayGame(gameId);
 	}
 
 	static async playGame(gameId: string, userId: string): Promise<GameObject> {
@@ -478,12 +676,10 @@ export default class Engine {
 		const publicGames = await this.client.smembers(Keys.PublicGames());
 
 		const results = await Promise.all(
-			publicGames.map(
-				async (gameId): Promise<boolean> => {
-					const players = await this.getPlayers(gameId);
-					return !this.playersInclude(players, userId);
-				}
-			)
+			publicGames.map(async (gameId): Promise<boolean> => {
+				const players = await this.getPlayers(gameId);
+				return !this.playersInclude(players, userId);
+			})
 		);
 
 		const filteredGames = publicGames.filter((_, index) => {

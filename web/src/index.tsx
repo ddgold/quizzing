@@ -8,16 +8,10 @@ import { getMainDefinition } from "@apollo/client/utilities";
 import { TokenRefreshLink } from "apollo-link-token-refresh";
 import jwt_decode from "jwt-decode";
 
-import { getAccessToken, setAccessToken } from "./auth";
+import { getAccessToken, setAccessToken, TokenPayload } from "./auth";
 import { App, serverURL } from "./app";
 
 import "./index.scss";
-
-interface TokenPayload {
-	exp: number;
-	iat: number;
-	userId: string;
-}
 
 // Refresh access token if undefined or expired
 const refreshLink = new TokenRefreshLink({

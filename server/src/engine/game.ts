@@ -57,6 +57,10 @@ export namespace Fields {
 		return "started";
 	};
 
+	export const Timeout = () => {
+		return "timeout";
+	};
+
 	export const Value = (row: number) => {
 		return `value:${row}`;
 	};

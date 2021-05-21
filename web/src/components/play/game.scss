@@ -132,7 +132,7 @@ $cell-width: calc(#{$cell-height} * #{$ratio});
 		font-weight: bold;
 	}
 
-	&.alreadyGuessed {
+	&.alreadyActed {
 		font-style: italic;
 	}
 }

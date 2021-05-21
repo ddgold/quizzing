@@ -94,7 +94,7 @@ type Row {
 type Player {
 	id: String!
 	nickname: String!
-	alreadyGuessed: Boolean!
+	alreadyActed: Boolean!
 	score: Int!
 }
 
@@ -104,6 +104,7 @@ type Game {
 	categories: [String!]!
 	rows: [Row!]!
 	state: String!
+	timeout: String
 	currentText: String
 	activePlayer: String
 	players: [Player]!
@@ -150,7 +151,8 @@ type Mutation {
 	selectClue(gameId: String!, row: Int!, col: Int!): Void
 	buzzIn(gameId: String!): Void
 	answerClue(gameId: String!, response: String!): Void
-	closeClue(gameId: String!): Void
+	protestResult(gameId: String!): Void
+	voteOnResult(gameId: String!, vote: Boolean!): Void
 }
 
 # -------------

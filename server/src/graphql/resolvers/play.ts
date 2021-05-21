@@ -48,9 +48,13 @@ export const PlayResolvers: IResolvers<any, Context> = {
 			await assertHttpToken(context, AccessLevel.User);
 			return Engine.answerClue(gameId, context.payload!.userId, response);
 		},
-		closeClue: async (_, { gameId }: { gameId: string }, context): Promise<void> => {
+		protestResult: async (_, { gameId }: { gameId: string }, context): Promise<void> => {
 			await assertHttpToken(context, AccessLevel.User);
-			return Engine.closeClue(gameId, context.payload!.userId);
+			return Engine.protestResult(gameId, context.payload!.userId);
+		},
+		voteOnResult: async (_, { gameId, vote }: { gameId: string; vote: boolean }, context): Promise<void> => {
+			await assertHttpToken(context, AccessLevel.User);
+			return Engine.voteOnResult(gameId, context.payload!.userId, vote);
 		}
 	},
 	Subscription: {

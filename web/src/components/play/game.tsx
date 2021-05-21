@@ -1,4 +1,5 @@
 import { gql, useMutation } from "@apollo/client";
+import { useEffect, useState } from "react";
 import Col from "react-bootstrap/Col";
 import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
@@ -31,11 +32,31 @@ const ANSWER_CLUE = gql`
 	}
 `;
 
-const CLOSE_CLUE = gql`
-	mutation CloseClue($gameId: String!) {
-		closeClue(gameId: $gameId)
+const PROTEST_RESULT = gql`
+	mutation ProtestResult($gameId: String!) {
+		protestResult(gameId: $gameId)
 	}
 `;
+
+const VOTE_ON_RESULT = gql`
+	mutation VoteOnResult($gameId: String!, $vote: Boolean!) {
+		voteOnResult(gameId: $gameId, vote: $vote)
+	}
+`;
+
+const Timer = ({ end }: { end?: number }) => {
+	const [timeLeft, setTimeLeft] = useState((end || Date.now()) - Date.now());
+
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			setTimeLeft(timeLeft - 1000);
+		}, 1000);
+
+		return () => clearTimeout(timer);
+	});
+
+	return <h2>{`${Math.round(timeLeft / 1000)}`}</h2>;
+};
 
 const Lightbox = ({ onClick, children }: { onClick?: () => void; children: Children }) => {
 	return (
@@ -74,13 +95,20 @@ const ResponseForm = ({ onSubmit }: { onSubmit: (response: string) => void }) =>
 	);
 };
 
-const PlayerCard = ({ active, alreadyGuessed, player }: { active?: boolean; alreadyGuessed?: boolean; player: PlayerObject | null }) => {
+const VoteForm = ({ onSubmit }: { onSubmit: (vote: boolean) => void }) => (
+	<>
+		<button onClick={() => onSubmit(true)}>True</button>
+		<button onClick={() => onSubmit(false)}>False</button>
+	</>
+);
+
+const PlayerCard = ({ active, player }: { active?: boolean; player: PlayerObject | null }) => {
 	let className = "player";
 	if (active) {
 		className += " active";
 	}
-	if (alreadyGuessed) {
-		className += " alreadyGuessed";
+	if (player?.alreadyActed) {
+		className += " alreadyActed";
 	}
 
 	return (
@@ -105,18 +133,19 @@ export const Game = withRouter((props: RouteComponentProps) => {
 	const [selectClueMutation] = useMutation<{}, { gameId: string; row?: number; col?: number }>(SELECT_CLUE);
 	const [buzzInMutation] = useMutation<{}, { gameId: string }>(BUZZ_IN);
 	const [answerClueMutation] = useMutation<{}, { gameId: string; response: string }>(ANSWER_CLUE);
-	const [closeClueMutation] = useMutation<{}, { gameId: string }>(CLOSE_CLUE);
+	const [protestResultMutation] = useMutation<{}, { gameId: string }>(PROTEST_RESULT);
+	const [voteOnResultMutation] = useMutation<{}, { gameId: string; vote: boolean }>(VOTE_ON_RESULT);
 	const history = useHistory();
 
 	const isActiveUser = (player: UserObject | PlayerObject | null): boolean => {
 		return player?.id === game?.activePlayer;
 	};
 
-	const alreadyGuessed = (game: GameObject): boolean => {
+	const haventActed = (game: GameObject): boolean => {
 		if (currentUser) {
 			for (const player of game.players) {
 				if (player && currentUser.id === player.id) {
-					return player.alreadyGuessed;
+					return !player.alreadyActed;
 				}
 			}
 		}
@@ -154,13 +183,23 @@ export const Game = withRouter((props: RouteComponentProps) => {
 		}
 	};
 
-	const closeClue = async (): Promise<void> => {
+	const protestResult = async (): Promise<void> => {
 		try {
-			await closeClueMutation({
+			await protestResultMutation({
 				variables: { gameId: gameId }
 			});
 		} catch (error) {
-			console.error("closeLightbox", error);
+			console.error("protestResult", error);
+		}
+	};
+
+	const voteOnResult = async (vote: boolean): Promise<void> => {
+		try {
+			await voteOnResultMutation({
+				variables: { gameId: gameId, vote: vote }
+			});
+		} catch (error) {
+			console.error("voteOnResult", error);
 		}
 	};
 
@@ -223,7 +262,7 @@ export const Game = withRouter((props: RouteComponentProps) => {
 
 			<Row>
 				{game.players.map((player, index) => (
-					<PlayerCard active={isActiveUser(player)} alreadyGuessed={player?.alreadyGuessed} key={index} player={player} />
+					<PlayerCard active={isActiveUser(player)} player={player} key={index} />
 				))}
 			</Row>
 
@@ -231,16 +270,18 @@ export const Game = withRouter((props: RouteComponentProps) => {
 				<Lightbox>
 					<h1>Awaiting more players</h1>
 				</Lightbox>
-			) : game.state === "ShowingAnswer" ? (
-				alreadyGuessed(game) ? (
-					<Lightbox>
-						<h1>{game.currentText!}</h1>
-						<h2>Waiting for other player to buzz-in </h2>
-					</Lightbox>
-				) : (
+			) : game.state === "ShowingClue" ? (
+				haventActed(game) ? (
 					<Lightbox onClick={buzzIn}>
 						<h1>{game.currentText!}</h1>
 						<h2>Click to buzz-in</h2>
+						<Timer key="ShowingClueHaventActed" end={game.timeout} />
+					</Lightbox>
+				) : (
+					<Lightbox>
+						<h1>{game.currentText!}</h1>
+						<h2>Waiting for other player to buzz-in</h2>
+						<Timer key="ShowingClueHaveActed" end={game.timeout} />
 					</Lightbox>
 				)
 			) : game.state === "AwaitingResponse" ? (
@@ -249,25 +290,42 @@ export const Game = withRouter((props: RouteComponentProps) => {
 						<h1>{game.currentText!}</h1>
 						<ResponseForm onSubmit={answerClue} />
 						<h2>Waiting for your response</h2>
+						<Timer key="AwaitingResponseActiveUser" end={game.timeout} />
 					</Lightbox>
 				) : (
 					<Lightbox>
 						<h1>{game.currentText!}</h1>
 						<h2>Waiting for other player's response</h2>
+						<Timer key="AwaitingResponseInactiveUser" end={game.timeout} />
 					</Lightbox>
 				)
-			) : game.state === "ShowingQuestion" ? (
-				isActiveUser(currentUser) ? (
-					<Lightbox onClick={closeClue}>
+			) : game.state === "ShowingResult" ? (
+				<Lightbox onClick={protestResult}>
+					<h1>{`Correct: ${game.currentText!}`}</h1>
+					<h2>Click to protest result</h2>
+					<Timer key="ShowingResult" end={game.timeout} />
+				</Lightbox>
+			) : game.state === "VerifyingResult" ? (
+				haventActed(game) ? (
+					<Lightbox>
 						<h1>{game.currentText!}</h1>
-						<h2>Click to close clue</h2>
+						<VoteForm onSubmit={voteOnResult} />
+						<h2>Click to buzz-in</h2>
+						<Timer key="VerifyingResultHaventActed" end={game.timeout} />
 					</Lightbox>
 				) : (
 					<Lightbox>
 						<h1>{game.currentText!}</h1>
-						<h2>Waiting for other player to close clue</h2>
+						<h2>Waiting for other player to vote</h2>
+						<Timer key="VerifyingResultHaveActed" end={game.timeout} />
 					</Lightbox>
 				)
+			) : game.state === "ShowingVerifiedResult" ? (
+				<Lightbox onClick={protestResult}>
+					<h1>{`Correct: ${game.currentText!}`}</h1>
+					<h2>Waiting for timeout</h2>
+					<Timer key="ShowingVerifiedResult" end={game.timeout} />
+				</Lightbox>
 			) : gameDone(game) ? (
 				<Lightbox onClick={() => history.push("/play")}>
 					<h1>Game Over!</h1>

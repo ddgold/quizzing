@@ -12,3 +12,10 @@ export enum AccessLevel {
 	User,
 	Admin
 }
+
+export interface TokenPayload {
+	exp: number;
+	iat: number;
+	userId: string;
+	access: AccessLevel;
+}

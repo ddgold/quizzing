@@ -12,12 +12,13 @@ const QUERY = gql`
 				value
 			}
 			state
+			timeout
 			currentText
 			activePlayer
 			players {
 				id
 				nickname
-				alreadyGuessed
+				alreadyActed
 				score
 			}
 		}
@@ -34,12 +35,13 @@ const SUBSCRIPTION = gql`
 				value
 			}
 			state
+			timeout
 			currentText
 			activePlayer
 			players {
 				id
 				nickname
-				alreadyGuessed
+				alreadyActed
 				score
 			}
 		}
