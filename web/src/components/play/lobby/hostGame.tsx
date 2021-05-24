@@ -3,9 +3,9 @@ import { useState } from "react";
 import Button from "react-bootstrap/Button";
 import { useHistory } from "react-router-dom";
 
-import { BoardObject, RecordObject, RecordType } from "../../objects/build";
-import { RecordSelectModal } from "../build/recordSelect";
-import { Alert, Page } from "../shared";
+import { BoardObject, RecordObject, RecordType } from "../../../objects/build";
+import { RecordSelectModal } from "../../build/recordSelect";
+import { Alert, Page } from "../../shared";
 
 const HOST_GAME = gql`
 	mutation HostGame($boardId: String!) {

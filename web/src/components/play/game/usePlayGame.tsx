@@ -1,6 +1,6 @@
 import { ApolloError, gql, useQuery, useSubscription } from "@apollo/client";
 
-import { GameObject } from "../../objects/play";
+import { GameObject } from "../../../objects/play";
 
 const QUERY = gql`
 	query PlayGame($gameId: String!) {

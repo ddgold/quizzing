@@ -6,11 +6,11 @@ import Row from "react-bootstrap/Row";
 import { useForm } from "react-hook-form";
 import { RouteComponentProps, useHistory, withRouter } from "react-router-dom";
 
-import { Children, ErrorPage, LoadingPage } from "../shared";
+import { Children, ErrorPage, LoadingPage } from "../../shared";
 import { usePlayGame } from "./usePlayGame";
-import { GameObject, PlayerObject, ResultObject, RowObject } from "../../objects/play";
-import { UserObject } from "../../objects/user";
-import { useCurrentUser } from "../user";
+import { GameObject, PlayerObject, ResultObject, RowObject } from "../../../objects/play";
+import { UserObject } from "../../../objects/user";
+import { useCurrentUser } from "../../user";
 
 import "./game.scss";
 

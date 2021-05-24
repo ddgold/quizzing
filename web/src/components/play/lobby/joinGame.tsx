@@ -5,9 +5,9 @@ import Table from "react-bootstrap/Table";
 import { BsArrowClockwise } from "react-icons/bs";
 import { useHistory } from "react-router-dom";
 
-import { Alert, IconButton, Error, Loading } from "../shared";
-import { GameFilter, GameObject } from "../../objects/play";
-import { Page } from "../shared";
+import { Alert, IconButton, Error, Loading } from "../../shared";
+import { GameFilter, GameObject } from "../../../objects/play";
+import { Page } from "../../shared";
 
 const GAMES = gql`
 	query Games($filter: Int!) {

@@ -1,2 +1,2 @@
-export { Game } from "./game";
-export { Play } from "./play";
+export { Game } from "./game/game";
+export { Play } from "./lobby/play";

@@ -5,10 +5,10 @@ import Table from "react-bootstrap/Table";
 import { BsArrowClockwise } from "react-icons/bs";
 import { Link } from "react-router-dom";
 
-import { AccessLevel } from "../../auth";
-import { Error, IconButton, Loading, Page } from "../shared";
-import { GameFilter, GameObject } from "../../objects/play";
-import { useCurrentUser } from "../user";
+import { AccessLevel } from "../../../auth";
+import { Error, IconButton, Loading, Page } from "../../shared";
+import { GameFilter, GameObject } from "../../../objects/play";
+import { useCurrentUser } from "../../user";
 
 const GAMES = gql`
 	query Games($filter: Int!) {
