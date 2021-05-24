@@ -1,11 +1,3 @@
-export interface ActiveClueObject {
-	answer: string;
-	question: string;
-	category: string;
-	value: number;
-	protestTally?: number;
-}
-
 export type PlayerArray = (PlayerObject | null)[];
 
 export interface PlayerObject {
@@ -13,6 +5,13 @@ export interface PlayerObject {
 	nickname: string;
 	alreadyActed: boolean;
 	score: number;
+}
+
+export interface ResultObject {
+	playerId: string;
+	response: string;
+	correct: boolean;
+	protested: boolean;
 }
 
 export interface GameObject {
@@ -23,6 +22,7 @@ export interface GameObject {
 	state: State;
 	timeout?: number;
 	currentText?: string;
+	results?: ResultObject[];
 	activePlayer?: string;
 	players: PlayerArray;
 	started: Date;
@@ -39,8 +39,8 @@ export type State =
 	| "ShowingClue"
 	| "AwaitingResponse"
 	| "ShowingResult"
-	| "VerifyingResult"
-	| "ShowingVerifiedResult";
+	| "AwaitingProtest"
+	| "VotingOnProtest";
 
 export enum GameFilter {
 	All,

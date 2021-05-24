@@ -6,9 +6,9 @@ import { v4 as uuid } from "uuid";
 
 import { TokenPayload } from "../auth";
 import { BoardModel, CategoryDocument, UserModel } from "../database";
-import { getDockerSecret, getEnvironmentVariable } from "../environment";
+import { getDockerSecret, getEnvironmentVariable, slowModeOn } from "../environment";
 import { Fields, Keys } from "./game";
-import { ActiveClueObject, GameObject, State, RowObject, PlayerArray } from "../objects/play";
+import { ActiveClueObject, GameObject, State, RowObject, PlayerArray, ResultObject } from "../objects/play";
 
 interface JudgeResponse {
 	answer: string;
@@ -174,14 +174,18 @@ export default class Engine {
 
 		const state = hash[Fields.State()] as State;
 		let currentText: string | undefined;
+		let results: ResultObject[] | undefined;
 		if (state === "ShowingClue" || state === "AwaitingResponse") {
 			const activeClue: ActiveClueObject = JSON.parse(hash[Fields.ActiveClue()]!);
 			currentText = activeClue.answer;
-		} else if (state === "ShowingResult" || state === "ShowingVerifiedResult") {
+		} else if (state === "ShowingResult" || state === "AwaitingProtest") {
 			const activeClue: ActiveClueObject = JSON.parse(hash[Fields.ActiveClue()]!);
 			currentText = activeClue.question;
-		} else if (state === "VerifyingResult") {
-			currentText = "Verifying Result";
+			results = activeClue.results;
+		} else if (state === "VotingOnProtest") {
+			const activeClue: ActiveClueObject = JSON.parse(hash[Fields.ActiveClue()]!);
+			currentText = activeClue.question;
+			results = [activeClue.results[activeClue.currentProtest!]!];
 		}
 
 		const model: GameObject = {
@@ -192,6 +196,7 @@ export default class Engine {
 			state: state,
 			timeout: timeout,
 			currentText: currentText,
+			results: results,
 			activePlayer: hash[Fields.ActivePlayer()],
 			players: JSON.parse(hash[Fields.Players()]!),
 			started: new Date(hash[Fields.Started()]!)
@@ -287,6 +292,10 @@ export default class Engine {
 			clearTimeout(oldTimeout);
 		}
 
+		if (slowModeOn()) {
+			ms = ms * 10;
+		}
+
 		const newTimeout = Date.now() + ms;
 		setTimeout(
 			(async () => {
@@ -353,7 +362,7 @@ export default class Engine {
 
 	private static showingResultTimeout(gameId: string): number {
 		return this.timeout(gameId, 5000, async () => {
-			await this.assertState(gameId, ["ShowingResult", "ShowingVerifiedResult"]);
+			await this.assertState(gameId, "ShowingResult");
 
 			const players = await this.getPlayers(gameId);
 			for (const player of players) {
@@ -384,13 +393,27 @@ export default class Engine {
 		});
 	}
 
-	private static verifyingResultTimeout(gameId: string): number {
+	private static awaitingProtestTimeout(gameId: string): number {
 		return this.timeout(gameId, 5000, async () => {
-			await this.assertState(gameId, "VerifyingResult");
+			await this.assertState(gameId, "AwaitingProtest");
 
 			await this.client
 				.multi()
-				.hset(Keys.ActiveGame(gameId), Fields.State(), "ShowingVerifiedResult")
+				.hset(Keys.ActiveGame(gameId), Fields.State(), "ShowingResult")
+				.hset(Keys.ActiveGame(gameId), Fields.Timeout(), this.showingResultTimeout(gameId))
+				.exec();
+
+			await this.publishPlayGame(gameId);
+		});
+	}
+
+	private static votingOnProtestTimeout(gameId: string): number {
+		return this.timeout(gameId, 5000, async () => {
+			await this.assertState(gameId, "VotingOnProtest");
+
+			await this.client
+				.multi()
+				.hset(Keys.ActiveGame(gameId), Fields.State(), "ShowingResult")
 				.hset(Keys.ActiveGame(gameId), Fields.Timeout(), this.showingResultTimeout(gameId))
 				.exec();
 
@@ -499,6 +522,7 @@ export default class Engine {
 		const activeClue: ActiveClueObject = JSON.parse(hash[0]);
 		activeClue.category = hash[1]!;
 		activeClue.value = Number.parseInt(hash[2]!);
+		activeClue.results = [];
 
 		await this.client
 			.multi()
@@ -534,6 +558,8 @@ export default class Engine {
 
 		// Correct response
 		if (response.length > 0 && (await this.judgeResponse(activeClue.question, response))) {
+			activeClue.results.push({ playerId: userId, response: response, correct: true, protested: false });
+
 			const players = await this.getPlayers(gameId);
 			for (const player of players) {
 				if (player && player.id === userId) {
@@ -554,6 +580,8 @@ export default class Engine {
 		}
 		// Wrong response
 		else {
+			activeClue.results.push({ playerId: userId, response: response, correct: false, protested: false });
+
 			const players = await this.getPlayers(gameId);
 			for (const player of players) {
 				if (player && player.id === userId) {
@@ -596,6 +624,31 @@ export default class Engine {
 		await this.assertUser(gameId, userId, "Any");
 
 		const activeClue = await this.getActiveClue(gameId);
+		if (activeClue.results.length === 0) {
+			throw new ValidationError("No results to protest");
+		}
+
+		await this.client
+			.multi()
+			.hset(Keys.ActiveGame(gameId), Fields.State(), "AwaitingProtest")
+			.hset(Keys.ActiveGame(gameId), Fields.Timeout(), this.awaitingProtestTimeout(gameId))
+			.hset(Keys.ActiveGame(gameId), Fields.ActivePlayer(), userId)
+			.exec();
+
+		await this.publishPlayGame(gameId);
+	}
+
+	static async selectProtest(gameId: string, userId: string, index: number) {
+		await this.assertState(gameId, "AwaitingProtest");
+		await this.assertUser(gameId, userId, "Active");
+
+		const activeClue = await this.getActiveClue(gameId);
+		if (index > activeClue.results.length || activeClue.results[index]!.protested) {
+			throw new ValidationError("Invalid result index");
+		}
+
+		activeClue.currentProtest = index;
+		activeClue.results[index]!.protested = true;
 		activeClue.protestTally = 0;
 
 		const players = await this.getPlayers(gameId);
@@ -607,8 +660,8 @@ export default class Engine {
 
 		await this.client
 			.multi()
-			.hset(Keys.ActiveGame(gameId), Fields.State(), "VerifyingResult")
-			.hset(Keys.ActiveGame(gameId), Fields.Timeout(), this.verifyingResultTimeout(gameId))
+			.hset(Keys.ActiveGame(gameId), Fields.State(), "VotingOnProtest")
+			.hset(Keys.ActiveGame(gameId), Fields.Timeout(), this.votingOnProtestTimeout(gameId))
 			.hset(Keys.ActiveGame(gameId), Fields.ActiveClue(), JSON.stringify(activeClue))
 			.hset(Keys.ActiveGame(gameId), Fields.Players(), JSON.stringify(players))
 			.exec();
@@ -616,8 +669,8 @@ export default class Engine {
 		await this.publishPlayGame(gameId);
 	}
 
-	static async voteOnResult(gameId: string, userId: string, vote: boolean) {
-		await this.assertState(gameId, "VerifyingResult");
+	static async voteOnProtest(gameId: string, userId: string, vote: boolean) {
+		await this.assertState(gameId, "VotingOnProtest");
 		await this.assertUser(gameId, userId, "HaventActed");
 
 		const activeClue = await this.getActiveClue(gameId);
@@ -635,7 +688,7 @@ export default class Engine {
 		if (players.every((player) => !player || player.alreadyActed)) {
 			await this.client
 				.multi()
-				.hset(Keys.ActiveGame(gameId), Fields.State(), "ShowingVerifiedResult")
+				.hset(Keys.ActiveGame(gameId), Fields.State(), "ShowingResult")
 				.hset(Keys.ActiveGame(gameId), Fields.Timeout(), this.showingResultTimeout(gameId))
 				.hset(Keys.ActiveGame(gameId), Fields.ActiveClue(), JSON.stringify(activeClue))
 				.hset(Keys.ActiveGame(gameId), Fields.Players(), JSON.stringify(players))

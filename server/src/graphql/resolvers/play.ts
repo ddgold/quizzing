@@ -52,9 +52,13 @@ export const PlayResolvers: IResolvers<any, Context> = {
 			await assertHttpToken(context, AccessLevel.User);
 			return Engine.protestResult(gameId, context.payload!.userId);
 		},
-		voteOnResult: async (_, { gameId, vote }: { gameId: string; vote: boolean }, context): Promise<void> => {
+		selectProtest: async (_, { gameId, index }: { gameId: string; index: number }, context): Promise<void> => {
 			await assertHttpToken(context, AccessLevel.User);
-			return Engine.voteOnResult(gameId, context.payload!.userId, vote);
+			return Engine.selectProtest(gameId, context.payload!.userId, index);
+		},
+		voteOnProtest: async (_, { gameId, vote }: { gameId: string; vote: boolean }, context): Promise<void> => {
+			await assertHttpToken(context, AccessLevel.User);
+			return Engine.voteOnProtest(gameId, context.payload!.userId, vote);
 		}
 	},
 	Subscription: {

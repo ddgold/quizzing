@@ -6,12 +6,12 @@ state AwaitingSelection
 state ShowingClue
 state AwaitingResponse
 state ShowingResult
-state VerifyingResult
-state ShowingVerifiedResult
+state AwaitingProtest
+state VotingOnProtest
 
 state join <<choice>>
 state answerClue <<choice>>
-state voteOnResult <<choice>>
+state voteOnProtest <<choice>>
 
 title \n=Engine State\n
 
@@ -27,11 +27,12 @@ ShowingClue --> ShowingResult: [timeout]
 AwaitingResponse --> answerClue : answerClue() \n or [timeout]
 answerClue --> ShowingResult : [correct] or \n [everyone wrong]
 answerClue --> ShowingClue : [incorrect]
-ShowingResult --> VerifyingResult : protestResult()
-VerifyingResult --> voteOnResult : voteOnResult() \n or [timeout]
-voteOnResult --> VerifyingResult : [outstanding votes]
-voteOnResult --> ShowingVerifiedResult : [all votes counted]
-ShowingResult --> AwaitingSelection : [timeout]
-ShowingVerifiedResult --> AwaitingSelection : [timeout]
+ShowingResult --> AwaitingProtest : protestResult()
+AwaitingProtest --> VotingOnProtest : selectProtest()
+AwaitingProtest --> ShowingResult : [timeout]
+VotingOnProtest --> voteOnProtest : voteOnProtest() \n or [timeout]
+voteOnProtest --> VotingOnProtest : [outstanding votes]
+voteOnProtest --> ShowingResult : [all votes counted]
+ShowingResult --> AwaitingSelection : [timeout] or \n [no protest]
 
 @enduml

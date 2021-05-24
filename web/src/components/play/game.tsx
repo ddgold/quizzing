@@ -8,7 +8,7 @@ import { RouteComponentProps, useHistory, withRouter } from "react-router-dom";
 
 import { Children, ErrorPage, LoadingPage } from "../shared";
 import { usePlayGame } from "./usePlayGame";
-import { GameObject, PlayerObject, RowObject } from "../../objects/play";
+import { GameObject, PlayerObject, ResultObject, RowObject } from "../../objects/play";
 import { UserObject } from "../../objects/user";
 import { useCurrentUser } from "../user";
 
@@ -38,9 +38,15 @@ const PROTEST_RESULT = gql`
 	}
 `;
 
-const VOTE_ON_RESULT = gql`
-	mutation VoteOnResult($gameId: String!, $vote: Boolean!) {
-		voteOnResult(gameId: $gameId, vote: $vote)
+const SELECT_PROTEST = gql`
+	mutation SelectProtest($gameId: String!, $index: Int!) {
+		selectProtest(gameId: $gameId, index: $index)
+	}
+`;
+
+const VOTE_ON_PROTEST = gql`
+	mutation VoteOnProtest($gameId: String!, $vote: Boolean!) {
+		voteOnProtest(gameId: $gameId, vote: $vote)
 	}
 `;
 
@@ -95,11 +101,37 @@ const ResponseForm = ({ onSubmit }: { onSubmit: (response: string) => void }) =>
 	);
 };
 
+const ProtestForm = ({ results, onSubmit }: { results: ResultObject[]; onSubmit?: (index: number) => void }) => {
+	const resultString = (result: ResultObject): string => {
+		return `${result.correct ? "Correct" : "Wrong"}: ${result.response}`;
+	};
+
+	return (
+		<>
+			{results.map((result, index) => (
+				<h2 key={index}>
+					<button
+						onClick={() => {
+							if (onSubmit) {
+								onSubmit(index);
+							}
+						}}
+						disabled={!onSubmit || result.protested}
+					>
+						{resultString(result)}
+					</button>
+				</h2>
+			))}
+		</>
+	);
+};
+
 const VoteForm = ({ onSubmit }: { onSubmit: (vote: boolean) => void }) => (
-	<>
+	<h2>
 		<button onClick={() => onSubmit(true)}>True</button>
+		{"  "}
 		<button onClick={() => onSubmit(false)}>False</button>
-	</>
+	</h2>
 );
 
 const PlayerCard = ({ active, player }: { active?: boolean; player: PlayerObject | null }) => {
@@ -130,15 +162,26 @@ export const Game = withRouter((props: RouteComponentProps) => {
 	const gameId = (props.match.params as { gameId: string }).gameId;
 	const currentUser = useCurrentUser();
 	const { loading, error, game } = usePlayGame(gameId);
-	const [selectClueMutation] = useMutation<{}, { gameId: string; row?: number; col?: number }>(SELECT_CLUE);
+	const [selectClueMutation] = useMutation<{}, { gameId: string; row: number; col: number }>(SELECT_CLUE);
 	const [buzzInMutation] = useMutation<{}, { gameId: string }>(BUZZ_IN);
 	const [answerClueMutation] = useMutation<{}, { gameId: string; response: string }>(ANSWER_CLUE);
 	const [protestResultMutation] = useMutation<{}, { gameId: string }>(PROTEST_RESULT);
-	const [voteOnResultMutation] = useMutation<{}, { gameId: string; vote: boolean }>(VOTE_ON_RESULT);
+	const [selectProtestMutation] = useMutation<{}, { gameId: string; index: number }>(SELECT_PROTEST);
+	const [voteOnProtestMutation] = useMutation<{}, { gameId: string; vote: boolean }>(VOTE_ON_PROTEST);
 	const history = useHistory();
 
 	const isActiveUser = (player: UserObject | PlayerObject | null): boolean => {
 		return player?.id === game?.activePlayer;
+	};
+
+	const availableProtest = (game: GameObject): boolean => {
+		if (!game.results) {
+			return false;
+		}
+
+		return game.results.some((result: ResultObject) => {
+			return !result.protested;
+		});
 	};
 
 	const haventActed = (game: GameObject): boolean => {
@@ -193,13 +236,23 @@ export const Game = withRouter((props: RouteComponentProps) => {
 		}
 	};
 
-	const voteOnResult = async (vote: boolean): Promise<void> => {
+	const selectProtest = async (index: number): Promise<void> => {
 		try {
-			await voteOnResultMutation({
+			await selectProtestMutation({
+				variables: { gameId: gameId, index: index }
+			});
+		} catch (error) {
+			console.error("selectProtest", error);
+		}
+	};
+
+	const voteOnProtest = async (vote: boolean): Promise<void> => {
+		try {
+			await voteOnProtestMutation({
 				variables: { gameId: gameId, vote: vote }
 			});
 		} catch (error) {
-			console.error("voteOnResult", error);
+			console.error("voteOnProtest", error);
 		}
 	};
 
@@ -300,32 +353,51 @@ export const Game = withRouter((props: RouteComponentProps) => {
 					</Lightbox>
 				)
 			) : game.state === "ShowingResult" ? (
-				<Lightbox onClick={protestResult}>
-					<h1>{`Correct: ${game.currentText!}`}</h1>
-					<h2>Click to protest result</h2>
-					<Timer key="ShowingResult" end={game.timeout} />
-				</Lightbox>
-			) : game.state === "VerifyingResult" ? (
+				availableProtest(game) ? (
+					<Lightbox onClick={protestResult}>
+						<h1>{`Correct: ${game.currentText!}`}</h1>
+						<h2>Click to protest result</h2>
+						<Timer key="ShowingResultAvailableProtest" end={game.timeout} />
+					</Lightbox>
+				) : (
+					<Lightbox>
+						<h1>{`Correct: ${game.currentText!}`}</h1>
+						<h2>Waiting for timeout</h2>
+						<Timer key="ShowingResultNoProtests" end={game.timeout} />
+					</Lightbox>
+				)
+			) : game.state === "AwaitingProtest" ? (
+				isActiveUser(currentUser) ? (
+					<Lightbox>
+						<h1>{`Correct: ${game.currentText!}`}</h1>
+						<h2>Select result to protest:</h2>
+						<ProtestForm results={game.results!} onSubmit={selectProtest} />
+						<Timer key="AwaitingProtestActiveUser" end={game.timeout} />
+					</Lightbox>
+				) : (
+					<Lightbox>
+						<h1>{game.currentText!}</h1>
+						<h2>Waiting for other player's response</h2>
+						<ProtestForm results={game.results!} />
+						<Timer key="AwaitingProtestInactiveUser" end={game.timeout} />
+					</Lightbox>
+				)
+			) : game.state === "VotingOnProtest" ? (
 				haventActed(game) ? (
 					<Lightbox>
 						<h1>{game.currentText!}</h1>
-						<VoteForm onSubmit={voteOnResult} />
-						<h2>Click to buzz-in</h2>
+						<ProtestForm results={game.results!} />
+						<VoteForm onSubmit={voteOnProtest} />
 						<Timer key="VerifyingResultHaventActed" end={game.timeout} />
 					</Lightbox>
 				) : (
 					<Lightbox>
 						<h1>{game.currentText!}</h1>
+						<ProtestForm results={game.results!} />
 						<h2>Waiting for other player to vote</h2>
 						<Timer key="VerifyingResultHaveActed" end={game.timeout} />
 					</Lightbox>
 				)
-			) : game.state === "ShowingVerifiedResult" ? (
-				<Lightbox onClick={protestResult}>
-					<h1>{`Correct: ${game.currentText!}`}</h1>
-					<h2>Waiting for timeout</h2>
-					<Timer key="ShowingVerifiedResult" end={game.timeout} />
-				</Lightbox>
 			) : gameDone(game) ? (
 				<Lightbox onClick={() => history.push("/play")}>
 					<h1>Game Over!</h1>

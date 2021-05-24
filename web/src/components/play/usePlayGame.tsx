@@ -14,6 +14,12 @@ const QUERY = gql`
 			state
 			timeout
 			currentText
+			results {
+				playerId
+				response
+				correct
+				protested
+			}
 			activePlayer
 			players {
 				id
@@ -37,6 +43,12 @@ const SUBSCRIPTION = gql`
 			state
 			timeout
 			currentText
+			results {
+				playerId
+				response
+				correct
+				protested
+			}
 			activePlayer
 			players {
 				id

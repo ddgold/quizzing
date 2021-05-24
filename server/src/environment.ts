@@ -1,8 +1,15 @@
 import path from "path";
 import fs from "fs";
 
+// ---------
+// Run Flags
+// ---------
 export const debugModeOn = (): boolean => {
 	return process.argv.includes("--debug");
+};
+
+export const slowModeOn = (): boolean => {
+	return process.argv.includes("--slow");
 };
 
 export const verboseModeOn = (): boolean => {

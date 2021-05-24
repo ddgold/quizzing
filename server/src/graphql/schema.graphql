@@ -98,6 +98,13 @@ type Player {
 	score: Int!
 }
 
+type Result {
+	playerId: String!
+	response: String!
+	correct: Boolean!
+	protested: Boolean!
+}
+
 type Game {
 	id: String!
 	name: String!
@@ -106,6 +113,7 @@ type Game {
 	state: String!
 	timeout: String
 	currentText: String
+	results: [Result]
 	activePlayer: String
 	players: [Player]!
 	started: Date!
@@ -152,7 +160,8 @@ type Mutation {
 	buzzIn(gameId: String!): Void
 	answerClue(gameId: String!, response: String!): Void
 	protestResult(gameId: String!): Void
-	voteOnResult(gameId: String!, vote: Boolean!): Void
+	selectProtest(gameId: String!, index: Int!): Void
+	voteOnProtest(gameId: String!, vote: Boolean!): Void
 }
 
 # -------------

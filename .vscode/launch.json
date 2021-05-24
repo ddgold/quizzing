@@ -5,19 +5,18 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
+			"name": "web",
 			"type": "pwa-chrome",
 			"request": "launch",
-			"name": "web",
-			"url": "http://localhost:3000",
+			"url": "http://${env:HOSTNAME}:3000",
 			"webRoot": "${workspaceFolder}"
 		},
 		{
-			"type": "node",
-			"request": "attach",
 			"name": "server",
+			"type": "pwa-node",
+			"request": "attach",
 			"processId": "${command:PickProcess}",
-			"restart": true,
-			"protocol": "inspector"
+			"restart": true
 		}
 	]
 }
