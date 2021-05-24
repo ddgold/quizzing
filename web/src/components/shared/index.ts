@@ -2,6 +2,7 @@ export { Alert } from "./alert";
 export { Error, ErrorPage } from "./error";
 export { Header } from "./header";
 export { Home } from "./home";
+export { IconButton } from "./iconButton";
 export { Loading, LoadingPage } from "./loading";
 export { Page } from "./page";
 

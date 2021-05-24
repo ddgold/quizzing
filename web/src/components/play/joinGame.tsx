@@ -2,9 +2,10 @@ import { gql, useMutation, useQuery } from "@apollo/client";
 import { useState } from "react";
 import Button from "react-bootstrap/Button";
 import Table from "react-bootstrap/Table";
+import { BsArrowClockwise } from "react-icons/bs";
 import { useHistory } from "react-router-dom";
 
-import { Alert, Error, Loading } from "../shared";
+import { Alert, IconButton, Error, Loading } from "../shared";
 import { GameFilter, GameObject } from "../../objects/play";
 import { Page } from "../shared";
 
@@ -26,7 +27,7 @@ const JOIN_GAME = gql`
 
 export const JoinGame = () => {
 	const [joinGameError, setJoinGameError] = useState<string | undefined>(undefined);
-	const { data, error, loading } = useQuery<{ games: GameObject[] }, { filter: GameFilter }>(GAMES, {
+	const { data, error, loading, refetch } = useQuery<{ games: GameObject[] }, { filter: GameFilter }>(GAMES, {
 		fetchPolicy: "network-only",
 		variables: {
 			filter: GameFilter.Public
@@ -50,7 +51,14 @@ export const JoinGame = () => {
 				{joinGameError!}
 			</Alert>
 
-			<Page title="Join Game">
+			<Page
+				title="Join Game"
+				titleRight={
+					<IconButton onClick={() => refetch()}>
+						<BsArrowClockwise />
+					</IconButton>
+				}
+			>
 				{loading ? (
 					<Loading />
 				) : error || !data ? (

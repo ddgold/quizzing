@@ -2,10 +2,11 @@ import { gql, useQuery } from "@apollo/client";
 import { useState } from "react";
 import Form from "react-bootstrap/Form";
 import Table from "react-bootstrap/Table";
+import { BsArrowClockwise } from "react-icons/bs";
 import { Link } from "react-router-dom";
 
 import { AccessLevel } from "../../auth";
-import { Error, Loading, Page } from "../shared";
+import { Error, IconButton, Loading, Page } from "../shared";
 import { GameFilter, GameObject } from "../../objects/play";
 import { useCurrentUser } from "../user";
 
@@ -21,7 +22,7 @@ const GAMES = gql`
 export const CurrentGames = () => {
 	const currentUser = useCurrentUser();
 	const [showAllGames, setShowAllGames] = useState(false);
-	const { data, error, loading } = useQuery<{ games: GameObject[] }, { filter: GameFilter }>(GAMES, {
+	const { data, error, loading, refetch } = useQuery<{ games: GameObject[] }, { filter: GameFilter }>(GAMES, {
 		fetchPolicy: "network-only",
 		variables: {
 			filter: showAllGames ? GameFilter.All : GameFilter.User
@@ -29,7 +30,14 @@ export const CurrentGames = () => {
 	});
 
 	return (
-		<Page title="Current Games">
+		<Page
+			title="Current Games"
+			titleRight={
+				<IconButton onClick={() => refetch()}>
+					<BsArrowClockwise />
+				</IconButton>
+			}
+		>
 			<>
 				{currentUser && currentUser?.access >= AccessLevel.Admin ? (
 					<Form>
