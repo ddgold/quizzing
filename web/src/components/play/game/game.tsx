@@ -1,15 +1,14 @@
 import { gql, useMutation } from "@apollo/client";
-import { useEffect, useState } from "react";
-import Col from "react-bootstrap/Col";
 import Container from "react-bootstrap/Container";
-import Row from "react-bootstrap/Row";
-import { useForm } from "react-hook-form";
 import { RouteComponentProps, useHistory, withRouter } from "react-router-dom";
 
-import { Children, ErrorPage, LoadingPage } from "../../shared";
+import { Gameboard } from "./gameboard";
+import { Lightbox, ProtestForm, ResponseForm, VoteForm } from "./lightbox";
+import { Scoreboard } from "./scoreboard";
 import { usePlayGame } from "./usePlayGame";
-import { GameObject, PlayerObject, ResultObject, RowObject } from "../../../objects/play";
+import { GameObject, PlayerObject, ResultObject } from "../../../objects/play";
 import { UserObject } from "../../../objects/user";
+import { ErrorPage, LoadingPage } from "../../shared";
 import { useCurrentUser } from "../../user";
 
 import "./game.scss";
@@ -50,114 +49,6 @@ const VOTE_ON_PROTEST = gql`
 	}
 `;
 
-const Timer = ({ end }: { end?: number }) => {
-	const [timeLeft, setTimeLeft] = useState((end || Date.now()) - Date.now());
-
-	useEffect(() => {
-		const timer = setTimeout(() => {
-			setTimeLeft(timeLeft - 1000);
-		}, 1000);
-
-		return () => clearTimeout(timer);
-	});
-
-	return <h2>{`${Math.round(timeLeft / 1000)}`}</h2>;
-};
-
-const Lightbox = ({ onClick, children }: { onClick?: () => void; children: Children }) => {
-	return (
-		<div className="lightbox">
-			<div onClick={onClick}>{children}</div>
-		</div>
-	);
-};
-
-const ResponseForm = ({ onSubmit }: { onSubmit: (response: string) => void }) => {
-	const {
-		handleSubmit,
-		register,
-		formState: { errors }
-	} = useForm<{ response: string }>();
-
-	return (
-		<form onSubmit={handleSubmit(({ response }) => onSubmit(response))}>
-			<input
-				className="responseInput"
-				{...register("response", {
-					required: {
-						value: true,
-						message: `Response is required`
-					},
-					maxLength: {
-						value: 64,
-						message: `Response must be at most 64 characters`
-					}
-				})}
-				placeholder={`Enter response`}
-			/>
-			{errors.response ? <p className="responseError">{errors.response.message}</p> : null}
-			<input type="submit" style={{ display: "none" }} />
-		</form>
-	);
-};
-
-const ProtestForm = ({ results, onSubmit }: { results: ResultObject[]; onSubmit?: (index: number) => void }) => {
-	const resultString = (result: ResultObject): string => {
-		return `${result.correct ? "Correct" : "Wrong"}: ${result.response}`;
-	};
-
-	return (
-		<>
-			{results.map((result, index) => (
-				<h2 key={index}>
-					<button
-						onClick={() => {
-							if (onSubmit) {
-								onSubmit(index);
-							}
-						}}
-						disabled={!onSubmit || result.protested}
-					>
-						{resultString(result)}
-					</button>
-				</h2>
-			))}
-		</>
-	);
-};
-
-const VoteForm = ({ onSubmit }: { onSubmit: (vote: boolean) => void }) => (
-	<h2>
-		<button onClick={() => onSubmit(true)}>True</button>
-		{"  "}
-		<button onClick={() => onSubmit(false)}>False</button>
-	</h2>
-);
-
-const PlayerCard = ({ active, player }: { active?: boolean; player: PlayerObject | null }) => {
-	let className = "player";
-	if (active) {
-		className += " active";
-	}
-	if (player?.alreadyActed) {
-		className += " alreadyActed";
-	}
-
-	return (
-		<Col className={className}>
-			{player ? (
-				<div>
-					{player.nickname}
-					<br />
-					{player.score}
-				</div>
-			) : (
-				<div>{"null"}</div>
-			)}
-		</Col>
-	);
-};
-
 export const Game = withRouter((props: RouteComponentProps) => {
 	const gameId = (props.match.params as { gameId: string }).gameId;
 	const currentUser = useCurrentUser();
@@ -194,6 +85,10 @@ export const Game = withRouter((props: RouteComponentProps) => {
 		}
 
 		return false;
+	};
+
+	const remainingSpots = (game: GameObject): number => {
+		return game.players.filter((player) => !player).length;
 	};
 
 	const selectClue = async (row: number, col: number): Promise<void> => {
@@ -267,6 +162,28 @@ export const Game = withRouter((props: RouteComponentProps) => {
 		return true;
 	};
 
+	const result = (game: GameObject): string[] => {
+		return game.players
+			.sort((lhs: PlayerObject | null, rhs: PlayerObject | null) => {
+				if (lhs === null && rhs === null) {
+					return 0;
+				} else if (lhs === null) {
+					return 1;
+				} else if (rhs === null) {
+					return -1;
+				} else if (lhs.score === rhs.score) {
+					return 0;
+				} else if (lhs.score < rhs.score) {
+					return 1;
+				} else {
+					return -1;
+				}
+			})
+			.map((player: PlayerObject | null) => {
+				return player ? `${player.nickname} - ${player.score}` : "Unknown - 0";
+			});
+	};
+
 	return loading ? (
 		<LoadingPage />
 	) : error ? (
@@ -274,133 +191,91 @@ export const Game = withRouter((props: RouteComponentProps) => {
 	) : !game ? (
 		<ErrorPage message={"Game not found"} />
 	) : (
-		<Container className="board" fluid>
+		<Container className="game" fluid>
 			<h1>{game.name}</h1>
 
-			<table>
-				<thead>
-					<tr>
-						{game.categories.map((category: string, index: number) => (
-							<th key={index}>
-								<div>{category}</div>
-							</th>
-						))}
-					</tr>
-				</thead>
-				<tbody>
-					{game.rows.map((row: RowObject, rowIndex: number) => (
-						<tr key={rowIndex}>
-							{row.cols.map((selected: boolean, colIndex: number) => {
-								if (!selected) {
-									return (
-										<td
-											key={colIndex}
-											onClick={async () => {
-												if (isActiveUser(currentUser)) {
-													await selectClue(rowIndex, colIndex);
-												}
-											}}
-										>
-											{row.value}
-										</td>
-									);
-								} else {
-									return <td key={colIndex} />;
-								}
-							})}
-						</tr>
-					))}
-				</tbody>
-			</table>
+			<Gameboard
+				categories={game.categories}
+				rows={game.rows}
+				onSelection={async (rowIndex: number, colIndex: number) => {
+					if (isActiveUser(currentUser)) {
+						await selectClue(rowIndex, colIndex);
+					}
+				}}
+			/>
 
-			<Row>
-				{game.players.map((player, index) => (
-					<PlayerCard active={isActiveUser(player)} player={player} key={index} />
-				))}
-			</Row>
+			<Scoreboard
+				players={game.players}
+				isActive={(player: PlayerObject | null) => {
+					return isActiveUser(player);
+				}}
+			/>
 
 			{game.state === "AwaitingPlayers" ? (
-				<Lightbox>
-					<h1>Awaiting more players</h1>
+				<Lightbox title="Awaiting more players...">
+					<>{`Game will start when ${remainingSpots(game)} more players join.`}</>
 				</Lightbox>
 			) : game.state === "ShowingClue" ? (
 				haventActed(game) ? (
-					<Lightbox onClick={buzzIn}>
+					<Lightbox title="Click to buzz-in!" timeout={game.timeout} onClick={buzzIn}>
 						<h1>{game.currentText!}</h1>
-						<h2>Click to buzz-in</h2>
-						<Timer key="ShowingClueHaventActed" end={game.timeout} />
 					</Lightbox>
 				) : (
-					<Lightbox>
+					<Lightbox title="Waiting for other player to buzz-in..." timeout={game.timeout}>
 						<h1>{game.currentText!}</h1>
-						<h2>Waiting for other player to buzz-in</h2>
-						<Timer key="ShowingClueHaveActed" end={game.timeout} />
 					</Lightbox>
 				)
 			) : game.state === "AwaitingResponse" ? (
 				isActiveUser(currentUser) ? (
-					<Lightbox>
+					<Lightbox title="Waiting for your response..." timeout={game.timeout}>
 						<h1>{game.currentText!}</h1>
 						<ResponseForm onSubmit={answerClue} />
-						<h2>Waiting for your response</h2>
-						<Timer key="AwaitingResponseActiveUser" end={game.timeout} />
 					</Lightbox>
 				) : (
-					<Lightbox>
+					<Lightbox title="Waiting for other player's response..." timeout={game.timeout}>
 						<h1>{game.currentText!}</h1>
-						<h2>Waiting for other player's response</h2>
-						<Timer key="AwaitingResponseInactiveUser" end={game.timeout} />
 					</Lightbox>
 				)
 			) : game.state === "ShowingResult" ? (
 				availableProtest(game) ? (
-					<Lightbox onClick={protestResult}>
+					<Lightbox title="Click to protest result..." timeout={game.timeout} onClick={protestResult}>
 						<h1>{`Correct: ${game.currentText!}`}</h1>
-						<h2>Click to protest result</h2>
-						<Timer key="ShowingResultAvailableProtest" end={game.timeout} />
 					</Lightbox>
 				) : (
-					<Lightbox>
+					<Lightbox title="Waiting for timeout" timeout={game.timeout}>
 						<h1>{`Correct: ${game.currentText!}`}</h1>
-						<h2>Waiting for timeout</h2>
-						<Timer key="ShowingResultNoProtests" end={game.timeout} />
 					</Lightbox>
 				)
 			) : game.state === "AwaitingProtest" ? (
 				isActiveUser(currentUser) ? (
-					<Lightbox>
+					<Lightbox title="Select result to protest:" timeout={game.timeout}>
 						<h1>{`Correct: ${game.currentText!}`}</h1>
-						<h2>Select result to protest:</h2>
 						<ProtestForm results={game.results!} onSubmit={selectProtest} />
-						<Timer key="AwaitingProtestActiveUser" end={game.timeout} />
 					</Lightbox>
 				) : (
-					<Lightbox>
+					<Lightbox title="Waiting for other player's response..." timeout={game.timeout}>
 						<h1>{game.currentText!}</h1>
-						<h2>Waiting for other player's response</h2>
 						<ProtestForm results={game.results!} />
-						<Timer key="AwaitingProtestInactiveUser" end={game.timeout} />
 					</Lightbox>
 				)
 			) : game.state === "VotingOnProtest" ? (
 				haventActed(game) ? (
-					<Lightbox>
+					<Lightbox title="Vote Yah! or Nah for protest..." timeout={game.timeout}>
 						<h1>{game.currentText!}</h1>
 						<ProtestForm results={game.results!} />
 						<VoteForm onSubmit={voteOnProtest} />
-						<Timer key="VerifyingResultHaventActed" end={game.timeout} />
 					</Lightbox>
 				) : (
-					<Lightbox>
+					<Lightbox title="Waiting for other player to vote..." timeout={game.timeout}>
 						<h1>{game.currentText!}</h1>
 						<ProtestForm results={game.results!} />
-						<h2>Waiting for other player to vote</h2>
-						<Timer key="VerifyingResultHaveActed" end={game.timeout} />
 					</Lightbox>
 				)
 			) : gameDone(game) ? (
-				<Lightbox onClick={() => history.push("/play")}>
-					<h1>Game Over!</h1>
+				<Lightbox title="Game Over" onClick={() => history.push("/play")}>
+					{result(game).map((result: string, index: number) => (
+						<p key={index}>{result}</p>
+					))}
 				</Lightbox>
 			) : null}
 		</Container>

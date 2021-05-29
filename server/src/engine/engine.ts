@@ -136,9 +136,9 @@ export default class Engine {
 		}
 	}
 
-	private static async checkTimeout(gameId: string, timeout: number): Promise<boolean> {
+	private static async checkTimeout(gameId: string, timeout: string): Promise<boolean> {
 		const cache = await this.client.hget(Keys.ActiveGame(gameId), Fields.Timeout());
-		return !!cache && timeout === Number.parseInt(cache);
+		return !!cache && timeout === cache;
 	}
 
 	private static async getModel(gameId: string): Promise<GameObject> {
@@ -167,9 +167,9 @@ export default class Engine {
 			models.push(model);
 		}
 
-		let timeout: number | undefined;
+		let timeout: string | undefined;
 		if (hash[Fields.Timeout()]) {
-			timeout = Number.parseInt(hash[Fields.Timeout()]!);
+			timeout = hash[Fields.Timeout()]!;
 		}
 
 		const state = hash[Fields.State()] as State;
@@ -286,7 +286,7 @@ export default class Engine {
 	// --------
 	// Timeouts
 	// --------
-	private static timeout(gameId: string, ms: number, callback: () => {}): number {
+	private static timeout(gameId: string, ms: number, callback: () => {}): string {
 		const oldTimeout = this.timeouts(gameId);
 		if (oldTimeout) {
 			clearTimeout(oldTimeout);
@@ -296,7 +296,7 @@ export default class Engine {
 			ms = ms * 10;
 		}
 
-		const newTimeout = Date.now() + ms;
+		const newTimeout = `${Date.now() + ms}^${ms}`;
 		setTimeout(
 			(async () => {
 				if (!(await this.checkTimeout(gameId, newTimeout))) {
@@ -311,7 +311,7 @@ export default class Engine {
 		return newTimeout;
 	}
 
-	private static awaitingSelectionTimeout(gameId: string): number {
+	private static awaitingSelectionTimeout(gameId: string): string {
 		return this.timeout(gameId, 5000, async () => {
 			await this.assertState(gameId, "AwaitingSelection");
 
@@ -338,7 +338,7 @@ export default class Engine {
 		});
 	}
 
-	private static showingClueTimeout(gameId: string): number {
+	private static showingClueTimeout(gameId: string): string {
 		return this.timeout(gameId, 10000, async () => {
 			await this.assertState(gameId, "ShowingClue");
 
@@ -354,13 +354,13 @@ export default class Engine {
 		});
 	}
 
-	private static awaitingResponseTimeout(gameId: string, userId: string): number {
+	private static awaitingResponseTimeout(gameId: string, userId: string): string {
 		return this.timeout(gameId, 10000, async () => {
 			await this.answerClue(gameId, userId, "");
 		});
 	}
 
-	private static showingResultTimeout(gameId: string): number {
+	private static showingResultTimeout(gameId: string): string {
 		return this.timeout(gameId, 5000, async () => {
 			await this.assertState(gameId, "ShowingResult");
 
@@ -393,7 +393,7 @@ export default class Engine {
 		});
 	}
 
-	private static awaitingProtestTimeout(gameId: string): number {
+	private static awaitingProtestTimeout(gameId: string): string {
 		return this.timeout(gameId, 5000, async () => {
 			await this.assertState(gameId, "AwaitingProtest");
 
@@ -407,7 +407,7 @@ export default class Engine {
 		});
 	}
 
-	private static votingOnProtestTimeout(gameId: string): number {
+	private static votingOnProtestTimeout(gameId: string): string {
 		return this.timeout(gameId, 5000, async () => {
 			await this.assertState(gameId, "VotingOnProtest");
 

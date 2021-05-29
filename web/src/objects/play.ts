@@ -20,7 +20,7 @@ export interface GameObject {
 	categories: string[];
 	rows: RowObject[];
 	state: State;
-	timeout?: number;
+	timeout?: string;
 	currentText?: string;
 	results?: ResultObject[];
 	activePlayer?: string;

@@ -15,8 +15,12 @@ $secondary: #005f86;
 	}
 }
 
+.dropdown-menu {
+	z-index: 10000 !important;
+}
+
 .iconButton {
 	svg {
-		margin-bottom: 4px;
+		margin-bottom: 2px;
 	}
 }
